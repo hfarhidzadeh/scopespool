@@ -1,0 +1,302 @@
+{
+  "Q01": {
+    "question_id": "a1eacc2a",
+    "repeat": false
+  },
+  "Q02": {
+    "question_id": "618f13b2",
+    "repeat": false
+  },
+  "Q03": {
+    "question_id": "5831f84d",
+    "repeat": true
+  },
+  "Q04": {
+    "question_id": "45dc21b6",
+    "repeat": false
+  },
+  "Q05": {
+    "question_id": "41698283",
+    "repeat": false
+  },
+  "Q06": {
+    "question_id": "71315a70",
+    "repeat": true
+  },
+  "Q07": {
+    "question_id": "7a87bd0c",
+    "repeat": false
+  },
+  "Q08": {
+    "question_id": "c6853660",
+    "repeat": false
+  },
+  "Q09": {
+    "question_id": "a2f3aa27",
+    "repeat": false
+  },
+  "Q10": {
+    "question_id": "5831f84d",
+    "repeat": false
+  },
+  "Q11": {
+    "question_id": "3ba21379",
+    "repeat": false
+  },
+  "Q12": {
+    "question_id": "2133c1b5",
+    "repeat": false
+  },
+  "Q13": {
+    "question_id": "69fee5aa",
+    "repeat": false
+  },
+  "Q14": {
+    "question_id": "184da446",
+    "repeat": false
+  },
+  "Q15": {
+    "question_id": "1cea1afa",
+    "repeat": false
+  },
+  "Q16": {
+    "question_id": "945e3d21",
+    "repeat": false
+  },
+  "Q17": {
+    "question_id": "71315a70",
+    "repeat": false
+  },
+  "Q18": {
+    "question_id": "b01defab",
+    "repeat": false
+  },
+  "Q19": {
+    "question_id": "ed4ddc30",
+    "repeat": false
+  },
+  "Q20": {
+    "question_id": "ba61f0b9",
+    "repeat": false
+  },
+  "Q21": {
+    "question_id": "dfde3500",
+    "repeat": false
+  },
+  "Q22": {
+    "question_id": "59524333",
+    "repeat": false
+  },
+  "Q23": {
+    "question_id": "e66b632c",
+    "repeat": false
+  },
+  "Q24": {
+    "question_id": "ed4ddc30",
+    "repeat": true
+  },
+  "Q25": {
+    "question_id": "603deb26",
+    "repeat": false
+  },
+  "Q26": {
+    "question_id": "f9e8c073",
+    "repeat": false
+  },
+  "Q27": {
+    "question_id": "852ce960",
+    "repeat": false
+  },
+  "Q28": {
+    "question_id": "7401057b",
+    "repeat": false
+  },
+  "Q29": {
+    "question_id": "06db6396",
+    "repeat": true
+  },
+  "Q30": {
+    "question_id": "f685340e",
+    "repeat": false
+  },
+  "Q31": {
+    "question_id": "26bdc477",
+    "repeat": false
+  },
+  "Q32": {
+    "question_id": "6a27ffc2",
+    "repeat": false
+  },
+  "Q33": {
+    "question_id": "6aeb4375",
+    "repeat": false
+  },
+  "Q34": {
+    "question_id": "c4ea545c",
+    "repeat": false
+  },
+  "Q35": {
+    "question_id": "830ce83f",
+    "repeat": false
+  },
+  "Q36": {
+    "question_id": "72e3ee87",
+    "repeat": false
+  },
+  "Q37": {
+    "question_id": "d7c942c3",
+    "repeat": false
+  },
+  "Q38": {
+    "question_id": "e61a7584",
+    "repeat": false
+  },
+  "Q39": {
+    "question_id": "7e974930",
+    "repeat": false
+  },
+  "Q40": {
+    "question_id": "06db6396",
+    "repeat": false
+  },
+  "Q41": {
+    "question_id": "10e09553",
+    "repeat": false
+  },
+  "Q42": {
+    "question_id": "2698e78f",
+    "repeat": false
+  },
+  "Q43": {
+    "question_id": "c7dc5443",
+    "repeat": false
+  },
+  "Q44": {
+    "question_id": "0ddfec37",
+    "repeat": false
+  },
+  "Q45": {
+    "question_id": "5a4f22c0",
+    "repeat": false
+  },
+  "Q46": {
+    "question_id": "50635ada",
+    "repeat": false
+  },
+  "Q47": {
+    "question_id": "0f05491a",
+    "repeat": false
+  },
+  "Q48": {
+    "question_id": "9ea5eabc",
+    "repeat": false
+  },
+  "Q49": {
+    "question_id": "07741c44",
+    "repeat": false
+  },
+  "Q50": {
+    "question_id": "cc5ded98",
+    "repeat": false
+  },
+  "Q51": {
+    "question_id": "8fb83627",
+    "repeat": false
+  },
+  "Q52": {
+    "question_id": "89941a94",
+    "repeat": false
+  },
+  "Q53": {
+    "question_id": "db467c8c",
+    "repeat": false
+  },
+  "Q54": {
+    "question_id": "0e4e4c46",
+    "repeat": false
+  },
+  "Q55": {
+    "question_id": "6a1eabeb",
+    "repeat": false
+  },
+  "Q56": {
+    "question_id": "5c40ec5b",
+    "repeat": false
+  },
+  "Q57": {
+    "question_id": "18bc8abd",
+    "repeat": false
+  },
+  "Q58": {
+    "question_id": "031748ae",
+    "repeat": false
+  },
+  "Q59": {
+    "question_id": "42ec0761",
+    "repeat": false
+  },
+  "Q60": {
+    "question_id": "ce6d2d27",
+    "repeat": false
+  },
+  "Q61": {
+    "question_id": "07741c45",
+    "repeat": false
+  },
+  "Q62": {
+    "question_id": "e493bb7c",
+    "repeat": false
+  },
+  "Q63": {
+    "question_id": "9ea5eabc",
+    "repeat": true
+  },
+  "Q64": {
+    "question_id": "0977f2af",
+    "repeat": false
+  },
+  "Q65": {
+    "question_id": "9bbe84a2",
+    "repeat": false
+  },
+  "Q66": {
+    "question_id": "08e075c7",
+    "repeat": false
+  },
+  "Q67": {
+    "question_id": "4d6b87c8",
+    "repeat": false
+  },
+  "Q68": {
+    "question_id": "4b24c848",
+    "repeat": false
+  },
+  "Q69": {
+    "question_id": "affe2881",
+    "repeat": false
+  },
+  "Q70": {
+    "question_id": "dad224aa",
+    "repeat": false
+  },
+  "Q71": {
+    "question_id": "6071bd76",
+    "repeat": false
+  },
+  "Q72": {
+    "question_id": "89941a93",
+    "repeat": false
+  },
+  "Q73": {
+    "question_id": "b6019101",
+    "repeat": false
+  },
+  "Q74": {
+    "question_id": "cf22b7bf",
+    "repeat": false
+  },
+  "Q75": {
+    "question_id": "01493427",
+    "repeat": false
+  }
+}
