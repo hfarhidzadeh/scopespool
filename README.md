@@ -351,7 +351,17 @@ Six injected faults were each caught. Filtering before ranking costs owners
 0.010 RR@10 against filtering after (interval -0.017 to -0.004). The access
 structure is invented. A blind human spot-check of 40 of the 120 other-user
 answer-text hits found no leak (controls valid; see
-`experiments/results/spot_check/outcome.md`), but 80 were not reviewed. Results: `experiments/results/longmemeval_shared_workspace.md`.
+`experiments/results/spot_check/outcome.md`), but 80 were not reviewed.
+
+Retraction on real text (`experiments/longmemeval_retraction.py`, 200 trials):
+after a message is retracted, none of its distinctive words remained in any stored
+value or any read, unlinked reads matched a store that never got the message, rebuild
+used only the remaining sources, and a key-file backup recovered nothing. Four
+injected faults were each caught. One difference was found: in linked workspaces a
+rebuilt memory does not inherit the old memory's links, so some reads rank differently
+from a never-written store (not a leak). Text copied into a memory that does not list
+the message as a source is not found by the store. Results:
+`experiments/results/longmemeval_retraction.md`. Results: `experiments/results/longmemeval_shared_workspace.md`.
 
 ```bash
 python3 -I experiments/audience_side_channel.py

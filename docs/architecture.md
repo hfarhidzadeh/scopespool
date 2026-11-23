@@ -280,6 +280,8 @@ back whatever it had replaced. The experiments in
 the others listed below test this.
 [longmemeval_shared_workspace.py](../experiments/longmemeval_shared_workspace.py)
 repeats the visibility checks on real LongMemEval text.
+[longmemeval_retraction.py](../experiments/longmemeval_retraction.py) does the same
+for retraction and rebuild.
 
 ## Pruning
 

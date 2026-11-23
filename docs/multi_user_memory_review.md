@@ -1021,6 +1021,43 @@ owner's private conversation.
   automated reads, and is a sample of a third of the hits, not proof about all
   120. The other 80 were not reviewed.
 
+**Retraction on real text, 2026-11-23.** The retraction experiment (H5) used
+invented tokens. Script: `experiments/longmemeval_retraction.py`; report:
+`experiments/results/longmemeval_retraction.md`. Each trial samples up to 100
+user turns of one LongMemEval history as messages, builds extractive derived
+memories that list their sources, retracts 1 to 3 messages, and then checks
+seven rules. "The retracted words" are the message's distinctive 6-word
+shingles, those that no other sampled message contains. Design, decision rule
+and fault criteria were fixed in the docstring before the recorded run.
+
+- **Result:** 200 trials; every rule held in every trial. No distinctive shingle
+  of a retracted message remained in any stored value; no read, message or
+  listing returned one before or after a rebuild; unlinked reads ranked
+  identically to a store that never received the message (898 of 898 queries);
+  rebuild used exactly the remaining sources; with a key file, an older copy
+  of the database recovered nothing of the retracted text. The raw database file
+  held none of the retracted messages' opening characters (descriptive).
+- **Faults:** four injected faults each failed the rule they were
+  pre-registered to fail, in 100% of the trials in scope: derived text kept
+  (rule 4), pads kept (rule 7), a consolidator that leaks (rule 6), and no
+  rebuild (rule 5).
+- **Finding, outside the verdict:** in linked workspaces a rebuilt memory does not
+  inherit the links of the stale memory it replaces. Its raw lexical and vector
+  scores equal the never-written store's, but it loses the link bonus, so reads
+  differ in ranking for 163 of 900 queries (47 more differ in scores or links
+  only). No retracted text is involved. This is open: either carry the links over
+  at rebuild or accept the difference.
+- **Known limit, measured:** a memory that repeats a retracted message but does
+  not list it as a source is not found by the store; all 398 such copies stayed
+  readable. Callers must list sources.
+- **Harness problems found and fixed before the recorded run (two discarded
+  runs):** the first scan matched shingles as substrings ("a" inside "an"), which
+  failed four trials for that reason alone; the raw-file count counted opening
+  characters that other messages share. Neither changed a rule.
+- **Limits:** the derived memories are extractive joins, not model summaries; the
+  channel structure is invented; a paraphrase of a retracted message, near-duplicate
+  text, a model consolidator and the `record_access` side channel are not tested.
+
 **The remaining "not built" items, 2026-11-19.** Asked to solve all of them,
 the model built each one up to where a human decision is needed.
 
