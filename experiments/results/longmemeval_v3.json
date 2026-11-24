@@ -14,12 +14,12 @@
     "tables": {
       "lexical/kept": {
         "current": {
-          "n": 47,
-          "first_hit": 0.9574468085106383,
-          "all_required": 0.9574468085106383,
-          "group_coverage": 0.9574468085106383,
-          "rr": 0.5333333333333332,
-          "stale_first": 0.46808510638297873
+          "n": 45,
+          "first_hit": 0.9555555555555556,
+          "all_required": 0.9555555555555556,
+          "group_coverage": 0.9555555555555556,
+          "rr": 0.5348148148148147,
+          "stale_first": 0.4666666666666667
         },
         "previous": {
           "n": 9,
@@ -46,11 +46,11 @@
           "stale_first": null
         },
         "context": {
-          "n": 3,
+          "n": 5,
           "first_hit": 1.0,
           "all_required": 1.0,
           "group_coverage": 1.0,
-          "rr": 0.6666666666666666,
+          "rr": 0.6,
           "stale_first": null
         },
         "all": {
@@ -59,24 +59,24 @@
           "all_required": 0.9411764705882353,
           "group_coverage": 0.9411764705882353,
           "rr": 0.5536764705882353,
-          "stale_first": 0.46808510638297873
+          "stale_first": 0.4666666666666667
         }
       },
       "lexical/applied": {
         "current": {
-          "n": 47,
-          "first_hit": 0.9574468085106383,
-          "all_required": 0.9574468085106383,
-          "group_coverage": 0.9574468085106383,
-          "rr": 0.6904255319148936,
+          "n": 45,
+          "first_hit": 0.9555555555555556,
+          "all_required": 0.9555555555555556,
+          "group_coverage": 0.9555555555555556,
+          "rr": 0.6877777777777777,
           "stale_first": 0.0
         },
         "previous": {
           "n": 9,
-          "first_hit": 0.2222222222222222,
-          "all_required": 0.2222222222222222,
-          "group_coverage": 0.2222222222222222,
-          "rr": 0.1111111111111111,
+          "first_hit": 0.5555555555555556,
+          "all_required": 0.5555555555555556,
+          "group_coverage": 0.5555555555555556,
+          "rr": 0.2777777777777778,
           "stale_first": null
         },
         "both": {
@@ -96,30 +96,30 @@
           "stale_first": null
         },
         "context": {
-          "n": 3,
+          "n": 5,
           "first_hit": 1.0,
           "all_required": 1.0,
           "group_coverage": 1.0,
-          "rr": 0.6666666666666666,
+          "rr": 0.6,
           "stale_first": null
         },
         "all": {
           "n": 68,
-          "first_hit": 0.8529411764705882,
-          "all_required": 0.7794117647058824,
-          "group_coverage": 0.8161764705882353,
-          "rr": 0.6120098039215688,
+          "first_hit": 0.8970588235294118,
+          "all_required": 0.8235294117647058,
+          "group_coverage": 0.8602941176470589,
+          "rr": 0.6267156862745099,
           "stale_first": 0.0
         }
       },
       "semantic/kept": {
         "current": {
-          "n": 47,
+          "n": 45,
           "first_hit": 1.0,
           "all_required": 1.0,
           "group_coverage": 1.0,
-          "rr": 0.37969436001350887,
-          "stale_first": 0.6382978723404256
+          "rr": 0.37434744268077597,
+          "stale_first": 0.6444444444444445
         },
         "previous": {
           "n": 9,
@@ -134,7 +134,7 @@
           "first_hit": 1.0,
           "all_required": 0.8333333333333334,
           "group_coverage": 0.9166666666666666,
-          "rr": 0.6944444444444443,
+          "rr": 0.611111111111111,
           "stale_first": null
         },
         "latest_event": {
@@ -146,11 +146,11 @@
           "stale_first": null
         },
         "context": {
-          "n": 3,
+          "n": 5,
           "first_hit": 1.0,
           "all_required": 1.0,
           "group_coverage": 1.0,
-          "rr": 0.3444444444444444,
+          "rr": 0.4066666666666666,
           "stale_first": null
         },
         "all": {
@@ -158,25 +158,25 @@
           "first_hit": 1.0,
           "all_required": 0.9852941176470589,
           "group_coverage": 0.9926470588235294,
-          "rr": 0.3969946311858075,
-          "stale_first": 0.6382978723404256
+          "rr": 0.38964169000933696,
+          "stale_first": 0.6444444444444445
         }
       },
       "semantic/applied": {
         "current": {
-          "n": 47,
+          "n": 45,
           "first_hit": 1.0,
           "all_required": 1.0,
           "group_coverage": 1.0,
-          "rr": 0.5244934143870312,
+          "rr": 0.5144708994708993,
           "stale_first": 0.0
         },
         "previous": {
           "n": 9,
-          "first_hit": 0.3333333333333333,
-          "all_required": 0.3333333333333333,
-          "group_coverage": 0.3333333333333333,
-          "rr": 0.09259259259259259,
+          "first_hit": 0.6666666666666666,
+          "all_required": 0.6666666666666666,
+          "group_coverage": 0.6666666666666666,
+          "rr": 0.24074074074074073,
           "stale_first": null
         },
         "both": {
@@ -184,7 +184,7 @@
           "first_hit": 0.8333333333333334,
           "all_required": 0.16666666666666666,
           "group_coverage": 0.5,
-          "rr": 0.5,
+          "rr": 0.4166666666666667,
           "stale_first": null
         },
         "latest_event": {
@@ -196,26 +196,26 @@
           "stale_first": null
         },
         "context": {
-          "n": 3,
+          "n": 5,
           "first_hit": 1.0,
           "all_required": 1.0,
           "group_coverage": 1.0,
-          "rr": 0.3444444444444444,
+          "rr": 0.4066666666666666,
           "stale_first": null
         },
         "all": {
           "n": 68,
-          "first_hit": 0.8970588235294118,
-          "all_required": 0.8382352941176471,
-          "group_coverage": 0.8676470588235294,
-          "rr": 0.4517331932773107,
+          "first_hit": 0.9411764705882353,
+          "all_required": 0.8823529411764706,
+          "group_coverage": 0.9117647058823529,
+          "rr": 0.4566351540616244,
           "stale_first": 0.0
         }
       }
     },
     "A": {
       "lexical": {
-        "questions": 47,
+        "questions": 45,
         "mean": 0.0,
         "ci95": [
           0.0,
@@ -224,10 +224,10 @@
         "p": 1.0,
         "better": 0,
         "worse": 0,
-        "same": 47
+        "same": 45
       },
       "semantic": {
-        "questions": 47,
+        "questions": 45,
         "mean": 0.0,
         "ci95": [
           0.0,
@@ -236,32 +236,32 @@
         "p": 1.0,
         "better": 0,
         "worse": 0,
-        "same": 47
+        "same": 45
       }
     },
     "B": {
       "lexical": {
-        "questions": 11,
+        "questions": 8,
         "mean": -1.0,
         "ci95": [
           -1.0,
           -1.0
         ],
-        "p": 0.0009765625,
+        "p": 0.0078125,
         "better": 0,
-        "worse": 11,
+        "worse": 8,
         "same": 0
       },
       "semantic": {
-        "questions": 11,
-        "mean": -0.9090909090909091,
+        "questions": 8,
+        "mean": -0.875,
         "ci95": [
           -1.0,
-          -0.7272727272727273
+          -0.625
         ],
-        "p": 0.001953125,
+        "p": 0.015625,
         "better": 0,
-        "worse": 10,
+        "worse": 7,
         "same": 1
       }
     },
@@ -291,59 +291,59 @@
     },
     "A_rr": {
       "lexical": {
-        "questions": 47,
-        "mean": 0.15709219858156032,
+        "questions": 45,
+        "mean": 0.152962962962963,
         "ci95": [
-          0.09574468085106383,
-          0.22340425531914893
+          0.09259259259259257,
+          0.2196296296296296
         ],
-        "p": 1.999980000199998e-05,
-        "better": 21,
+        "p": 2.999970000299997e-05,
+        "better": 20,
         "worse": 1,
-        "same": 25
+        "same": 24
       },
       "semantic": {
-        "questions": 47,
-        "mean": 0.14479905437352245,
+        "questions": 45,
+        "mean": 0.14012345679012345,
         "ci95": [
-          0.09163289429246876,
-          0.20475346166835526
+          0.08678130511463844,
+          0.19960317460317462
         ],
         "p": 9.99990000099999e-06,
-        "better": 32,
+        "better": 31,
         "worse": 2,
-        "same": 13
+        "same": 12
       }
     },
     "A_stale": {
       "lexical": {
-        "questions": 47,
-        "mean": -0.46808510638297873,
+        "questions": 45,
+        "mean": -0.4666666666666667,
         "ci95": [
-          -0.6170212765957447,
-          -0.3191489361702128
+          -0.6222222222222222,
+          -0.3111111111111111
         ],
         "p": 9.99990000099999e-06,
         "better": 0,
-        "worse": 22,
-        "same": 25
+        "worse": 21,
+        "same": 24
       },
       "semantic": {
-        "questions": 47,
-        "mean": -0.6382978723404256,
+        "questions": 45,
+        "mean": -0.6444444444444445,
         "ci95": [
-          -0.7659574468085106,
-          -0.5106382978723404
+          -0.7777777777777778,
+          -0.5111111111111111
         ],
         "p": 9.99990000099999e-06,
         "better": 0,
-        "worse": 30,
-        "same": 17
+        "worse": 29,
+        "same": 16
       }
     },
     "sizes": {
-      "current": 47,
-      "need_old": 11,
+      "current": 45,
+      "need_old": 8,
       "both": 6
     }
   },
@@ -411,10 +411,10 @@
         },
         "previous": {
           "n": 9,
-          "first_hit": 0.2222222222222222,
-          "all_required": 0.2222222222222222,
-          "group_coverage": 0.2222222222222222,
-          "rr": 0.1111111111111111,
+          "first_hit": 0.5555555555555556,
+          "all_required": 0.5555555555555556,
+          "group_coverage": 0.5555555555555556,
+          "rr": 0.2777777777777778,
           "stale_first": null
         },
         "both": {
@@ -443,10 +443,10 @@
         },
         "all": {
           "n": 64,
-          "first_hit": 0.84375,
-          "all_required": 0.765625,
-          "group_coverage": 0.8046875,
-          "rr": 0.6033854166666668,
+          "first_hit": 0.890625,
+          "all_required": 0.8125,
+          "group_coverage": 0.8515625,
+          "rr": 0.6268229166666668,
           "stale_first": 0.0
         }
       },
@@ -472,7 +472,7 @@
           "first_hit": 1.0,
           "all_required": 0.8333333333333334,
           "group_coverage": 0.9166666666666666,
-          "rr": 0.6944444444444443,
+          "rr": 0.611111111111111,
           "stale_first": null
         },
         "latest_event": {
@@ -496,7 +496,7 @@
           "first_hit": 1.0,
           "all_required": 0.984375,
           "group_coverage": 0.9921875,
-          "rr": 0.39524429563492053,
+          "rr": 0.38743179563492053,
           "stale_first": 0.6444444444444445
         }
       },
@@ -511,10 +511,10 @@
         },
         "previous": {
           "n": 9,
-          "first_hit": 0.3333333333333333,
-          "all_required": 0.3333333333333333,
-          "group_coverage": 0.3333333333333333,
-          "rr": 0.09259259259259259,
+          "first_hit": 0.6666666666666666,
+          "all_required": 0.6666666666666666,
+          "group_coverage": 0.6666666666666666,
+          "rr": 0.24074074074074073,
           "stale_first": null
         },
         "both": {
@@ -522,7 +522,7 @@
           "first_hit": 0.8333333333333334,
           "all_required": 0.16666666666666666,
           "group_coverage": 0.5,
-          "rr": 0.5,
+          "rr": 0.4166666666666667,
           "stale_first": null
         },
         "latest_event": {
@@ -543,10 +543,10 @@
         },
         "all": {
           "n": 64,
-          "first_hit": 0.890625,
-          "all_required": 0.828125,
-          "group_coverage": 0.859375,
-          "rr": 0.4455915178571426,
+          "first_hit": 0.9375,
+          "all_required": 0.875,
+          "group_coverage": 0.90625,
+          "rr": 0.45861235119047594,
           "stale_first": 0.0
         }
       }
@@ -579,27 +579,27 @@
     },
     "B": {
       "lexical": {
-        "questions": 11,
+        "questions": 8,
         "mean": -1.0,
         "ci95": [
           -1.0,
           -1.0
         ],
-        "p": 0.0009765625,
+        "p": 0.0078125,
         "better": 0,
-        "worse": 11,
+        "worse": 8,
         "same": 0
       },
       "semantic": {
-        "questions": 11,
-        "mean": -0.9090909090909091,
+        "questions": 8,
+        "mean": -0.875,
         "ci95": [
           -1.0,
-          -0.7272727272727273
+          -0.625
         ],
-        "p": 0.001953125,
+        "p": 0.015625,
         "better": 0,
-        "worse": 10,
+        "worse": 7,
         "same": 1
       }
     },
@@ -681,7 +681,7 @@
     },
     "sizes": {
       "current": 45,
-      "need_old": 11,
+      "need_old": 8,
       "both": 6
     }
   },
@@ -690,5 +690,6 @@
     "verdict": "lexical: applying supersession, current-value questions: no clear effect; questions that need the old evidence: hurts; semantic: applying supersession, current-value questions: no clear effect; questions that need the old evidence: hurts; semantic vs lexical: no clear effect"
   },
   "data_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
-  "annotations_sha256": "78e8c466638d357b9b51fd72f79820df2b0a994bbea4e2c1fbb19fab1d6e4214"
+  "annotations_sha256": "44dc0791aa1bc55108b76de7c8ea889a6f5aa7f4d87cdf560ba6ef1734084c0c",
+  "annotations": "eval/longmemeval_knowledge_update_annotations_v3_reviewed.json"
 }

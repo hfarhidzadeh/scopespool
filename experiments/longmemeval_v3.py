@@ -1,8 +1,9 @@
 """LongMemEval knowledge updates, version 3: all required evidence, not the first piece.
 
-Status: provisional. The v3 annotations (``eval/longmemeval_knowledge_update_annotations_v3.json``)
-were derived from AI labels and an AI review; no human has adjudicated them (see
-``dynmemory.longmemeval_v3``). The numbers describe that annotation, not settled
+Status: provisional. The v3 annotations were derived from AI labels and an AI review;
+the researcher has since made five category decisions and supplied a source-evidence
+review (see Runs below and ``dynmemory.longmemeval_v3``), but most annotations are
+still not human-adjudicated. The numbers describe that annotation, not settled
 ground truth, and they are not comparable with versions 1 and 2, whose cohorts,
 update edges and metric differed.
 
@@ -73,6 +74,21 @@ cf22b7bf, 5c40ec5b, 26bdc477, 42ec0761: three recommended by the AI review and
 two more proposed in an AI-filled sheet; none adjudicated by a human) are
 dropped and every reading is recomputed.
 
+Runs.
+  Run 1 (reports in ``experiments/results/longmemeval_v3_run1_superseded/``):
+  ``eval/longmemeval_knowledge_update_annotations_v3.json``, derived from the AI labels
+  and the AI review, with the review's three category changes applied.
+  Run 2 (this file's default): ``eval/longmemeval_knowledge_update_annotations_v3_reviewed.json``,
+  which applies the researcher's five category decisions (2133c1b5 excluded;
+  5c40ec5b, cf22b7bf, 26bdc477, 42ec0761 context) and a source-evidence review of the
+  questions that need evidence marked as superseded and of the flagged rows (which
+  changed the supersession relation of 50635ada, 0ddfec37 and dfde3500 and the required
+  groups of c6853660). The file does not record who made the second part of the review;
+  it was supplied by the researcher for this run. The design, controls, decision rule and
+  statistics are those of run 1; only the annotations changed. The sensitivity run below
+  now drops rows whose category was contested before, so it shows how much the
+  contested rows matter whatever their final category.
+
 Run from the project root (the MiniLM backend needs the venv in
 ``memory/embedding-environment.md``):
 
@@ -98,7 +114,7 @@ from dynmemory.evaluation import CachedEmbedder, query_rows  # noqa: E402
 from dynmemory.longmemeval_v3 import convert, load_annotations  # noqa: E402
 
 DATA = ROOT / "data" / "longmemeval" / "longmemeval_s_cleaned.json"
-ANNOTATIONS = ROOT / "eval" / "longmemeval_knowledge_update_annotations_v3.json"
+ANNOTATIONS = ROOT / "eval" / "longmemeval_knowledge_update_annotations_v3_reviewed.json"
 DEPTH = 10
 CONTESTED = ("2133c1b5", "cf22b7bf", "5c40ec5b", "26bdc477", "42ec0761")
 CONTROL_SEEDS = 5
@@ -313,8 +329,10 @@ def render(report: dict) -> str:
         "# LongMemEval knowledge updates, version 3 (provisional)", "",
         "Real LongMemEval text; no LLM. {} questions annotated for required evidence"
         " and supersession; semantic backend: {}.".format(m["questions"], report["semantic"]),
-        "Annotations are AI-derived and not human-adjudicated; results are not comparable with versions 1 and 2.",
-        "Data sha256 {}; annotations sha256 {}.".format(report["data_sha256"][:16], report["annotations_sha256"][:16]),
+        "Annotations: the researcher's five category decisions plus a source-evidence review whose reviewer is not"
+        " recorded; the rest is AI-derived and not human-adjudicated. Not comparable with versions 1 and 2.",
+        "Annotations: `{}`. Data sha256 {}; annotations sha256 {}.".format(
+            report["annotations"], report["data_sha256"][:16], report["annotations_sha256"][:16]),
         "See the docstring of `experiments/longmemeval_v3.py` for the design and decision rule.", "",
         "## Controls", "",
         "- C1 (no supersession edge: applying updates changes nothing): {}".format(c["c1_unchanged"]),
@@ -369,6 +387,8 @@ def main(argv=None) -> int:
         "sensitivity": readings(eval_sets, outcome["rows"], set(CONTESTED)),
         "decision": decide(outcome["controls"], main_result),
         "data_sha256": sha256(arguments.data), "annotations_sha256": sha256(arguments.annotations),
+        "annotations": str(arguments.annotations.relative_to(ROOT))
+        if arguments.annotations.is_relative_to(ROOT) else arguments.annotations.name,
     }
     text = render(report)
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

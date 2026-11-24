@@ -709,32 +709,33 @@ fact, and a question that needs two pieces of evidence is not answered by findin
 say which evidence the answer needs (all groups, and any one turn of a group).
 **Supersession** says whether a newer turn replaces an older one (`supersedes`),
 adds to it (`adds_to`) or is a separate event (`independent`); only `supersedes`
-becomes an update. The annotations are derived from the AI labels and the AI
-review, are **not human-adjudicated**, and live in an editable file,
-[eval/longmemeval_knowledge_update_annotations_v3.json](eval/longmemeval_knowledge_update_annotations_v3.json).
-The evaluator reports `all required@10`, the share of questions with every required
-group in the top 10.
+becomes an update. The evaluator reports `all required@10`, the share of questions with
+every required group in the top 10. The annotations are editable files:
+[the reviewed set](eval/longmemeval_knowledge_update_annotations_v3_reviewed.json)
+(the researcher's five category decisions plus a source-evidence review whose reviewer is
+not recorded; the rest is derived from the AI labels and AI review and is **not
+human-adjudicated**) and [the first derived set](eval/longmemeval_knowledge_update_annotations_v3.json).
 
 [experiments/longmemeval_v3.py](experiments/longmemeval_v3.py) (design, controls and
 decision rule fixed in its docstring; report in
-[experiments/results/longmemeval_v3.md](experiments/results/longmemeval_v3.md)).
-On the 68 annotated questions, lexical and MiniLM, all three controls held:
+[experiments/results/longmemeval_v3.md](experiments/results/longmemeval_v3.md), run 1 on
+the first set kept in `longmemeval_v3_run1_superseded/`). On the 68 annotated questions of
+the reviewed set, lexical and MiniLM, all three controls held and the verdict matches run 1:
 
 - **The old metric overstated the harm of archiving.** On the 6 questions that need two
   pieces, applying the supersession edges leaves first hit@10 at 1.000 (lexical) but takes
-  all required@10 to 0.167. Archiving needed evidence is structural: 11 of 68 questions
-  need evidence that is also marked superseded, and all 11 lose it (a positive control
-  confirms the metric sees this).
-- **On current-value questions, top-10 coverage is already near ceiling** (0.957, so all
-  required@10 does not move), but ranking improves: reciprocal rank +0.16 and the share
+  all required@10 to 0.167. 8 of 68 questions (11 in run 1) need evidence that is also
+  marked superseded, and all 8 lose it under the oracle (structural; a positive control
+  confirms the metric sees it).
+- **On current-value questions, top-10 coverage is already near ceiling** (0.956, so all
+  required@10 does not move), but ranking improves: reciprocal rank +0.15 and the share
   where an outdated turn ranks first falls from 0.47 to 0 (lexical; similar for MiniLM).
 - **MiniLM against lexical, updates kept:** all required@10 0.985 against 0.941; not a
   clear difference (p 0.375, 4 questions better, 1 worse).
 
 These are not comparable with the version 1 and 2 numbers, whose cohorts, update edges and
 metric differed. The updates are an oracle, so "applied" is the best case. Only 6 questions
-need two pieces, so those figures are descriptive. Dropping the 5 contested questions
-changes none of the readings.
+need two pieces, so those figures are descriptive.
 
 ## LongMemEval: silence
 

@@ -1118,6 +1118,19 @@ cf22b7bf and 5c40ec5b context), the two more that an AI-filled sheet proposed ar
 - **Dropped:** dropping the 5 contested questions changes none of the readings. Reciprocal
   rank and stale-first (A') were added to the report after a smoke run showed all required@10
   at ceiling for current questions; the decision rule was not changed.
+- **Run 2 (reviewed annotations):** the researcher supplied
+  `eval/longmemeval_knowledge_update_annotations_v3_reviewed.json`: five category
+  decisions (2133c1b5 excluded; 5c40ec5b, cf22b7bf, 26bdc477, 42ec0761 context) and a
+  source-evidence review that changed the supersession relation of 50635ada (none),
+  0ddfec37 and dfde3500 (independent) and the required groups of c6853660. The file does
+  not record who made that second review, so it is not logged as human-adjudicated. Same
+  design, controls and rule; run 1's reports are in
+  `experiments/results/longmemeval_v3_run1_superseded/`. Controls held; the verdict is
+  unchanged. Questions that need evidence also marked superseded fall from 11 to 8, all lost
+  under the oracle; the 6 two-piece questions still go from first hit@10 1.000 to all
+  required@10 0.167 (lexical) when updates are applied; current-value questions: all
+  required@10 at ceiling 0.956, reciprocal rank +0.15 and stale-first 0.47 to 0 (lexical);
+  MiniLM against lexical with updates kept 0.985 against 0.941, p 0.375.
 - **Limits:** annotations are provisional and the human label review is still open; only 6
   questions need two pieces; the oracle is perfect detection; results are not comparable with
   versions 1 and 2. A positive control built on "the last non-required memory" could not
