@@ -12,10 +12,10 @@ Two problems the store leaves to the caller by default:
   one being updated or returns None. The caller then writes the claim under
   that memory's key, or relates it as a supersession.
 
-The baselines here are deliberately simple and have **not** been evaluated on
-real conversations. Measuring them on LongMemEval waits for the human review of
-the knowledge-update labels (see ``docs/longmemeval_label_review.md``); until
-then, treat any of them as a mechanism, not as a validated detector.
+The baselines here are deliberately simple. On LongMemEval (version 3 reviewed
+annotations, provisional) none of them was usable at its default settings: see
+``experiments/results/longmemeval_detector_baselines.md``. Treat them as a
+mechanism and a floor to beat, not as a validated detector.
 """
 
 from __future__ import annotations

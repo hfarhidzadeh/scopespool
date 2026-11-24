@@ -467,8 +467,8 @@ treats claims whose embeddings are close enough as agreeing.
 `store.detect_update(text, detector, viewers=...)` returns the visible memory a
 new text would replace, according to a detector such as
 `OverlapUpdateDetector` or `EmbeddingUpdateDetector`; the caller decides what
-to do with the answer. These baselines have not been evaluated on real
-conversations: that waits for the human review of the LongMemEval labels.
+to do with the answer. On LongMemEval none of them was usable at its
+defaults (see [the detector evaluation](#longmemeval-update-detector-baselines)).
 
 ### Command line for channels and viewers
 
@@ -736,6 +736,34 @@ the reviewed set, lexical and MiniLM, all three controls held and the verdict ma
 These are not comparable with the version 1 and 2 numbers, whose cohorts, update edges and
 metric differed. The updates are an oracle, so "applied" is the best case. Only 6 questions
 need two pieces, so those figures are descriptive.
+
+## LongMemEval: update-detector baselines
+
+[experiments/longmemeval_detector_baselines.py](experiments/longmemeval_detector_baselines.py)
+(design, controls and decision rule fixed in its docstring; report in
+[experiments/results/longmemeval_detector_baselines.md](experiments/results/longmemeval_detector_baselines.md))
+evaluates the shipped baselines at their default settings on the 68 annotated questions of the
+[reviewed v3 annotations](eval/longmemeval_knowledge_update_annotations_v3_reviewed.json): 53 questions
+where a newer turn supersedes an older one, 15 where nothing is superseded. A candidate search
+finds a true old turn among its five candidates for 51 of the 53. Both controls held, and **no
+baseline was usable**:
+
+- **Overlap** never fires at its default threshold (recall 0 on the 45 current questions).
+- **Embedding detector, hash embedder:** fires on 31 of the 53, right on 12 (recall 0.24 on the
+  current questions, not better than choosing a candidate at random, p 0.54); it also fires on
+  6 of 15 questions with nothing to supersede and on 162 of 680 ordinary turns.
+- **Embedding detector, MiniLM:** right on 9 of 53 (recall 0.20), 8 of 15 false fires, 249 of 680
+  ordinary turns.
+- **End to end,** applying a detector's decision improves current-value reciprocal rank (hash
+  +0.065, MiniLM +0.054, both p < 0.01) but recovers under half of the oracle's gain (+0.153) and
+  barely beats archiving a random candidate (+0.041). A control that always archives the best-ranked
+  earlier turn recovers 84% of the oracle's gain, so most of the oracle's gain comes from removing the
+  top-ranked older turn, which a detector has to beat by being selective.
+- A threshold sweep (reported, not judged) trades recall for false fires without reaching both targets.
+
+The ground truth is provisional (the researcher's five category decisions plus a source-evidence
+review whose reviewer is not recorded; the rest is AI-derived). The baselines are simple on purpose;
+a model-based detector is not tested here, and the earlier local-model attempt was inconclusive.
 
 ## LongMemEval: silence
 

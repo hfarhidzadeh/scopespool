@@ -1068,6 +1068,32 @@ and fault criteria were fixed in the docstring before the recorded run.
   channel structure is invented; a paraphrase of a retracted message, near-duplicate
   text and a model consolidator are not tested (the `record_access` side channel is covered in its own entry).
 
+**Update-detector baselines on LongMemEval, 2026-11-25.** Script:
+`experiments/longmemeval_detector_baselines.py`; report:
+`experiments/results/longmemeval_detector_baselines.md`. The baselines in
+`dynmemory.detection` (overlap, and an embedding detector with the hash embedder and with
+MiniLM) were evaluated at their defaults on the reviewed v3 annotations, with the design,
+controls and decision rule fixed in the docstring before the recorded run. Each detector sees
+the new evidence turn and its five best earlier BM25 candidates and names the turn it replaces or
+none.
+
+- **Controls (held):** a detector that never fires leaves retrieval identical to no updates; an
+  oracle limited to the candidates is right exactly where a true target is among them.
+- **Result:** none is usable. Overlap never fires (recall 0 of 45 current positives). The hash
+  embedder is right on 12 of 53 positives and wrong on 19, fires on 6 of 15 negatives and 162 of 680
+  ordinary turns; MiniLM is right on 9, wrong on 19, 8 of 15 negatives, 249 of 680 ordinary turns.
+  Neither beats choosing a random candidate on the current cohort (p 0.54 and 1.0). Candidate search is
+  not the limit: a true old turn is a candidate for 51 of 53 positive questions.
+- **End to end:** applying decisions raises current-value reciprocal rank by +0.065 (hash) and +0.054
+  (MiniLM) over no updates (p < 0.01) but recovers 0.42 and 0.35 of the oracle's +0.153, against +0.041
+  for a random candidate. Always archiving the top-ranked earlier turn recovers 0.84 with no real
+  detection (a control, not a candidate): most of the oracle's gain is removing the best-ranked older
+  turn, so a detector must be selective to be worth anything.
+- **Limits:** provisional annotations; BM25 candidates; only the new turn's decision is applied;
+  control-turn fires are an upper bound on false supersessions (a genuine unlabelled update counts as a
+  fire); only simple baselines are tested, not a model-based detector (the earlier local-model run is
+  archived as inconclusive).
+
 **The `record_access` side channel, 2026-11-24.** `search` records each read by
 default (`access_count` +1, `last_accessed_at` set on every returned memory). The
 counters belong to the memory, so every member who can see it sees them, and `prune`
