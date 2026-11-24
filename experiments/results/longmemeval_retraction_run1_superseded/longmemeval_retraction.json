@@ -1,0 +1,76 @@
+{
+  "trials": 200,
+  "fault": null,
+  "store_schema_version": 7,
+  "summary": {
+    "checks": {
+      "determinism": {
+        "held": 200,
+        "not_held_seeds": []
+      },
+      "probe": {
+        "held": 200,
+        "not_held_seeds": []
+      },
+      "specificity": {
+        "held": 200,
+        "not_held_seeds": []
+      },
+      "erasure": {
+        "held": 200,
+        "not_held_seeds": []
+      },
+      "reads": {
+        "held": 200,
+        "not_held_seeds": []
+      },
+      "rebuild": {
+        "held": 200,
+        "not_held_seeds": []
+      },
+      "backup": {
+        "held": 200,
+        "not_held_seeds": []
+      }
+    },
+    "messages": 20000,
+    "retractable": 18993,
+    "dependents": 396,
+    "opportunities": 178,
+    "trials_with_opportunity": 131,
+    "unlinked_classes": {
+      "identical": 898,
+      "same-ranking": 0,
+      "different": 0
+    },
+    "linked_classes": {
+      "identical": 690,
+      "same-ranking": 47,
+      "different": 163
+    },
+    "families": {
+      "hybrid": 50,
+      "linked": 100
+    },
+    "raw_file_still_holds": 0,
+    "copies": {
+      "added": 398,
+      "surviving": 398
+    },
+    "opportunity_failures": {
+      "rebuild": 0,
+      "reads": 0
+    }
+  },
+  "decision": {
+    "rule_1_determinism": true,
+    "rule_2_probe": true,
+    "rule_3_specificity": true,
+    "rule_4_erasure": true,
+    "rule_5_reads": true,
+    "rule_6_rebuild": true,
+    "rule_7_backup": true,
+    "verdict": "retraction erases on real text"
+  },
+  "validation": null
+}

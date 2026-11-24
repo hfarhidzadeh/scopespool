@@ -21,18 +21,29 @@
         "not_held_seeds": []
       },
       "reads": {
-        "held": 29,
+        "held": 18,
         "not_held_seeds": [
           2,
+          3,
           6,
           8,
+          9,
           10,
+          11,
+          13,
           14,
+          17,
           18,
+          21,
           22,
+          23,
+          25,
           30,
+          31,
           32,
           34,
+          35,
+          37,
           38
         ]
       },
@@ -112,7 +123,7 @@
     },
     "opportunity_failures": {
       "rebuild": 22,
-      "reads": 11
+      "reads": 22
     }
   },
   "decision": {
@@ -128,8 +139,8 @@
   "validation": {
     "fault": "no-rebuild",
     "rule": 5,
-    "trials_in_scope": 11,
-    "failed": 11,
+    "trials_in_scope": 22,
+    "failed": 22,
     "share": 1.0,
     "detected": true
   }

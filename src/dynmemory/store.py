@@ -1425,9 +1425,11 @@ class MemoryStore:
         (or None to decline). The rebuilt memory lists exactly those sources,
         keeps the stale memory's kind, key, channel, speaker, subject,
         write-time authority and write time (so claim resolution orders it
-        where the original stood), and supersedes it, so it leaves the queue. A
-        memory with no remaining source is left in the queue. This is trusted,
-        administrative work; the store calls no model itself.
+        where the original stood), carries its links to live memories (a stale
+        neighbour counts as its own rebuild), and supersedes it, so it leaves
+        the queue. A memory with no remaining
+        source is left in the queue. This is trusted, administrative work; the
+        store calls no model itself.
         """
         results = []
         for stale in self.stale_memories(limit=limit):
@@ -1781,6 +1783,9 @@ class MemoryStore:
                         "UPDATE memories SET superseded_by = ? WHERE id = ?",
                         (memory_id, rebuild_of),
                     )
+                # In the same transaction, so a rebuild never exists without its
+                # links, and a crash cannot leave the stale memory out of the queue.
+                self._carry_rebuild_links(connection, rebuild_of, memory_id, now)
 
             for previous in predecessors:
                 self._record_supersession(connection, memory_id, previous["id"], now)
@@ -1824,6 +1829,66 @@ class MemoryStore:
             """,
             (new_id, old_id, Relationship.SUPERSEDES.value, now),
         )
+
+    @staticmethod
+    def _live_counterpart(connection: sqlite3.Connection, memory_id: str) -> Optional[str]:
+        """The memory a link to ``memory_id`` should now point at, or None.
+
+        A live memory stands for itself. A stale one (its source was retracted)
+        stands for the memory that rebuilt it, if there is one and it is live;
+        so two linked neighbours that are both rebuilt end up linked, whichever
+        is rebuilt first. A pruned or retracted memory with no live rebuild has
+        no counterpart, so its links are not brought back.
+        """
+        row = connection.execute(
+            "SELECT archived_at, stale_at FROM memories WHERE id = ?", (memory_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        if row["archived_at"] is None and row["stale_at"] is None:
+            return memory_id
+        if row["stale_at"] is None:
+            return None
+        found = connection.execute(
+            """SELECT memories.id FROM relationships
+            JOIN memories ON memories.id = relationships.source_id
+            WHERE relationships.target_id = ? AND relationships.relation = 'supersedes'
+            AND memories.archived_at IS NULL AND memories.stale_at IS NULL
+            ORDER BY memories.created_at, memories.id LIMIT 1""",
+            (memory_id,),
+        ).fetchone()
+        return found["id"] if found else None
+
+    def _carry_rebuild_links(
+        self, connection: sqlite3.Connection, old_id: str, new_id: str, now: str
+    ) -> None:
+        """Give a rebuilt memory the non-supersession links of the one it replaces.
+
+        Each link keeps its direction and relation and now points at the live
+        counterpart of its other end (see ``_live_counterpart``). Links whose
+        other end has no live counterpart are dropped. Supersession links are
+        not carried: the rebuild supersedes the stale memory, and who else it
+        replaced stays with the claim rules. Visibility is not decided here;
+        reads filter links by audience as they do for any link.
+        """
+        rows = connection.execute(
+            """SELECT source_id, target_id, relation FROM relationships
+            WHERE (source_id = ? OR target_id = ?) AND relation != 'supersedes'""",
+            (old_id, old_id),
+        ).fetchall()
+        for row in rows:
+            outgoing = row["source_id"] == old_id
+            other = self._live_counterpart(
+                connection, row["target_id"] if outgoing else row["source_id"]
+            )
+            if other is None or other == new_id:
+                continue
+            ends = (new_id, other) if outgoing else (other, new_id)
+            connection.execute(
+                """INSERT INTO relationships (source_id, target_id, relation, created_at)
+                VALUES (?, ?, ?, ?) ON CONFLICT(source_id, target_id, relation) DO NOTHING""",
+                (ends[0], ends[1], row["relation"], now),
+            )
 
     def relate(
         self,

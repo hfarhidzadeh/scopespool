@@ -1021,7 +1021,7 @@ owner's private conversation.
   automated reads, and is a sample of a third of the hits, not proof about all
   120. The other 80 were not reviewed.
 
-**Retraction on real text, 2026-11-23.** The retraction experiment (H5) used
+**Retraction on real text, 2026-11-23 (run 3, 2026-11-24).** The retraction experiment (H5) used
 invented tokens. Script: `experiments/longmemeval_retraction.py`; report:
 `experiments/results/longmemeval_retraction.md`. Each trial samples up to 100
 user turns of one LongMemEval history as messages, builds extractive derived
@@ -1033,20 +1033,30 @@ and fault criteria were fixed in the docstring before the recorded run.
 - **Result:** 200 trials; every rule held in every trial. No distinctive shingle
   of a retracted message remained in any stored value; no read, message or
   listing returned one before or after a rebuild; unlinked reads ranked
-  identically to a store that never received the message (898 of 898 queries);
+  identically to a store that never received the message (all 1,798 queries, linked and unlinked);
   rebuild used exactly the remaining sources; with a key file, an older copy
   of the database recovered nothing of the retracted text. The raw database file
   held none of the retracted messages' opening characters (descriptive).
 - **Faults:** four injected faults each failed the rule they were
   pre-registered to fail, in 100% of the trials in scope: derived text kept
   (rule 4), pads kept (rule 7), a consolidator that leaks (rule 6), and no
-  rebuild (rule 5).
-- **Finding, outside the verdict:** in linked workspaces a rebuilt memory does not
-  inherit the links of the stale memory it replaces. Its raw lexical and vector
-  scores equal the never-written store's, but it loses the link bonus, so reads
-  differ in ranking for 163 of 900 queries (47 more differ in scores or links
-  only). No retracted text is involved. This is open: either carry the links over
-  at rebuild or accept the difference.
+  rebuild (rule 5, now over linked trials too).
+- **Finding, then fixed (three runs):** in run 1, linked reads were outside the
+  verdict because a rebuilt memory did not inherit the stale memory's links; it
+  lost the link bonus and ranked differently from a never-written store (163 of
+  900 linked queries; no retracted text involved). The researcher then added link
+  carry-over to `rebuild_stale` (run 2). Review of that change found that it lost
+  the link between two linked memories that both lose a source, because each was
+  stale while the other was rebuilt (probably the cause of the 4 of 900
+  queries that differed in scores or links in run 2; they vanished after the fix
+  but were not traced one by one). The store now points a link at the live memory that rebuilt a stale
+  neighbour and carries links in the same transaction as the rebuild. In run 3
+  linked reads were identical to the never-written store in all 900 queries and
+  linked reads are part of rule 5. Run 1's reports are kept in
+  `experiments/results/longmemeval_retraction_run1_superseded/`; run 2's were
+  overwritten. Supersession links are not carried (the rebuild supersedes the
+  stale memory); whether an explicit supersession of an older memory should pass
+  to the rebuild is not decided.
 - **Known limit, measured:** a memory that repeats a retracted message but does
   not list it as a source is not found by the store; all 398 such copies stayed
   readable. Callers must list sources.

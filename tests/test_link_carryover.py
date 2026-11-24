@@ -124,6 +124,112 @@ class LinkCarryoverTests(unittest.TestCase):
 
         self.assertEqual([(result.memory.id, result.links) for result in results], [(context.id, ())])
 
+    def test_rebuild_carries_a_live_link(self):
+        store = self.store("keep")
+        removed = store.add_message("the removed source", channel="private", speaker="alice")
+        source = store.add_message("the remaining source", channel="private", speaker="alice")
+        derived = store.add_memory(
+            "the derived summary", MemoryType.EPISODE,
+            source_message_ids=[removed.id, source.id],
+        )
+        context = store.add_memory("context for the summary", MemoryType.EPISODE)
+        store.relate(context.id, derived.id, Relationship.RELATED_TO)
+
+        store.retract_message(removed.id, actor_id="alice")
+        rebuilt = store.rebuild_stale(
+            lambda _stale, messages: " ".join(message.content for message in messages)
+        )
+
+        self.assertEqual(len(rebuilt), 1)
+        self.assertIsNotNone(rebuilt[0].rebuilt_id)
+        result = next(
+            item for item in store.search("context", record_access=False)
+            if item.memory.id == context.id
+        )
+        self.assertEqual(
+            result.links,
+            (Link(context.id, rebuilt[0].rebuilt_id, Relationship.RELATED_TO),),
+        )
+
+    def linked_pairs(self, store):
+        with store._transaction(write=False) as connection:
+            return {
+                (row["source_id"], row["target_id"], row["relation"])
+                for row in connection.execute(
+                    "SELECT source_id, target_id, relation FROM relationships "
+                    "WHERE relation != 'supersedes'"
+                )
+            }
+
+    def two_linked_derivations(self, store):
+        """Memories A and B, each from two messages, linked to each other."""
+        messages = [
+            store.add_message("source {} text".format(number), channel="private", speaker="alice")
+            for number in range(4)
+        ]
+        first = store.add_memory(
+            "summary of the first pair", MemoryType.EPISODE,
+            source_message_ids=[messages[0].id, messages[1].id])
+        second = store.add_memory(
+            "summary of the second pair", MemoryType.EPISODE,
+            source_message_ids=[messages[2].id, messages[3].id])
+        store.relate(first.id, second.id)
+        return messages, first, second
+
+    def join_sources(self, _stale, messages):
+        return " ".join(message.content for message in messages)
+
+    def test_rebuilding_both_ends_of_a_link_relinks_them_in_either_order(self):
+        for order in ((0, 2), (2, 0)):
+            with self.subTest(order=order):
+                store = MemoryStore(":memory:")
+                messages, first, second = self.two_linked_derivations(store)
+                for index in order:
+                    store.retract_message(messages[index].id, actor_id="alice")
+                rebuilt = {r.stale_id: r.rebuilt_id for r in store.rebuild_stale(self.join_sources)}
+                self.assertEqual(set(rebuilt), {first.id, second.id})
+                self.assertIn(
+                    (rebuilt[first.id], rebuilt[second.id], "related_to"),
+                    self.linked_pairs(store),
+                )
+
+    def test_a_link_to_a_memory_with_no_live_rebuild_is_not_carried(self):
+        store = MemoryStore(":memory:")
+        messages, first, second = self.two_linked_derivations(store)
+        # The second memory loses both of its sources, so it cannot be rebuilt.
+        store.retract_message(messages[0].id, actor_id="alice")
+        store.retract_message(messages[2].id, actor_id="alice")
+        store.retract_message(messages[3].id, actor_id="alice")
+        results = {r.stale_id: r.rebuilt_id for r in store.rebuild_stale(self.join_sources)}
+        self.assertIsNotNone(results[first.id])
+        self.assertIsNone(results[second.id])
+        touching = [pair for pair in self.linked_pairs(store) if results[first.id] in pair[:2]]
+        self.assertEqual(touching, [])
+
+    def test_a_link_to_an_archived_memory_is_not_carried(self):
+        store = MemoryStore(":memory:")
+        messages, first, second = self.two_linked_derivations(store)
+        with store._transaction() as connection:  # as pruning would
+            connection.execute(
+                "UPDATE memories SET archived_at = updated_at WHERE id = ?", (second.id,))
+        store.retract_message(messages[0].id, actor_id="alice")
+        (result,) = store.rebuild_stale(self.join_sources)
+        self.assertEqual(
+            [pair for pair in self.linked_pairs(store) if result.rebuilt_id in pair[:2]], [])
+
+    def test_a_failure_while_carrying_links_leaves_the_memory_queued(self):
+        from unittest import mock
+
+        store = MemoryStore(":memory:")
+        messages, first, _ = self.two_linked_derivations(store)
+        store.retract_message(messages[0].id, actor_id="alice")
+        before = len(store.list_memories(limit=100))
+        with mock.patch.object(MemoryStore, "_carry_rebuild_links", side_effect=RuntimeError("boom")):
+            with self.assertRaises(RuntimeError):
+                store.rebuild_stale(self.join_sources)
+        self.assertEqual([memory.id for memory in store.stale_memories()], [first.id])
+        self.assertEqual(len(store.list_memories(limit=100)), before)
+
     def test_unknown_policy_is_rejected(self):
         with self.assertRaises(ValueError):
             MemoryStore(":memory:", link_carryover="move")

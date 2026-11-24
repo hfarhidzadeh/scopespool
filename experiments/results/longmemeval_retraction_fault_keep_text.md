@@ -10,7 +10,7 @@ See the docstring of `experiments/longmemeval_retraction.py` for the design and 
 | 2 | Probe: before retraction the scan finds every distinctive shingle (and a backup copy the text) | 40 of 40 (100.0%) | every trial | True |
 | 3 | Specificity: only memories derived from retracted messages change | 40 of 40 (100.0%) | every trial | True |
 | 4 | Erasure: no distinctive shingle of a retracted message in any stored value | 0 of 40 (0.0%) | every trial | False |
-| 5 | Reads: no retracted text readable; unlinked reads rank like a store that never got the message | 40 of 40 (100.0%) | every trial | True |
+| 5 | Reads: no retracted text readable; reads rank like a store that never got the message | 40 of 40 (100.0%) | every trial | True |
 | 6 | Rebuild: rebuildable memories rebuilt from exactly their remaining sources | 0 of 40 (0.0%) | every trial | False |
 | 7 | Backup: with a key file, an earlier copy yields no retracted text | 40 of 40 (100.0%) | every trial | True |
 
@@ -20,7 +20,7 @@ Reported, not part of the verdict:
 
 - Messages sampled 4000; retractable (3 or more distinctive shingles): 3814 of 4000 (95.3%).
 - Memories derived from a retracted message: 80; of those, with a remaining source to rebuild from: 31 (in 22 trials).
-- Reads against the never-written reference, per query. Unlinked trials: identical 183, same ranking with other scores 0, different 0. Linked trials (not in the verdict): identical 153, same ranking 7, different 18.
+- Reads against the never-written reference, per query. Unlinked trials: identical 183, same ranking with other scores 0, different 0. Linked trials (also included in the reads verdict): identical 178, same ranking 0, different 0.
 - Trials in which the raw database file still holds the first 40 characters of a retracted message that no other message shares: 40 of 40 (100.0%).
 - Undeclared copies (memories repeating a retracted message without listing it as a source): 81 written, 81 still readable. The store cannot find them; this is a known limit.
 

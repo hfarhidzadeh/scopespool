@@ -138,13 +138,12 @@ class TrialTests(unittest.TestCase):
             self.assertEqual(result["copies"]["surviving"], result["copies"]["added"])
 
 
-    def test_a_rebuilt_memory_does_not_inherit_the_links_of_the_one_it_replaces(self):
-        # Found by this experiment: reads after a rebuild can rank differently from a
-        # store that never got the message, in linked trials only, because the rebuilt
-        # memory has no links. Reported, outside the verdict (see the script docstring).
+    def test_a_rebuilt_memory_inherits_live_links_of_the_one_it_replaces(self):
+        # Rebuilds carry links whose other endpoint remains live, so linked reads
+        # match the never-written reference as well as unlinked reads.
         linked = [lr.run_trial(seed) for seed in (1, 3, 5, 7, 9, 11)]
         self.assertTrue(all(r["reads"] for r in linked))
-        self.assertTrue(any(r["classes"]["different"] for r in linked if r["opportunities"]))
+        self.assertTrue(all(r["classes"]["different"] == 0 for r in linked if r["opportunities"]))
 
 
 class FaultTests(unittest.TestCase):
@@ -168,7 +167,7 @@ class FaultTests(unittest.TestCase):
         self.assertTrue(all(r["backup"] for r in results))
 
     def test_skipping_the_rebuild_fails_reads_where_a_memory_could_be_rebuilt(self):
-        results = [r for r in self.results("no-rebuild", 16) if r["opportunities"] and not r["linked"]]
+        results = [r for r in self.results("no-rebuild", 16) if r["opportunities"]]
         self.assertTrue(results)
         self.assertTrue(all(not r["reads"] for r in results))
 

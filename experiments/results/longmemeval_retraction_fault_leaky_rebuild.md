@@ -10,7 +10,7 @@ See the docstring of `experiments/longmemeval_retraction.py` for the design and 
 | 2 | Probe: before retraction the scan finds every distinctive shingle (and a backup copy the text) | 40 of 40 (100.0%) | every trial | True |
 | 3 | Specificity: only memories derived from retracted messages change | 40 of 40 (100.0%) | every trial | True |
 | 4 | Erasure: no distinctive shingle of a retracted message in any stored value | 40 of 40 (100.0%) | every trial | True |
-| 5 | Reads: no retracted text readable; unlinked reads rank like a store that never got the message | 18 of 40 (45.0%) | every trial | False |
+| 5 | Reads: no retracted text readable; reads rank like a store that never got the message | 18 of 40 (45.0%) | every trial | False |
 | 6 | Rebuild: rebuildable memories rebuilt from exactly their remaining sources | 18 of 40 (45.0%) | every trial | False |
 | 7 | Backup: with a key file, an earlier copy yields no retracted text | 40 of 40 (100.0%) | every trial | True |
 
@@ -20,7 +20,7 @@ Reported, not part of the verdict:
 
 - Messages sampled 4000; retractable (3 or more distinctive shingles): 3814 of 4000 (95.3%).
 - Memories derived from a retracted message: 80; of those, with a remaining source to rebuild from: 31 (in 22 trials).
-- Reads against the never-written reference, per query. Unlinked trials: identical 79, same ranking with other scores 45, different 59. Linked trials (not in the verdict): identical 78, same ranking 49, different 51.
+- Reads against the never-written reference, per query. Unlinked trials: identical 79, same ranking with other scores 45, different 59. Linked trials (also included in the reads verdict): identical 78, same ranking 45, different 55.
 - Trials in which the raw database file still holds the first 40 characters of a retracted message that no other message shares: 0 of 40 (0.0%).
 - Undeclared copies (memories repeating a retracted message without listing it as a source): 81 written, 81 still readable. The store cannot find them; this is a known limit.
 

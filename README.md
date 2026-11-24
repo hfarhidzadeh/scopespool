@@ -355,12 +355,12 @@ answer-text hits found no leak (controls valid; see
 
 Retraction on real text (`experiments/longmemeval_retraction.py`, 200 trials):
 after a message is retracted, none of its distinctive words remained in any stored
-value or any read, unlinked reads matched a store that never got the message, rebuild
-used only the remaining sources, and a key-file backup recovered nothing. Four
-injected faults were each caught. One difference was found: in linked workspaces a
-rebuilt memory does not inherit the old memory's links, so some reads rank differently
-from a never-written store (not a leak). Text copied into a memory that does not list
-the message as a source is not found by the store. Results:
+value or any read, reads matched a store that never got the message (linked and
+unlinked, 1,798 of 1,798 queries), rebuild used only the remaining sources and kept
+the links to live memories, and a key-file backup recovered nothing. Four injected
+faults were each caught. Two flaws in link carry-over were found and fixed along the
+way (see the review document). Text copied into a memory that does not list the
+message as a source is not found by the store. Results:
 `experiments/results/longmemeval_retraction.md`. Results: `experiments/results/longmemeval_shared_workspace.md`.
 
 ```bash

@@ -58,9 +58,9 @@ Checks, per trial.
   embedding is kept for a memory that lost a source.
 - Reads: after the retraction, and again after the rebuild, no result of any
   panel query, no message and no listed memory read for the audience holds a
-  distinctive shingle of a retracted message; and, in the trials without
-  links, after the rebuild no panel query's result has a different ranking
-  from the reference's (the same memories in the same order; scores may differ
+  distinctive shingle of a retracted message; and, in every trial (linked or
+  not), after the rebuild no panel query's result has a different ranking from
+  the reference's (the same memories in the same order; scores may differ
   within the tolerance 1e-9 or not at all, and are reported). A read that
   returns a different memory list from the reference counts as different.
 - Rebuild: ``rebuild_stale`` with the extractive consolidator rebuilds every
@@ -75,10 +75,9 @@ Checks, per trial.
   memory, while every retained message still reads correctly from it.
 
 Reported, not part of the verdict: how often a message was retractable (the
-rest repeat their words elsewhere); in linked trials, how often reads equal the
-reference (identical, same ranking with different scores or links, or
-different); in unlinked trials, how often scores or links differ although the
-ranking is the same; trials whose raw file still holds the first 40 characters of
+rest repeat their words elsewhere); how often reads equal the reference
+(identical, or the same ranking with different scores or links), in linked and
+unlinked trials separately; trials whose raw file still holds the first 40 characters of
 a retracted message (only prefixes that no other message shares count); memories derived from retracted messages; and the
 undeclared-copy probe: copies of a retracted message's text written as memories
 that do not list it as a source are not found by the store, and this counts how
@@ -105,8 +104,8 @@ least 95% of the trials named:
     every trial.
   leaky-rebuild (the consolidator also writes the first 15 words of a retracted
     message): rule 6 fails in every trial where some memory can be rebuilt.
-  no-rebuild (rebuild_stale is never called): rule 5 fails in every unlinked
-    trial where some memory can be rebuilt, because the reference holds those
+  no-rebuild (rebuild_stale is never called): rule 5 fails in every trial
+    where some memory can be rebuilt, because the reference holds those
     memories.
 The expected pattern of every other rule is not part of the criterion.
 
@@ -115,13 +114,31 @@ the endpoints of links that were outside a read's top 10 by memory id, which
 differs between two stores, so every linked read looked "different" in its links.
 That was the harness, not the store; endpoints are now labelled by their text.
 
-Second design-time finding (found by the unit tests, before any recorded run):
-in a linked trial, a memory rebuilt after a retraction can rank differently
-from the same memory in a store that never got the message, even though its raw
-lexical and vector scores are identical, because the rebuilt memory does not
-inherit the links of the stale memory it replaces and so loses the graph bonus.
-That is why linked reads are reported and kept out of the verdict. It is not a
-leak; it is a difference from "never written" that this run measures.
+Second design-time finding (run 1, before the store changed): a memory rebuilt
+after a retraction did not inherit the links of the stale memory it replaces, so
+in linked trials it lost the graph bonus and ranked differently from the same
+memory in a store that never got the message, although its raw lexical and vector
+scores were identical (163 of 900 linked queries). Run 1 kept linked reads out
+of the verdict for that reason.
+
+Fifth finding (run 2, found when the researcher's carry-over was reviewed): the
+first carry-over copied a link only if the other end was live at that moment.
+When both ends of a link lose a source, each is stale while the other is
+rebuilt, so the link between the two rebuilt memories was lost (4 of 900 linked
+queries differed in scores or links in run 2, probably for this reason: they
+vanished after the fix but were not traced one by one; a unit test reproduces
+the case). The store
+now points a link at the live counterpart of a stale end, that is the memory that
+rebuilt it, and does the carrying inside the transaction that writes the rebuild.
+
+Runs. Run 1 (committed in c7a7a94; reports in
+``experiments/results/longmemeval_retraction_run1_superseded/``): linked reads
+outside the verdict; 163 of 900 linked queries differed from the reference.
+Run 2 (the researcher's first carry-over; its reports were overwritten and only
+its figures survive: linked reads identical 896, same ranking 4, different 0).
+Run 3 (this one): the store carries links to live counterparts; linked reads
+are in the verdict (rule 5) and the fault criteria cover every trial. The data,
+scan and other rules are those of run 1, and all fault validations were rerun.
 
 Third design-time finding (the first full run, discarded): the scan matched a
 shingle as a plain substring, so the retracted window "it in the form of a" was
@@ -507,8 +524,9 @@ def run(trial: dict, flaw=None) -> dict:
         classes = [compare(a, b) for a, b in zip(panel_after, read_panel(reference, trial))]
         reference.close()
         store.close()
-        if not trial["linked"]:
-            reads_ok = reads_ok and "different" not in classes
+        # Link carryover is part of the never-written equivalence check for
+        # both linked and unlinked trials.
+        reads_ok = reads_ok and "different" not in classes
         result["reads"] = reads_ok
         result["classes"] = {k: classes.count(k) for k in ("identical", "same-ranking", "different")}
         alone = [trial["texts"][i][:RAW_PREFIX] for i in sorted(retracted)
@@ -623,7 +641,7 @@ def validate_fault(flaw: str, trials: list) -> dict:
     name = RULES[rule]
     scope = trials
     if flaw in FAULT_NEEDS_REBUILD:
-        scope = [t for t in trials if t["opportunities"] and (flaw != "no-rebuild" or not t["linked"])]
+        scope = [t for t in trials if t["opportunities"]]
     failed = sum(not t[name] for t in scope)
     share = failed / len(scope) if scope else 0.0
     return {"fault": flaw, "rule": rule, "trials_in_scope": len(scope), "failed": failed,
@@ -655,7 +673,7 @@ def render(report: dict) -> str:
         (2, "Probe: before retraction the scan finds every distinctive shingle (and a backup copy the text)"),
         (3, "Specificity: only memories derived from retracted messages change"),
         (4, "Erasure: no distinctive shingle of a retracted message in any stored value"),
-        (5, "Reads: no retracted text readable; unlinked reads rank like a store that never got the message"),
+        (5, "Reads: no retracted text readable; reads rank like a store that never got the message"),
         (6, "Rebuild: rebuildable memories rebuilt from exactly their remaining sources"),
         (7, "Backup: with a key file, an earlier copy yields no retracted text"),
     )
@@ -677,8 +695,8 @@ def render(report: dict) -> str:
         " rebuild from: {} (in {} trials).".format(
             summary["dependents"], summary["opportunities"], summary["trials_with_opportunity"]),
         "- Reads against the never-written reference, per query. Unlinked trials: identical {},"
-        " same ranking with other scores {}, different {}. Linked trials (not in the verdict):"
-        " identical {}, same ranking {}, different {}.".format(
+        " same ranking with other scores {}, different {}. Linked trials (also included in the"
+        " reads verdict): identical {}, same ranking {}, different {}.".format(
             unlinked["identical"], unlinked["same-ranking"], unlinked["different"],
             linked["identical"], linked["same-ranking"], linked["different"]),
         "- Trials in which the raw database file still holds the first 40 characters of a"
