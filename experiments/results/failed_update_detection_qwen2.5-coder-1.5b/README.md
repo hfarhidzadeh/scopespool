@@ -1,4 +1,6 @@
-# Failed update-detection diagnostic
+# ScopeSpool update-detection diagnostic
+
+This directory documents an incomplete historical ScopeSpool run.
 
 **Disposition (2026-11-19): retain this incomplete run for provenance; exclude
 it from accepted results and the active cache.** The original JSONL was moved

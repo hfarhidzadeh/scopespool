@@ -1,6 +1,6 @@
-# Memvane
+# ScopeSpool
 
-Memvane is a local-first prototype for **self-evolving agent memory**. It
+ScopeSpool is a local-first prototype for **self-evolving agent memory**. It
 demonstrates typed memory, explicit knowledge links, hybrid retrieval, and
 conservative memory pruning in a small Python package backed by SQLite.
 
@@ -45,15 +45,23 @@ Python 3.9 or newer.
 
 ## Install
 
+For a fresh checkout:
+
+```bash
+git clone https://github.com/hfarhidzadeh/scopespool.git
+cd scopespool
+```
+
+From the repository root:
+
 ```bash
 python -m pip install -e .
 python -m pip install -e '.[embeddings]'   # optional: semantic vectors
 ```
 
-The package and command are now `memvane`; reinstall after updating an older
-checkout. Python imports remain `dynmemory`. The default database remains
-`.memora.sqlite3` for compatibility with existing stores; use `--db` to select
-another path. Existing database contents need no migration for this rename.
+The installed package and command are `scopespool`, and Python imports use
+`dynmemory`. The default database is `.memora.sqlite3` for compatibility with
+existing stores. Use `--db` to select another path.
 
 Or run from a checkout without installing:
 
@@ -64,23 +72,23 @@ PYTHONPATH=src python -m dynmemory --help
 ## Quick start
 
 ```bash
-memvane --db ./agent-memory.sqlite3 init
-memvane --db ./agent-memory.sqlite3 add \
+scopespool --db ./agent-memory.sqlite3 init
+scopespool --db ./agent-memory.sqlite3 add \
   "Prefer SQLite for local memory storage." \
   --type user_preference --key storage.backend --importance 0.8
-memvane --db ./agent-memory.sqlite3 add \
+scopespool --db ./agent-memory.sqlite3 add \
   "The agent's memory must stay on the user's machine." \
   --type technical_constraint
-memvane --db ./agent-memory.sqlite3 search "SQLite"
-memvane --db ./agent-memory.sqlite3 list
+scopespool --db ./agent-memory.sqlite3 search "SQLite"
+scopespool --db ./agent-memory.sqlite3 list
 ```
 
-The `add` command prints each new memory's ID. Use `memvane link <source-id>
+The `add` command prints each new memory's ID. Use `scopespool link <source-id>
 <target-id> --relation supports` to connect two active memories; searching one
 can then also retrieve the other.
 
 Bad input (an unknown ID, a confidence above 1, a missing file) prints a
-one-line `memvane: error: ...` message and exits with status 1.
+one-line `scopespool: error: ...` message and exits with status 1.
 
 ## Links and versions
 
@@ -95,7 +103,7 @@ continue the same history. A memory can only supersede an older one; to bring
 back earlier content, add it again as a new memory.
 
 ```bash
-memvane --db ./agent-memory.sqlite3 history <memory-id>
+scopespool --db ./agent-memory.sqlite3 history <memory-id>
 ```
 
 `history` accepts any version and prints all of them, newest first. If pruning
@@ -439,15 +447,15 @@ that name a member and expire (`issue(member_id, ttl_seconds=...)`,
 returns a reader and a writer bound to the verified member, so untrusted code
 never chooses an identity.
 
-`dynmemory.server.MemvaneServer` serves a store over a Unix socket created with
+`dynmemory.server.ScopeSpoolServer` serves a store over a Unix socket created with
 owner-only permissions. Every request carries a token; reads run as the
 verified audience and writes as the verified member, and administrative calls
-are not exposed. `MemvaneClient(socket_path, token)` is the matching client.
+are not exposed. `ScopeSpoolClient(socket_path, token)` is the matching client.
 
 ```bash
-memvane new-secret ./secret                         # 32 random bytes, mode 0600
-memvane --db team.sqlite3 serve --socket ./memvane.sock --secret-file ./secret
-memvane token alice --secret-file ./secret          # give this token to alice
+scopespool new-secret ./secret                         # 32 random bytes, mode 0600
+scopespool --db team.sqlite3 serve --socket ./scopespool.sock --secret-file ./secret
+scopespool token alice --secret-file ./secret          # give this token to alice
 ```
 
 ### Equivalence and update detection
@@ -471,10 +479,10 @@ turns on encryption. The CLI still authenticates nobody: anyone who can run it
 on the database file can choose those options.
 
 ```bash
-memvane --db team.sqlite3 channel join design alice
-memvane --db team.sqlite3 --as alice message add "Review is Thursday" --channel design
-memvane --db team.sqlite3 --viewers carol disputes
-memvane --db team.sqlite3 --viewers carol who-knows MEMORY_ID
+scopespool --db team.sqlite3 channel join design alice
+scopespool --db team.sqlite3 --as alice message add "Review is Thursday" --channel design
+scopespool --db team.sqlite3 --viewers carol disputes
+scopespool --db team.sqlite3 --viewers carol who-knows MEMORY_ID
 ```
 
 ## Embeddings
@@ -482,8 +490,8 @@ memvane --db team.sqlite3 --viewers carol who-knows MEMORY_ID
 Choose a backend with `--embedder` before the command:
 
 ```bash
-memvane --db ./agent-memory.sqlite3 --embedder ngram search "invoice"
-memvane --db ./agent-memory.sqlite3 --embedder sentence-transformers search "short responses"
+scopespool --db ./agent-memory.sqlite3 --embedder ngram search "invoice"
+scopespool --db ./agent-memory.sqlite3 --embedder sentence-transformers search "short responses"
 ```
 
 | Backend | Needs | Finds | Default `--min-similarity` |
@@ -530,11 +538,11 @@ never accessed. Memories idle for at least `--min-age-days` that score below
 `--threshold` are candidates. Pruning is a dry-run by default:
 
 ```bash
-memvane --db ./agent-memory.sqlite3 prune --min-age-days 30
-memvane --db ./agent-memory.sqlite3 prune --decay episode=14 --decay task=30
-memvane --db ./agent-memory.sqlite3 prune --min-age-days 30 --apply
-memvane --db ./agent-memory.sqlite3 list --include-archived
-memvane --db ./agent-memory.sqlite3 restore <memory-id>
+scopespool --db ./agent-memory.sqlite3 prune --min-age-days 30
+scopespool --db ./agent-memory.sqlite3 prune --decay episode=14 --decay task=30
+scopespool --db ./agent-memory.sqlite3 prune --min-age-days 30 --apply
+scopespool --db ./agent-memory.sqlite3 list --include-archived
+scopespool --db ./agent-memory.sqlite3 restore <memory-id>
 ```
 
 - `--decay KIND=DAYS` gives one memory type its own decay (repeatable);
@@ -548,9 +556,9 @@ memvane --db ./agent-memory.sqlite3 restore <memory-id>
 ## Evaluation
 
 ```bash
-memvane eval eval/synthetic_set.json
-memvane --embedder ngram eval eval/synthetic_set.json
-memvane --embedder sentence-transformers eval eval/synthetic_set.json --json
+scopespool eval eval/synthetic_set.json
+scopespool --embedder ngram eval eval/synthetic_set.json
+scopespool --embedder sentence-transformers eval eval/synthetic_set.json --json
 ```
 
 An evaluation set is a JSON file with `memories` (key → content and kind),
@@ -641,7 +649,7 @@ being used as research conclusions.
 
 [LongMemEval](https://arxiv.org/abs/2410.10813) (Wu et al., ICLR 2025; MIT
 licence) is a public benchmark of long chat histories with questions about
-them. It contains no patient data. Memvane converts it into evaluation suites:
+them. It contains no patient data. ScopeSpool converts it into evaluation suites:
 
 ```bash
 mkdir -p data/longmemeval
@@ -650,7 +658,7 @@ curl -L -o data/longmemeval/longmemeval_s_cleaned.json \
 PYTHONPATH=src python -m dynmemory.longmemeval data/longmemeval/longmemeval_s_cleaned.json \
   --labels eval/longmemeval_knowledge_update_labels.json \
   --out data/longmemeval/knowledge_update.jsonl
-memvane --link-carryover topic eval data/longmemeval/knowledge_update.jsonl
+scopespool --link-carryover topic eval data/longmemeval/knowledge_update.jsonl
 ```
 
 The download is 277 MB. Each question becomes one evaluation set: the user's

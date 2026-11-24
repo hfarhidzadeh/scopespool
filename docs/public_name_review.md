@@ -1,4 +1,33 @@
-# Public name review — 2026-11-19
+# Public name review
+
+## Current name, 2026-11-24
+
+The GitHub repository was renamed to [ScopeSpool](https://github.com/hfarhidzadeh/scopespool).
+The applied rename covers the repository name. The installed package and
+command currently use `memvane`, and Python imports use `dynmemory`.
+
+## Memvane collision check, 2026-11-24
+
+**Recommendation: choose a different public name.** A second public project
+uses **MemVane** for a plugin that retrieves project documents, notes, and
+wiki context for coding agents. Its name matched the former repository name when case is ignored, and both
+projects serve agent memory or context workflows.
+[Other MemVane project](https://github.com/zbdulee/memvane)
+
+Verisign records `memvane.com` as registered since September 13, 2026.
+Registrant identity and any relationship to the other project are
+unconfirmed. The exact PyPI and npm registry lookups returned 404 at the time
+of this check. Registry occupancy can change separately from public name use.
+[Verisign registration record](https://rdap.verisign.com/com/v1/domain/memvane.com)
+· [PyPI lookup](https://pypi.org/pypi/memvane/json)
+· [npm registry lookup](https://registry.npmjs.org/memvane)
+
+This check documents a software naming collision. Formal trademark clearance
+remains outside its scope. Use the [USPTO search](https://tmsearch.uspto.gov/search/),
+[WIPO Global Brand Database](https://www.wipo.int/en/web/global-brand-database/index),
+and [EUIPO search tools](https://www.euipo.europa.eu/en/search-ip) for a formal launch review.
+
+## Original decision, 2026-11-19
 
 **Decision: rename this project to Memvane (repository/package/CLI: `memvane`).**
 The owner selected this name on 2026-11-19. Initial exact-name web searches,

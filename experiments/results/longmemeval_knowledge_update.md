@@ -1,5 +1,7 @@
 # Knowledge updates on LongMemEval
 
+ScopeSpool project note: this report uses the historical name Memora for the recorded run.
+
 **Status: provisional historical results.** The November 19, 2026
 [70-label review](../../docs/longmemeval_label_review.md) found three recommended
 category changes and further evidence/update-semantics issues. All numbers and

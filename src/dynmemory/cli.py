@@ -1,9 +1,9 @@
-"""Command-line interface for the Memvane memory prototype.
+"""Command-line interface for the ScopeSpool memory prototype.
 
 The CLI is an administrative tool for someone who can open the database file:
 it authenticates no one. ``--viewers`` scopes reads to an audience and ``--as``
 writes as a bound member (with membership checks), but anyone running the CLI
-can choose them. Untrusted users belong behind ``memvane serve`` with tokens.
+can choose them. Untrusted users belong behind ``scopespool serve`` with tokens.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def _names(text: str) -> list[str]:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="memvane",
+        prog="scopespool",
         description="A local-first typed memory store for agent prototypes.",
     )
     parser.add_argument(
@@ -492,9 +492,9 @@ def _run(args: argparse.Namespace) -> int:
         _print_json(store.rebuild_stale(ExtractiveConsolidator(), limit=args.limit))
     elif args.command == "serve":
         from .auth import TokenAuthority
-        from .server import MemvaneServer
+        from .server import ScopeSpoolServer
 
-        server = MemvaneServer(args.socket, store, TokenAuthority(_read_secret(args.secret_file)))
+        server = ScopeSpoolServer(args.socket, store, TokenAuthority(_read_secret(args.secret_file)))
         print("Serving {} on {} (Ctrl-C to stop)".format(args.db, args.socket), flush=True)
         try:
             server.serve_forever()
@@ -510,7 +510,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         return _run(args)
     except (ValueError, ImportError, OSError, sqlite3.Error) as error:
-        print("memvane: error: {}".format(error), file=sys.stderr)
+        print("scopespool: error: {}".format(error), file=sys.stderr)
         return 1
 
 

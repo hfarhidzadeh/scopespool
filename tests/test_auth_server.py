@@ -11,7 +11,7 @@ from pathlib import Path
 
 from dynmemory import MemoryStore, MemoryType
 from dynmemory.auth import AuthenticationError, TokenAuthority, open_session, reader_for_tokens
-from dynmemory.server import MemvaneClient, MemvaneServer, RemoteError, handle_request
+from dynmemory.server import ScopeSpoolClient, ScopeSpoolServer, RemoteError, handle_request
 
 FACT = MemoryType.FACT
 
@@ -112,14 +112,14 @@ class ServerTests(unittest.TestCase):
         self.store.join_channel("board", "bob")
         self.authority = TokenAuthority(TokenAuthority.generate_secret())
         self.socket_path = self.directory / "s.sock"
-        self.server = MemvaneServer(self.socket_path, self.store, self.authority)
+        self.server = ScopeSpoolServer(self.socket_path, self.store, self.authority)
         thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         thread.start()
         self.addCleanup(self.server.server_close)
         self.addCleanup(self.server.shutdown)
 
     def client(self, member):
-        return MemvaneClient(self.socket_path, self.authority.issue(member))
+        return ScopeSpoolClient(self.socket_path, self.authority.issue(member))
 
     def test_the_socket_is_owner_only(self):
         mode = stat.S_IMODE(os.stat(self.socket_path).st_mode)
@@ -143,7 +143,7 @@ class ServerTests(unittest.TestCase):
 
     def test_bad_tokens_admin_calls_and_bad_requests_are_refused(self):
         with self.assertRaisesRegex(RemoteError, "authentication failed"):
-            MemvaneClient(self.socket_path, "forged").search("launch")
+            ScopeSpoolClient(self.socket_path, "forged").search("launch")
         alice = self.client("alice")
         for operation, arguments in (
             ("join_channel", {"channel": "board", "member_id": "alice"}),
@@ -172,9 +172,9 @@ class ServerTests(unittest.TestCase):
 
     def test_an_existing_socket_path_is_not_clobbered_and_long_paths_are_refused(self):
         with self.assertRaises(FileExistsError):
-            MemvaneServer(self.socket_path, self.store, self.authority)
+            ScopeSpoolServer(self.socket_path, self.store, self.authority)
         with self.assertRaisesRegex(ValueError, "too long"):
-            MemvaneServer(self.directory / ("x" * 120), self.store, self.authority)
+            ScopeSpoolServer(self.directory / ("x" * 120), self.store, self.authority)
 
 
 if __name__ == "__main__":

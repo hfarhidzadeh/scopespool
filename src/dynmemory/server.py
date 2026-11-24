@@ -131,7 +131,7 @@ class _Handler(socketserver.StreamRequestHandler):
         self.wfile.flush()
 
 
-class MemvaneServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
+class ScopeSpoolServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
     """A threaded Unix-socket server for one store."""
 
     daemon_threads = True
@@ -169,8 +169,8 @@ class RemoteError(ValueError):
     """The server refused a request."""
 
 
-class MemvaneClient:
-    """Call a ``MemvaneServer`` as one member, optionally with more viewers."""
+class ScopeSpoolClient:
+    """Call a ``ScopeSpoolServer`` as one member, optionally with more viewers."""
 
     def __init__(self, socket_path: Union[str, Path], token: str, *, timeout: float = 10.0) -> None:
         self.socket_path = str(socket_path)
@@ -203,3 +203,8 @@ class MemvaneClient:
 
     def retract_message(self, message_id: str):
         return self.call("retract_message", message_id=message_id)
+
+
+# The earlier names, kept so existing code keeps working.
+MemvaneServer = ScopeSpoolServer
+MemvaneClient = ScopeSpoolClient

@@ -1,5 +1,7 @@
 # Staying silent on LongMemEval
 
+ScopeSpool project note: this report uses the historical name Memora for the recorded run.
+
 **Question.** Search always returns its best matches, so when the answer was
 never stored it hands back something unrelated or misleading. Can Memora tell
 from its own search signals that it has nothing to say, while still speaking

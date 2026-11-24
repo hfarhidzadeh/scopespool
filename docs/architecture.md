@@ -1,4 +1,4 @@
-# Memvane architecture
+# ScopeSpool architecture
 
 How the code is organised, what it stores, and what happens on each read and
 write. Rules and their rationale are in the [README](../README.md) and, for the
@@ -23,7 +23,7 @@ page describes the system as built at schema version 7.
 
 ## Overview
 
-Memvane is one Python package, `dynmemory`, with no runtime dependencies. Its
+ScopeSpool is implemented in the `dynmemory` Python module and has no runtime dependencies. Its
 core is `MemoryStore`, a class over one SQLite file. Everything else either
 calls the store (the CLI, the readers and writers bound to a person, the
 evaluation harness, the experiments) or supplies it with vectors (the
@@ -47,7 +47,7 @@ src/dynmemory/
   consolidation.py  Consolidator protocol, ExtractiveConsolidator (rebuilds)
   detection.py    claim equivalence and update-detection interfaces, baselines
   auth.py         TokenAuthority (signed member tokens), sessions
-  server.py       MemvaneServer and MemvaneClient over a Unix socket
+  server.py       ScopeSpoolServer and ScopeSpoolClient over a Unix socket
   evaluation.py   labelled evaluation sets, retrieval and pruning reports,
                   negative controls
   longmemeval.py  converts LongMemEval questions into evaluation sets
