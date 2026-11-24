@@ -1066,7 +1066,63 @@ and fault criteria were fixed in the docstring before the recorded run.
   characters that other messages share. Neither changed a rule.
 - **Limits:** the derived memories are extractive joins, not model summaries; the
   channel structure is invented; a paraphrase of a retracted message, near-duplicate
-  text, a model consolidator and the `record_access` side channel are not tested.
+  text and a model consolidator are not tested (the `record_access` side channel is covered in its own entry).
+
+**The `record_access` side channel, 2026-11-24.** `search` records each read by
+default (`access_count` +1, `last_accessed_at` set on every returned memory). The
+counters belong to the memory, so every member who can see it sees them, and `prune`
+uses them. Script: `experiments/audience_access_channel.py`; report:
+`experiments/results/audience_access_channel.md`. Alice reads in `team` (members alice,
+bob); bob never reads and only observes, using reads that record nothing. Design, controls
+and decision rule were fixed in the docstring before the recorded run.
+
+- **Result (500 trials, synthetic):** verdict "reads leave a trace other members can see".
+  Bob saw that someone read in 500 of 500 trials and named alice's topic from the counters
+  in 500 of 500 (chance 12.5%); the changed set equalled exactly the returned memories he
+  can see, and the read time was visible in every trial. The same inference worked from
+  which memories survive a later `prune` (500 of 500), because her reads keep memories
+  alive for everyone.
+- **What holds:** a read changed no counter visible to a member of another channel, and
+  bob's own ranking was identical before and after (500 of 500 each). With
+  `record_access=False` (the CLI's `--peek`) a read left no trace.
+- **Validation:** a fault that records access outside the reader's view failed the
+  hidden-channel rule in 100 of 100 trials; a fault that boosts scores by access count
+  failed the ranking rule in 100 of 100.
+- **Not decided:** how to close it. Options: make reads with `viewers` silent by default;
+  keep counters per viewer or audience; hide counters from member views while `prune` still
+  reflects reads. No mitigation is built or tested.
+- **Limits:** one reader and one query with unique topic tokens (the easy case for an
+  observer); no mitigation; the counters belong to the memory by design.
+
+**LongMemEval version 3: required evidence and supersession as two annotations, 2026-11-24.**
+The converter took the order of the evidence turns as the order of replacement and
+scored a question by its first relevant hit, which can archive evidence the answer
+needs (the coin count that is added to; Hawaii and Paris as separate trips). Version 3
+(`src/dynmemory/longmemeval_v3.py`, `experiments/longmemeval_v3.py`, report
+`experiments/results/longmemeval_v3.md`) annotates each question with required evidence
+groups and with supersession relations (`supersedes`, `adds_to`, `independent`); only
+`supersedes` becomes an update, and the evaluator reports `all required@10`. The annotations
+come from the AI labels and the AI review, are not human-adjudicated, and sit in an editable
+file; the three category changes the AI review recommended are applied (2133c1b5 excluded,
+cf22b7bf and 5c40ec5b context), the two more that an AI-filled sheet proposed are not.
+
+- **Controls (all held):** a question with no `supersedes` edge is unchanged by applying
+  updates; archiving every required turn takes all required@10 to 0; archiving random
+  non-required turns moves the mean by under 0.02.
+- **Result (68 questions):** for the 6 questions needing two pieces, applying updates leaves
+  first hit@10 at 1.000 and takes all required@10 to 0.167 (lexical); the old metric hid this.
+  11 of 68 questions need evidence that is also marked superseded, and all 11 lose it under
+  the oracle (structural, not a detector's error). For current-value questions all required@10
+  is at ceiling (0.957) but reciprocal rank rises by 0.16 and stale-first falls from 0.47 to 0.
+  MiniLM against lexical with updates kept: 0.985 against 0.941, not clear (p 0.375).
+- **Dropped:** dropping the 5 contested questions changes none of the readings. Reciprocal
+  rank and stale-first (A') were added to the report after a smoke run showed all required@10
+  at ceiling for current questions; the decision rule was not changed.
+- **Limits:** annotations are provisional and the human label review is still open; only 6
+  questions need two pieces; the oracle is perfect detection; results are not comparable with
+  versions 1 and 2. A positive control built on "the last non-required memory" could not
+  archive a required turn that was itself last (found by the unit tests); it now supersedes
+  through an appended placeholder memory.
 
 **The remaining "not built" items, 2026-11-19.** Asked to solve all of them,
 the model built each one up to where a human decision is needed.

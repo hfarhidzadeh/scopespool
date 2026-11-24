@@ -342,6 +342,13 @@ the viewer's own channel (positive control). The data were written alongside
 the code, so this shows the mechanism, not how often it matters in real use.
 Results: `experiments/results/audience_side_channel.md`.
 
+Reads are recorded by default, and the counters they update are shared. In
+`experiments/audience_access_channel.py` (500 trials) another member of the channel
+named the topic of a reader's query from the memories whose `access_count` changed in
+every trial, and also from what a later `prune` kept; nothing changed for members of other
+channels. A read with `record_access=False` (`--peek`) leaves no trace. This is an open
+exposure: no mitigation is built. Results: `experiments/results/audience_access_channel.md`.
+
 On real text, `experiments/longmemeval_shared_workspace.py` treats LongMemEval
 question histories as shared workspaces (private, shared and team channels,
 a joiner and a leaver, canaries, cross-channel links). Over 601 workspaces and
@@ -681,6 +688,45 @@ In the historical runs on the 50 questions originally labelled “current”:
   value or both values, MRR fell from 0.53 to 0.24.
 - **MiniLM at its default settings lowered MRR** compared with lexical search
   alone (0.63 against 0.72).
+
+## LongMemEval: required evidence and supersession (version 3, provisional)
+
+The [label review](docs/longmemeval_label_review.md) found that the converter
+used the order of the evidence turns to decide which facts replace older ones, and
+scored a question by its first relevant hit. Both are wrong for some questions: a
+coin count that is *added to* is not replaced, two trips are not versions of one
+fact, and a question that needs two pieces of evidence is not answered by finding one.
+
+`dynmemory.longmemeval_v3` gives each question two annotations. **Required groups**
+say which evidence the answer needs (all groups, and any one turn of a group).
+**Supersession** says whether a newer turn replaces an older one (`supersedes`),
+adds to it (`adds_to`) or is a separate event (`independent`); only `supersedes`
+becomes an update. The annotations are derived from the AI labels and the AI
+review, are **not human-adjudicated**, and live in an editable file,
+[eval/longmemeval_knowledge_update_annotations_v3.json](eval/longmemeval_knowledge_update_annotations_v3.json).
+The evaluator reports `all required@10`, the share of questions with every required
+group in the top 10.
+
+[experiments/longmemeval_v3.py](experiments/longmemeval_v3.py) (design, controls and
+decision rule fixed in its docstring; report in
+[experiments/results/longmemeval_v3.md](experiments/results/longmemeval_v3.md)).
+On the 68 annotated questions, lexical and MiniLM, all three controls held:
+
+- **The old metric overstated the harm of archiving.** On the 6 questions that need two
+  pieces, applying the supersession edges leaves first hit@10 at 1.000 (lexical) but takes
+  all required@10 to 0.167. Archiving needed evidence is structural: 11 of 68 questions
+  need evidence that is also marked superseded, and all 11 lose it (a positive control
+  confirms the metric sees this).
+- **On current-value questions, top-10 coverage is already near ceiling** (0.957, so all
+  required@10 does not move), but ranking improves: reciprocal rank +0.16 and the share
+  where an outdated turn ranks first falls from 0.47 to 0 (lexical; similar for MiniLM).
+- **MiniLM against lexical, updates kept:** all required@10 0.985 against 0.941; not a
+  clear difference (p 0.375, 4 questions better, 1 worse).
+
+These are not comparable with the version 1 and 2 numbers, whose cohorts, update edges and
+metric differed. The updates are an oracle, so "applied" is the best case. Only 6 questions
+need two pieces, so those figures are descriptive. Dropping the 5 contested questions
+changes none of the readings.
 
 ## LongMemEval: silence
 

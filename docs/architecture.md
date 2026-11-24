@@ -51,6 +51,8 @@ src/dynmemory/
   evaluation.py   labelled evaluation sets, retrieval and pruning reports,
                   negative controls
   longmemeval.py  converts LongMemEval questions into evaluation sets
+  longmemeval_v3.py  version 3 conversion: required evidence and supersession
+                  as two annotations
   __init__.py     public exports
 eval/             evaluation sets and the LongMemEval label files
 experiments/      one script per experiment, and results/ (reports and JSON)
@@ -326,6 +328,8 @@ a Markdown and JSON report to `experiments/results/`.
 | --- | --- |
 | `longmemeval_knowledge_update.py` | Should links carry over to a fact's new version? |
 | `longmemeval_silence.py` | Can a score gate tell when there is no answer? |
+| `audience_access_channel.py` | Does a read leave a trace (access counters, prune) that another member can see? |
+| `longmemeval_v3.py` | Do updates help or hurt once required evidence is scored in full? (provisional) |
 | `longmemeval_update_detection.py` | Can a small local model find updates itself? (The recorded run failed its validity check and is archived.) |
 | `audience_side_channel.py` | Can a viewer detect words in memories they cannot see through scores? |
 | `audience_link_paths.py` | Do links (graph hop, contradiction flags, topic carry-over) reveal hidden memories? |
@@ -349,11 +353,11 @@ PYTHONPATH=src python3 -m unittest discover -s tests
 | Area | Files |
 | --- | --- |
 | Store, CLI, embeddings, links | `test_store.py`, `test_cli.py`, `test_embeddings.py`, `test_link_carryover.py` |
-| Evaluation harness and conversion | `test_eval.py`, `test_longmemeval.py`, `test_experiment_statistics.py`, `test_update_detection.py` |
+| Evaluation harness and conversion | `test_eval.py`, `test_longmemeval.py`, `test_longmemeval_v3.py`, `test_longmemeval_v3_experiment.py`, `test_experiment_statistics.py`, `test_update_detection.py` |
 | Channels, viewers, writers, sources | `test_audience.py`, `test_claim_resolution.py` |
 | Disputes, who-knows, encryption, rebuild | `test_disputes_who_knows.py`, `test_encryption_and_rebuild.py` |
 | Tokens, sessions, the server, detection | `test_auth_server.py`, `test_detection.py` |
-| The audience experiments | `test_audience_side_channel.py`, `test_audience_link_paths.py`, `test_audience_utility.py`, `test_audience_noninterference.py`, `test_audience_write_outcomes.py`, `test_audience_retraction_canary.py`, `test_audience_disputes_who_knows.py` |
+| The audience experiments | `test_audience_side_channel.py`, `test_audience_link_paths.py`, `test_audience_utility.py`, `test_audience_noninterference.py`, `test_audience_write_outcomes.py`, `test_audience_retraction_canary.py`, `test_audience_disputes_who_knows.py`, `test_audience_access_channel.py` |
 
 The experiment tests check each script's own machinery, including that an
 injected fault is detected, so a passing experiment means something.

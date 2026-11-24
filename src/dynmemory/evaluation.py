@@ -181,6 +181,21 @@ def load_eval_set(source: Union[str, Path, dict]) -> dict:
             raise ValueError("{}.relevant: expected a non-empty list".format(where))
         for key in relevant:
             _check_memory_key(key, memories, where + ".relevant")
+        groups = query.get("required_groups")
+        if groups is not None:
+            if not isinstance(groups, list) or not groups or not all(
+                isinstance(group, list) and group for group in groups
+            ):
+                raise ValueError(
+                    "{}.required_groups: expected a non-empty list of non-empty lists".format(where)
+                )
+            for group in groups:
+                for key in group:
+                    _check_memory_key(key, memories, where + ".required_groups")
+            if {key for group in groups for key in group} != set(relevant):
+                raise ValueError(
+                    "{}.required_groups: must cover exactly the relevant memories".format(where)
+                )
         tags = query.get("tags", [])
         if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
             raise ValueError("{}.tags: expected a list of strings".format(where))
@@ -384,6 +399,11 @@ def query_rows(
                 first_answer = next(
                     (key for key in retrieved if key in relevant or key in stale), None
                 )
+                groups = query.get("required_groups")
+                group_hits = (
+                    [any(key in retrieved[:k] for key in group) for group in groups]
+                    if groups else None
+                )
                 rows.append(
                     {
                         "set": eval_set.get("id", set_index),
@@ -401,6 +421,14 @@ def query_rows(
                             0.0,
                         ),
                         "stale_first": (first_answer in stale) if stale else None,
+                        **(
+                            {
+                                "required_groups": groups,
+                                "group_coverage": sum(group_hits) / len(group_hits),
+                                "all_required": all(group_hits),
+                            }
+                            if groups else {}
+                        ),
                     }
                 )
     return rows
@@ -415,6 +443,9 @@ def mean_rows(row_lists: Sequence[Sequence[dict]]) -> list[dict]:
             row[field] = sum(run[field] for run in runs) / len(runs)
         if runs[0]["stale_first"] is not None:
             row["stale_first"] = sum(run["stale_first"] for run in runs) / len(runs)
+        if "all_required" in runs[0]:
+            for field in ("group_coverage", "all_required"):
+                row[field] = sum(run[field] for run in runs) / len(runs)
         averaged.append(row)
     return averaged
 
