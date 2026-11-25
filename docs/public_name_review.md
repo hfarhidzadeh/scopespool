@@ -3,8 +3,8 @@
 ## Current name, 2026-11-24
 
 The GitHub repository was renamed to [ScopeSpool](https://github.com/hfarhidzadeh/scopespool).
-The applied rename covers the repository name. The installed package and
-command currently use `memvane`, and Python imports use `dynmemory`.
+The distribution and primary command are `scopespool`. The earlier `memvane`
+command remains available as an alias. Python imports use `dynmemory`.
 
 ## ScopeSpool exact-name check, 2026-11-25
 

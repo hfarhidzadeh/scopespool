@@ -28,7 +28,7 @@ conservative memory pruning in a small Python package backed by SQLite.
   replaces it (`--link-carryover keep|copy|topic`).
 - Records the channel a memory was said in and who said it, and can search as
   a named set of viewers who see only the channels they all belong to
-  (Python API only; see [Channels and viewers](#channels-and-viewers)).
+  (see [Channels and viewers](#channels-and-viewers)).
 - Keeps all data in a local SQLite file. There are no runtime dependencies;
   the optional semantic embedding backend also runs locally.
 
@@ -59,9 +59,10 @@ python -m pip install -e .
 python -m pip install -e '.[embeddings]'   # optional: semantic vectors
 ```
 
-The installed package and command are `scopespool`, and Python imports use
-`dynmemory`. The default database is `.memora.sqlite3` for compatibility with
-existing stores. Use `--db` to select another path.
+The installed package and primary command are `scopespool`. The earlier
+`memvane` command is an alias, and Python imports use `dynmemory`. The default
+database is `.memora.sqlite3` for compatibility with existing stores. Use
+`--db` to select another path.
 
 Or run from a checkout without installing:
 
@@ -185,13 +186,28 @@ pruning. Use `search --peek` (or `record_access=False` in Python) for explorator
 or evaluation queries that should not affect pruning. A search for named viewers
 (`--viewers`, `for_viewers`, the server) does not count by default, because the
 counters belong to the memory and every member who can see it would see them change;
-`--record` (or `record_access=True`) opts in. Such reads therefore no longer keep a
-memory from being pruned.
+`--record` (or `record_access=True`) opts into shared tracking.
+
+A trusted Python caller can also track access privately for one named reader.
+Ordinary pruning follows the shared policy. Recently used memories that it
+archives appear in the reader's personal list while still visible to that
+reader.
+
+```python
+reader = store.for_viewers("alice")
+reader.search("SQLite", record_private_access=True)
+retained = reader.list_retained_memories()
+```
+
+Private tracking is opt-in. See the [private retention contract](docs/per_viewer_retention.md)
+for the schema upgrade, the 90-day activity window, and membership and
+retraction behavior.
 
 ## Channels and viewers
 
-A first step towards memory shared by several people. It is available from
-Python only; the command line has no options for it yet.
+The Python API supports shared memory for several people. The trusted local
+CLI also provides channel management through `channel` and scoped reads
+through `--viewers`.
 
 ```python
 from dynmemory import MemoryStore
@@ -725,61 +741,41 @@ fact, and a question that needs two pieces of evidence is not answered by findin
 say which evidence the answer needs (all groups, and any one turn of a group).
 **Supersession** says whether a newer turn replaces an older one (`supersedes`),
 adds to it (`adds_to`) or is a separate event (`independent`); only `supersedes`
-becomes an update. The evaluator reports `all required@10`, the share of questions with
-every required group in the top 10. The annotations are editable files:
-[the reviewed set](eval/longmemeval_knowledge_update_annotations_v3_reviewed.json)
-(the researcher's five category decisions plus a source-evidence review whose reviewer is
-not recorded; the rest is derived from the AI labels and AI review and is **not
-human-adjudicated**) and [the first derived set](eval/longmemeval_knowledge_update_annotations_v3.json).
+becomes an update. The evaluator reports `all required@10`, the share of
+questions with every required group in the top 10. The project owner accepted
+nine disputed categories in the [approved snapshot](eval/longmemeval_knowledge_update_annotations_v3_category_approved_2026-11-25.json).
+Required evidence and supersession relations remain provisional.
 
-[experiments/longmemeval_v3.py](experiments/longmemeval_v3.py) (design, controls and
-decision rule fixed in its docstring; report in
-[experiments/results/longmemeval_v3.md](experiments/results/longmemeval_v3.md), run 1 on
-the first set kept in `longmemeval_v3_run1_superseded/`). On the 68 annotated questions of
-the reviewed set, lexical and MiniLM, all three controls held and the verdict matches run 1:
+All three controls passed in the [64-question v3 run](experiments/results/longmemeval_v3_category_approved_2026-11-25.md).
+Applying the annotated updates improved reciprocal rank by 0.156 for lexical
+and 0.140 for MiniLM over 44 current-value questions. All required@10 was
+unchanged for those questions. It fell on seven of seven questions that need
+superseded evidence with lexical retrieval and six of seven with MiniLM. For the
+six questions requiring two pieces, lexical first hit@10 stayed at 1.000 while
+all required@10 fell from 1.000 to 0.167.
 
-- **The old metric overstated the harm of archiving.** On the 6 questions that need two
-  pieces, applying the supersession edges leaves first hit@10 at 1.000 (lexical) but takes
-  all required@10 to 0.167. 8 of 68 questions (11 in run 1) need evidence that is also
-  marked superseded, and all 8 lose it under the oracle (structural; a positive control
-  confirms the metric sees it).
-- **On current-value questions, top-10 coverage is already near ceiling** (0.956, so all
-  required@10 does not move), but ranking improves: reciprocal rank +0.15 and the share
-  where an outdated turn ranks first falls from 0.47 to 0 (lexical; similar for MiniLM).
-- **MiniLM against lexical, updates kept:** all required@10 0.985 against 0.941; not a
-  clear difference (p 0.375, 4 questions better, 1 worse).
-
-These are not comparable with the version 1 and 2 numbers, whose cohorts, update edges and
-metric differed. The updates are an oracle, so "applied" is the best case. Only 6 questions
-need two pieces, so those figures are descriptive.
+The [v3 runner](experiments/longmemeval_v3.py) uses oracle updates to measure the
+effects of archiving. The versions 1 and 2 experiments used different cohorts,
+edges, and metrics. The [earlier v3 report](experiments/results/longmemeval_v3.md)
+records the separate 68-question run.
 
 ## LongMemEval: update-detector baselines
 
-[experiments/longmemeval_detector_baselines.py](experiments/longmemeval_detector_baselines.py)
-(design, controls and decision rule fixed in its docstring; report in
-[experiments/results/longmemeval_detector_baselines.md](experiments/results/longmemeval_detector_baselines.md))
-evaluates the shipped baselines at their default settings on the 68 annotated questions of the
-[reviewed v3 annotations](eval/longmemeval_knowledge_update_annotations_v3_reviewed.json): 53 questions
-where a newer turn supersedes an older one, 15 where nothing is superseded. A candidate search
-finds a true old turn among its five candidates for 51 of the 53. Both controls held, and **no
-baseline was usable**:
+The [approved-cohort detector run](experiments/results/longmemeval_detector_baselines_category_approved_2026-11-25.md)
+evaluated three shipped baselines on 51 annotated update cases and 13
+no-update cases. Both controls passed. Candidate search found a true earlier
+turn in its top five for 49/51 update cases. **None of the detectors met the
+preset usability rule.**
 
-- **Overlap** never fires at its default threshold (recall 0 on the 45 current questions).
-- **Embedding detector, hash embedder:** fires on 31 of the 53, right on 12 (recall 0.24 on the
-  current questions, not better than choosing a candidate at random, p 0.54); it also fires on
-  6 of 15 questions with nothing to supersede and on 162 of 680 ordinary turns.
-- **Embedding detector, MiniLM:** right on 9 of 53 (recall 0.20), 8 of 15 false fires, 249 of 680
-  ordinary turns.
-- **End to end,** applying a detector's decision improves current-value reciprocal rank (hash
-  +0.065, MiniLM +0.054, both p < 0.01) but recovers under half of the oracle's gain (+0.153) and
-  barely beats archiving a random candidate (+0.041). A control that always archives the best-ranked
-  earlier turn recovers 84% of the oracle's gain, so most of the oracle's gain comes from removing the
-  top-ranked older turn, which a detector has to beat by being selective.
-- A threshold sweep (reported, not judged) trades recall for false fires without reaching both targets.
+| Detector | Correct targets on 44 current cases | Fires on 13 no-update cases | Fires on 640 control turns |
+| --- | ---: | ---: | ---: |
+| Overlap | 0 | 0 | 14 |
+| N-gram hash | 11 | 5 | 155 |
+| MiniLM | 9 | 7 | 236 |
 
-The ground truth is provisional (the researcher's five category decisions plus a source-evidence
-review whose reviewer is not recorded; the rest is AI-derived). The baselines are simple on purpose;
-a model-based detector is not tested here, and the earlier local-model attempt was inconclusive.
+The [detector runner](experiments/longmemeval_detector_baselines.py) tests
+positive cases at the annotated confirmation turn. The [earlier baseline](experiments/results/longmemeval_detector_baselines.md)
+used the previous cohort and probed a different turn for two cases.
 
 ## LongMemEval: silence
 
@@ -818,26 +814,23 @@ changed (details in the write-up). The full write-up is in
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
+See the [experiment reproduction guide](docs/experiment_reproduction.md) for
+the current annotation snapshot, runtime versions, and commands that save
+fresh results to a scratch directory.
+
 ## Next research steps
 
-1. Detect updates automatically (for example with a local contradiction or
-   similarity model) and measure how much of the oracle's gain on LongMemEval
-   it recovers. The incomplete Qwen run is
-   [archived as a failed diagnostic](experiments/results/failed_update_detection_qwen2.5-coder-1.5b/README.md),
-   not evidence of detector effectiveness.
-2. Keep old versions findable: rank them lower instead of archiving them, or
-   search history for questions about the past, and measure both question
-   groups.
-3. Tune `min_similarity` and the fusion for MiniLM on part of LongMemEval and
-   test on the rest; at the defaults it lowers MRR.
-4. Resolve the [label review findings](docs/longmemeval_label_review.md), separate
-   answer evidence from supersession labels, and rerun the experiments before
-   extending the conversion to other question types.
-5. Build a labelled set from real (non-patient) agent sessions and compare
-   configurations against their controls there too.
-6. Introduce LLM-guided consolidation behind a reviewable proposal interface.
-7. Resolve contradictions. Search now surfaces them through `links`; deciding
-   between conflicting memories is still open.
-8. Add entity-level provenance and permission-aware shared-memory operations.
-9. Benchmark retention quality, storage growth, and unlearning guarantees
-   before considering irreversible deletion.
+1. Independently review answer evidence and supersession, starting with the
+   seven cases that need older evidence. Freeze reviewed labels and a grouped
+   holdout before model tuning. [Evidence review packet](docs/longmemeval_evidence_review_packet.md)
+2. Rerun the ranking comparison on reviewed evidence. The lexical pilot uses
+   supplied intent and update edges to compare demotion with whole-turn
+   archival. [History retrieval pilot](experiments/results/longmemeval_history_retrieval_pilot.md)
+3. Compare a selective update detector with the shipped baselines on held-out
+   cases. Measure wrong targets, false fires, and historical evidence loss.
+   [Earlier Qwen diagnostic](experiments/results/failed_update_detection_qwen2.5-coder-1.5b/README.md)
+4. Build a reviewed set of paraphrase and near-match pairs for disputes, then
+   measure equivalence errors and confirm audience and authority behavior.
+5. Measure retention benefit, latency, storage growth, and audience isolation
+   as the private retention design advances. Expand retraction tests around
+   captured provenance before trying model-guided consolidation.
