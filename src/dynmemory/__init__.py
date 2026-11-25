@@ -16,6 +16,7 @@ from .store import (
     PruneCandidate,
     Rebuild,
     Relationship,
+    RetainedMemory,
     SearchResult,
     retention_score,
 )
@@ -37,6 +38,7 @@ __all__ = [
     "PruneCandidate",
     "Rebuild",
     "Relationship",
+    "RetainedMemory",
     "SearchResult",
     "SentenceTransformerEmbedder",
     "retention_score",

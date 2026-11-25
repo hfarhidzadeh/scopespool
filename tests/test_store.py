@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from dynmemory import Link, MemoryStore, MemoryType, Relationship
+from dynmemory.store import SCHEMA_VERSION
 
 SOURCE = Path(__file__).resolve().parents[1] / "src"
 
@@ -461,7 +462,7 @@ class MemoryStoreTests(unittest.TestCase):
             {(a2.id, a1.id), (b2.id, b1.id), (c1.id, c2.id)},
         )
         with reopened._transaction() as connection:
-            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 7)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], SCHEMA_VERSION)
 
     def test_a_version_0_1_database_is_upgraded_in_place(self):
         path = Path(self.temp_dir.name) / "v0.1.sqlite3"

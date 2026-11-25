@@ -12,14 +12,14 @@ import uuid
 from array import array
 from contextlib import closing, contextmanager
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Mapping, Optional, Sequence, Union
 
 from .embeddings import Embedder
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 
 class MemoryType(str, Enum):
@@ -139,6 +139,15 @@ class PruneCandidate:
 
 
 @dataclass(frozen=True)
+class RetainedMemory:
+    """A pruned memory and the activity recorded for this reader alone."""
+
+    memory: Memory
+    access_count: int
+    last_accessed_at: str
+
+
+@dataclass(frozen=True)
 class DisputeRow:
     """One claim in a dispute table: who said what, when and where, and its status.
 
@@ -232,13 +241,16 @@ class AudienceReader:
         kind: Optional[Union[MemoryType, str]] = None,
         limit: int = 10,
         record_access: Optional[bool] = None,
+        record_private_access: bool = False,
     ) -> list[SearchResult]:
+        private_options = {"record_private_access": True} if record_private_access else {}
         return self._store.search(
             query,
             kind=kind,
             limit=limit,
             record_access=record_access,
             viewers=self._viewers,
+            **private_options,
         )
 
     def get_memory(self, memory_id: str) -> Optional[Memory]:
@@ -261,6 +273,12 @@ class AudienceReader:
             limit=limit,
             viewers=self._viewers,
         )
+
+    def list_retained_memories(self, *, limit: int = 100) -> list[RetainedMemory]:
+        """List recently tracked memories that shared pruning archived."""
+        if len(self._viewers) != 1:
+            raise ValueError("private retention requires a single named viewer")
+        return self._store._list_retained_memories(self._viewers[0], limit=limit)
 
     def disputes(
         self, *, channel: Optional[str] = None, memory_key: Optional[str] = None
@@ -380,6 +398,7 @@ class MemoryStore:
     _RRF_K = 60
     _EMBED_BATCH = 256
     _ID_CHUNK = 400
+    _PRIVATE_RETENTION_DAYS = 90
 
     def __init__(
         self,
@@ -660,6 +679,15 @@ class MemoryStore:
                 PRIMARY KEY (message_id, member_id, kind)
             )
             """,
+            """
+            CREATE TABLE IF NOT EXISTS viewer_access (
+                member_id TEXT NOT NULL,
+                memory_id TEXT NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+                access_count INTEGER NOT NULL CHECK (access_count > 0),
+                last_accessed_at TEXT NOT NULL,
+                PRIMARY KEY (member_id, memory_id)
+            )
+            """,
         )
         indexes = (
             # Memories without a channel share one key namespace, as before
@@ -705,6 +733,8 @@ class MemoryStore:
                 WHERE revoked_at IS NULL
             """,
             "CREATE INDEX IF NOT EXISTS memory_sources_by_message ON memory_sources(message_id)",
+            "CREATE INDEX IF NOT EXISTS viewer_access_by_memory ON viewer_access(memory_id)",
+            "CREATE INDEX IF NOT EXISTS viewer_access_by_time ON viewer_access(last_accessed_at)",
         )
         with self._transaction() as connection:
             for statement in tables:
@@ -735,6 +765,8 @@ class MemoryStore:
                 connection.execute(
                     "ALTER TABLE memories ADD COLUMN has_sources INTEGER NOT NULL DEFAULT 0"
                 )
+            if "pruned_at" not in columns:
+                connection.execute("ALTER TABLE memories ADD COLUMN pruned_at TEXT")
             if version < 2:
                 # Keys were unique across the whole store; the index is
                 # rebuilt below to cover only memories without a channel.
@@ -809,6 +841,10 @@ class MemoryStore:
     @staticmethod
     def _now() -> str:
         return datetime.now(timezone.utc).isoformat(timespec="microseconds")
+
+    def _private_access_cutoff(self, now: str) -> str:
+        cutoff = datetime.fromisoformat(now) - timedelta(days=self._PRIVATE_RETENTION_DAYS)
+        return cutoff.isoformat(timespec="microseconds")
 
     def _memory_from_row(self, row: sqlite3.Row) -> Memory:
         return Memory(
@@ -965,6 +1001,17 @@ class MemoryStore:
                 """UPDATE delegations SET revoked_at = ?, revoked_by = ?
                 WHERE channel = ? AND member_id = ? AND revoked_at IS NULL""",
                 (self._now(), "channel_departure", channel, member_id),
+            )
+            connection.execute(
+                """
+                DELETE FROM viewer_access WHERE member_id = ? AND memory_id IN (
+                    SELECT id FROM memories WHERE channel = ?
+                    UNION
+                    SELECT ms.memory_id FROM memory_sources AS ms
+                    JOIN messages ON messages.id = ms.message_id WHERE messages.channel = ?
+                )
+                """,
+                (member_id, channel, channel),
             )
 
     def members_of(self, channel: str) -> list[str]:
@@ -1125,12 +1172,16 @@ class MemoryStore:
             connection.execute(
                 """UPDATE memories SET stale_at = COALESCE(stale_at, ?),
                 archived_at = COALESCE(archived_at, ?), updated_at = ?,
-                content = ?
+                content = ?, pruned_at = NULL
                 WHERE id IN ({})""".format(affected),
                 (now, now, now, self.RETRACTED_CONTENT, message_id),
             )
             connection.execute(
                 "DELETE FROM embeddings WHERE memory_id IN ({})".format(affected),
+                (message_id,),
+            )
+            connection.execute(
+                "DELETE FROM viewer_access WHERE memory_id IN ({})".format(affected),
                 (message_id,),
             )
             if self.key_path is not None:
@@ -2171,7 +2222,7 @@ class MemoryStore:
             connection.execute(
                 """
                 UPDATE memories
-                SET archived_at = NULL, updated_at = ?, last_accessed_at = ?
+                SET archived_at = NULL, pruned_at = NULL, updated_at = ?, last_accessed_at = ?
                 WHERE id = ?
                 """,
                 (now, now, memory_id),
@@ -2213,6 +2264,38 @@ class MemoryStore:
         memories.sort(key=lambda memory: memory.updated_at, reverse=True)
         return memories[:limit]
 
+    def _list_retained_memories(self, member_id: str, *, limit: int) -> list[RetainedMemory]:
+        if limit < 1:
+            raise ValueError("limit must be positive")
+        viewers = (member_id,)
+        visible, parameters = self._visible(viewers)
+        retained = []
+        with self._transaction(write=False) as connection:
+            cutoff = self._private_access_cutoff(self._now())
+            rows = connection.execute(
+                """
+                SELECT memories.*, va.access_count AS private_count,
+                    va.last_accessed_at AS private_last_accessed_at
+                FROM viewer_access AS va JOIN memories ON memories.id = va.memory_id
+                WHERE va.member_id = ? AND va.last_accessed_at > ?
+                  AND memories.archived_at = memories.pruned_at
+                {} ORDER BY va.last_accessed_at DESC, memories.id
+                """.format(visible),
+                [member_id, cutoff, *parameters],
+            ).fetchall()
+            if not rows:
+                return []
+            view = self._claim_view(connection, viewers)
+            for row in rows:
+                if row["id"] in view.replaced:
+                    continue
+                retained.append(RetainedMemory(
+                    self._memory_from_row(row), row["private_count"], row["private_last_accessed_at"]
+                ))
+                if len(retained) == limit:
+                    break
+        return retained
+
     def search(
         self,
         query: str,
@@ -2221,6 +2304,7 @@ class MemoryStore:
         limit: int = 10,
         record_access: Optional[bool] = None,
         viewers: Optional[Union[str, Iterable[str]]] = None,
+        record_private_access: bool = False,
     ) -> list[SearchResult]:
         """Rank active memories for a query.
 
@@ -2232,6 +2316,9 @@ class MemoryStore:
         (``experiments/audience_access_channel.py``). A read without
         ``viewers`` (single-user or administrative use) counts by default.
         ``record_access=True`` opts a viewer read in, and leaves that trace.
+        ``record_private_access=True`` instead tracks the returned memories
+        for one named viewer's personal retention list. Omit ``record_access``
+        when opting into private tracking.
 
         Each result's ``links`` lists its relationships to the other results,
         the links behind its graph score, and every ``contradicts`` link to an
@@ -2258,6 +2345,11 @@ class MemoryStore:
             except ValueError as error:
                 raise ValueError("unsupported memory type: {}".format(kind)) from error
         viewer_ids = self._read_viewers(viewers)
+        if record_private_access:
+            if viewer_ids is None or len(viewer_ids) != 1:
+                raise ValueError("private retention requires a single named viewer")
+            if record_access is not None:
+                raise ValueError("omit record_access when recording private access")
         if record_access is None:
             record_access = viewers is None
         visible, visible_parameters = self._visible(viewer_ids)
@@ -2270,7 +2362,7 @@ class MemoryStore:
         if not query_tokens and query_vector is None:
             return []
 
-        with self._transaction(write=record_access) as connection:
+        with self._transaction(write=record_access or record_private_access) as connection:
             view = self._claim_view(connection, viewer_ids)
             sql = "SELECT * FROM memories WHERE archived_at IS NULL" + visible
             parameters = list(visible_parameters)
@@ -2347,6 +2439,19 @@ class MemoryStore:
                         """,
                         (now, memory_id),
                     )
+            elif record_private_access:
+                cutoff = self._private_access_cutoff(now)
+                connection.executemany(
+                    """
+                    INSERT INTO viewer_access (member_id, memory_id, access_count, last_accessed_at)
+                    VALUES (?, ?, 1, ?)
+                    ON CONFLICT(member_id, memory_id) DO UPDATE SET
+                        access_count = CASE WHEN viewer_access.last_accessed_at > ?
+                            THEN viewer_access.access_count + 1 ELSE 1 END,
+                        last_accessed_at = max(viewer_access.last_accessed_at, excluded.last_accessed_at)
+                    """,
+                    [(viewer_ids[0], memory_id, now, cutoff) for memory_id in ranked_ids],
+                )
 
             links_by_memory = {memory_id: set() for memory_id in ranked_ids}
             result_links = self._search_links(connection, ranked_ids, viewer_ids, view)
@@ -3182,13 +3287,19 @@ class MemoryStore:
                     candidates.append(PruneCandidate(memory=memory, score=score))
 
             candidates.sort(key=lambda candidate: (candidate.score, candidate.memory.id))
-            if candidates and not dry_run:
+            if not dry_run:
                 connection.executemany(
-                    "UPDATE memories SET archived_at = ?, updated_at = ? WHERE id = ?",
+                    "UPDATE memories SET archived_at = ?, pruned_at = ?, updated_at = ? WHERE id = ?",
                     [
-                        (now, now, candidate.memory.id)
+                        (now, now, now, candidate.memory.id)
                         for candidate in candidates
                     ],
+                )
+                # Use wall time for housekeeping, even when the caller
+                # chooses a different evaluation time for shared pruning.
+                connection.execute(
+                    "DELETE FROM viewer_access WHERE last_accessed_at <= ?",
+                    (self._private_access_cutoff(self._now()),),
                 )
                 candidates = [
                     replace(

@@ -3,7 +3,7 @@
 How the code is organised, what it stores, and what happens on each read and
 write. Rules and their rationale are in the [README](../README.md) and, for the
 multi-user design, in the [design document](multi_user_memory_review.md). This
-page describes the system as built at schema version 7.
+page describes the system as built at schema version 8.
 
 ## Contents
 
@@ -114,11 +114,11 @@ flowchart LR
   are not exposed. This is the process-isolation boundary.
 - **consolidation.py** defines what a rebuild may see: a stale memory and its
   remaining sources, nothing else. **detection.py** defines pluggable claim
-  equivalence and update detection, with unevaluated baselines.
+  equivalence and update detection.
 
 ## Data model
 
-Schema version 7, stored in SQLite's `user_version`. Opening an older database
+Schema version 8, stored in SQLite's `user_version`. Opening an older database
 upgrades it in place.
 
 | Table | Holds | Notes |
@@ -132,6 +132,7 @@ upgrades it in place.
 | `messages` | immutable attributed source messages | Retraction replaces the content with a tombstone. |
 | `memory_sources` | which messages a memory was derived from | Complete list, supplied by the caller. |
 | `acknowledgements` | who replied to or reacted to a message | The evidence for "knows"; presence is never recorded as knowing. |
+| `viewer_access` | private count and last access per reader and memory | Used by the reader's personal retention list. |
 | `keys.pads` (separate file) | one-time pads, only with `key_path` | One pad per memory text, message text and vector. Destroying a pad makes earlier copies of that row unreadable. |
 
 Columns of `memories` that matter most:
@@ -143,6 +144,7 @@ Columns of `memories` that matter most:
 | `confidence`, `importance` | 0 to 1, used by pruning |
 | `access_count`, `last_accessed_at` | updated by searches that record access; used by pruning |
 | `archived_at` | set by pruning, by replacement of an unchannelled memory, or by retraction |
+| `pruned_at` | marks an archive created by shared pruning; cleared by restore or retraction |
 | `superseded_by` | the memory that replaced this one (unchannelled memories) |
 | `channel`, `speaker` | where it was said and by whom; both empty for single-user memories |
 | `asserted_as_admin`, `asserted_as_delegate` | the speaker's authority, fixed when written |
@@ -295,6 +297,11 @@ pruned, and `decay_days_by_kind` can override the decay per memory type. The
 default is a dry run that returns the candidates. Archived memories stay in the
 table and `restore` can reactivate them, unless they were superseded or are
 stale. Channel claims already replaced in the global view are skipped.
+
+Private tracking for a single reader can make a pruned memory discoverable
+through that reader's personal list for 90 days after access. Shared pruning
+uses the shared counts. The personal list applies current channel and source
+visibility. See the [private retention contract](per_viewer_retention.md).
 
 ## Embeddings
 

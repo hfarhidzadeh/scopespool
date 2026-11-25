@@ -21,6 +21,7 @@ import unittest
 from pathlib import Path
 
 from dynmemory import MemoryStore, MemoryType, Relationship
+from dynmemory.store import SCHEMA_VERSION
 
 FACT = MemoryType.FACT
 
@@ -709,7 +710,7 @@ class ReadTimeResolutionTests(ClaimResolutionCase):
 
         reopened = MemoryStore(store.db_path)
         with reopened._transaction(write=False) as connection:
-            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 7)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], SCHEMA_VERSION)
             rows = {
                 row["id"]: (row["archived_at"] is None, row["superseded_by"])
                 for row in connection.execute("SELECT * FROM memories")
