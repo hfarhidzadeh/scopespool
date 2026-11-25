@@ -31,4 +31,9 @@ Use a fixture with a query-visible memory eligible for shared pruning and compar
 
 `tests/test_per_viewer_retention.py` includes the paired comparison over 500 seeds. It compares observer search results, history and lists, their personal lists, and shared prune previews and outcomes. It also checks expiration, leave and rejoin, source-channel departure, retraction, restore, migration, and concurrent increments.
 
-Before considering a default or server behavior change, extend the recorded access experiment with the personal retention treatment. Run the existing five checks over 500 paired trials and require 500/500 for each, require a reader benefit for every fixture eligible for that treatment, and measure latency, prune cost, and counter storage. The report should describe the actor, audience, archive policy, and which API outputs it compared.
+The [recorded private retention experiment](../experiments/results/private_retention_verification.md)
+compares no read, the named default, explicit silence, and private tracking.
+All five checks and the personal retention benefit held across 500 paired
+trials. It also records SQLite timings and storage growth on a 256-memory
+fixture. Server integration needs its own verification, and larger workloads
+are needed to establish performance budgets for a release.

@@ -1,0 +1,168 @@
+{
+  "trial_count": 500,
+  "passed": true,
+  "failures": {
+    "determinism": [],
+    "observer_control": [],
+    "ranking": [],
+    "disjoint": [],
+    "shared_trace": [],
+    "reader_benefit": []
+  },
+  "schema": 8,
+  "python": "3.9.6",
+  "sqlite": "3.39.5",
+  "platform": "macOS-13.7.8-x86_64-i386-64bit",
+  "cpu_count": 4,
+  "store_sha256": "044195188dce98d43d88be88ae395f25eb3a91e30132cc459c63e23295d5e19d",
+  "benchmark_config": {
+    "memories": 256,
+    "topics": 8,
+    "search_limit": 5,
+    "workers": 4,
+    "warmups": 8,
+    "serial": 80,
+    "concurrent": 80,
+    "lists": 50,
+    "prune_previews": 20,
+    "arm_order": [
+      "silent",
+      "private"
+    ],
+    "journal_mode": "wal"
+  },
+  "benchmark": {
+    "silent": {
+      "serial": {
+        "samples": 80,
+        "p50_ms": 6.36234199998853,
+        "p95_ms": 7.750942000029681
+      },
+      "concurrent": {
+        "samples": 80,
+        "p50_ms": 50.78591249997544,
+        "p95_ms": 74.10319399997434
+      },
+      "concurrent_ops_per_second": 75.22366921176746,
+      "retained_list": {
+        "samples": 50,
+        "p50_ms": 0.68559899997922,
+        "p95_ms": 1.4072580000288326
+      },
+      "prune_preview": {
+        "samples": 20,
+        "p50_ms": 5.678056499988315,
+        "p95_ms": 9.694529000000784
+      },
+      "prune_apply_ms": 11.643445000004249,
+      "archived": 219,
+      "retained_before_expiry": 0,
+      "retained_after_expiry": 0,
+      "cleanup_ms": 1.3722670000220205,
+      "storage": {
+        "initial": {
+          "db_bytes": 196608,
+          "wal_bytes": 0,
+          "private_rows": 0,
+          "counted_accesses": 0
+        },
+        "after_serial": {
+          "db_bytes": 196608,
+          "wal_bytes": 0,
+          "private_rows": 0,
+          "counted_accesses": 0
+        },
+        "after_concurrent": {
+          "db_bytes": 196608,
+          "wal_bytes": 0,
+          "private_rows": 0,
+          "counted_accesses": 0
+        },
+        "checkpointed": {
+          "db_bytes": 196608,
+          "wal_bytes": 0,
+          "private_rows": 0,
+          "counted_accesses": 0
+        },
+        "before_cleanup": {
+          "db_bytes": 196608,
+          "wal_bytes": 90672,
+          "private_rows": 0,
+          "counted_accesses": 0
+        },
+        "after_cleanup": {
+          "db_bytes": 196608,
+          "wal_bytes": 90672,
+          "private_rows": 0,
+          "counted_accesses": 0
+        }
+      }
+    },
+    "private": {
+      "serial": {
+        "samples": 80,
+        "p50_ms": 6.878697999979977,
+        "p95_ms": 8.306005000008554
+      },
+      "concurrent": {
+        "samples": 80,
+        "p50_ms": 6.65048449999972,
+        "p95_ms": 8.82626300000311
+      },
+      "concurrent_ops_per_second": 115.81968831303607,
+      "retained_list": {
+        "samples": 50,
+        "p50_ms": 1.8608175000167648,
+        "p95_ms": 2.3095409999882577
+      },
+      "prune_preview": {
+        "samples": 20,
+        "p50_ms": 5.250384500016025,
+        "p95_ms": 5.800020999970457
+      },
+      "prune_apply_ms": 11.846023000032346,
+      "archived": 219,
+      "retained_before_expiry": 34,
+      "retained_after_expiry": 0,
+      "cleanup_ms": 1.7782060000399724,
+      "storage": {
+        "initial": {
+          "db_bytes": 196608,
+          "wal_bytes": 0,
+          "private_rows": 0,
+          "counted_accesses": 0
+        },
+        "after_serial": {
+          "db_bytes": 196608,
+          "wal_bytes": 791072,
+          "private_rows": 40,
+          "counted_accesses": 440
+        },
+        "after_concurrent": {
+          "db_bytes": 196608,
+          "wal_bytes": 1800472,
+          "private_rows": 160,
+          "counted_accesses": 840
+        },
+        "checkpointed": {
+          "db_bytes": 237568,
+          "wal_bytes": 0,
+          "private_rows": 160,
+          "counted_accesses": 840
+        },
+        "before_cleanup": {
+          "db_bytes": 237568,
+          "wal_bytes": 90672,
+          "private_rows": 160,
+          "counted_accesses": 840
+        },
+        "after_cleanup": {
+          "db_bytes": 237568,
+          "wal_bytes": 152472,
+          "private_rows": 0,
+          "counted_accesses": 0
+        }
+      }
+    }
+  }
+}
