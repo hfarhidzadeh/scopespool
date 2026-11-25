@@ -411,6 +411,15 @@ identical with and without hidden claims and acknowledgements, a reply counted
 as knowing and presence only as access; with an injected fault that computed
 them over every memory, they differed in 496 of 500 pairs.
 
+On real text (`experiments/longmemeval_cross_user_disputes.py`, 470 trials), the older
+and newer turns of each LongMemEval knowledge update were stated as claims on one key
+by two members, with hidden claims from a channel the readers cannot see. Every audience
+saw one open dispute with the real sentences; replies counted as knowing, presence only
+as access, and the hidden claims changed nothing (470 of 470 on every rule; the injected
+fault was caught in 470 of 470). Two members of equal standing stay disputed whichever
+spoke later; only an admin's claim settled it. Speakers are staged and values are
+compared as exact text. Results: `experiments/results/longmemeval_cross_user_disputes.md`.
+
 ```python
 writer = store.for_writer("bob")
 writer.acknowledge(message.id, "replied")

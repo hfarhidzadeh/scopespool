@@ -339,6 +339,7 @@ a Markdown and JSON report to `experiments/results/`.
 | `audience_write_outcomes.py` | Does a bound writer's write outcome depend on claims it cannot see? |
 | `audience_retraction_canary.py` | Does retraction erase the text, rebuild correctly, and leave earlier encrypted copies unreadable? |
 | `audience_disputes_who_knows.py` | Do hidden claims or acknowledgements change dispute tables or who-knows answers? |
+| `longmemeval_cross_user_disputes.py` | The same on real LongMemEval update turns: is the dispute shown, and do hidden claims change it? |
 
 Results from single-user LongMemEval runs are marked provisional until the
 [label review](longmemeval_label_review.md) findings are resolved.
@@ -358,7 +359,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests
 | Channels, viewers, writers, sources | `test_audience.py`, `test_claim_resolution.py` |
 | Disputes, who-knows, encryption, rebuild | `test_disputes_who_knows.py`, `test_encryption_and_rebuild.py` |
 | Tokens, sessions, the server, detection | `test_auth_server.py`, `test_detection.py` |
-| The audience experiments | `test_audience_side_channel.py`, `test_audience_link_paths.py`, `test_audience_utility.py`, `test_audience_noninterference.py`, `test_audience_write_outcomes.py`, `test_audience_retraction_canary.py`, `test_audience_disputes_who_knows.py`, `test_audience_access_channel.py` |
+| The audience experiments | `test_audience_side_channel.py`, `test_audience_link_paths.py`, `test_audience_utility.py`, `test_audience_noninterference.py`, `test_audience_write_outcomes.py`, `test_audience_retraction_canary.py`, `test_audience_disputes_who_knows.py`, `test_audience_access_channel.py`, `test_longmemeval_cross_user_disputes.py` |
 
 The experiment tests check each script's own machinery, including that an
 injected fault is detected, so a passing experiment means something.

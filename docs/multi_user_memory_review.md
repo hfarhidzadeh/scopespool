@@ -1171,6 +1171,35 @@ cf22b7bf and 5c40ec5b context), the two more that an AI-filled sheet proposed ar
   archive a required turn that was itself last (found by the unit tests); it now supersedes
   through an appended placeholder memory.
 
+**Cross-user disputes on real text, 2026-11-25.** H8 was tested on invented "k0 is v1"
+claims. Script: `experiments/longmemeval_cross_user_disputes.py`; report:
+`experiments/results/longmemeval_cross_user_disputes.md`. Each pair is one `supersedes`
+edge of a current question in the reviewed v3 annotations: the older and the newer user
+turn, as real text. Alice and carol state them as claims on one key in `history`; bob and
+dana add 1 to 3 hidden claims from `dm` messages (the older turn, the newer turn, or
+another user turn of the question; dana's carry admin authority). Same worlds as H8 (W, H,
+H2, V); design, controls and decision rule were fixed in the docstring before the recorded
+run. A first draft of this experiment was discarded unrun: its claims were invented
+strings and two of its checks could not fail.
+
+- **Result (470 trials: 47 pairs from 45 questions, none dropped as identical, 10 seeds
+  each):** verdict "disputes and who-knows pass on real text". All six rules held in 470 of
+  470: determinism; detection (with the visible claims alone, every audience sees one open
+  dispute with the real older and newer sentences); power; a reply counting as knowing the
+  newer claim; presence (bob, dana) counting only as access; and noninterference. 624 of the
+  933 hidden claims restated a visible turn word for word.
+- **Observed:** two members of equal standing stay in an open dispute whichever said the
+  newer turn; the store does not treat the later turn as the update. When the hidden claims
+  were made visible, the dispute closed in 330 of 470 trials, exactly the trials with a
+  claim by dana (admin).
+- **Validation:** with disputes and who-knows computed over every memory, noninterference
+  failed in 470 of 470 (criterion 25%; report
+  `experiments/results/longmemeval_cross_user_disputes_fault.md`). Rules 4 and 5 also fail
+  under that fault, because hidden speakers then count as stating.
+- **Limits:** who said which turn is staged; claim values are whole turns compared as exact
+  text after case-folding, so paraphrased restatements (`claim_equivalence`) are not tested;
+  annotations are provisional.
+
 **The remaining "not built" items, 2026-11-19.** Asked to solve all of them,
 the model built each one up to where a human decision is needed.
 

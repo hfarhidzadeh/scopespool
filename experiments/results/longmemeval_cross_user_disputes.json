@@ -1,0 +1,62 @@
+{
+  "trials": 470,
+  "reps": 10,
+  "pairs": {
+    "edges": 47,
+    "dropped_identical": 0,
+    "pairs": 47,
+    "questions": 45
+  },
+  "store_schema_version": 7,
+  "fault": null,
+  "summary": {
+    "checks": {
+      "determinism": {
+        "held": 470,
+        "not_held": []
+      },
+      "detection": {
+        "held": 470,
+        "not_held": []
+      },
+      "power": {
+        "held": 470,
+        "not_held": []
+      },
+      "acknowledgement": {
+        "held": 470,
+        "not_held": []
+      },
+      "presence": {
+        "held": 470,
+        "not_held": []
+      },
+      "noninterference": {
+        "held": 470,
+        "not_held": []
+      }
+    },
+    "v_closed": 330,
+    "v_closed_with_dana": 330,
+    "trials_with_dana": 330,
+    "v_closed_statuses": [
+      "agrees",
+      "current",
+      "overruled"
+    ],
+    "hidden_claims": 933,
+    "hidden_restating": 624,
+    "failures": []
+  },
+  "decision": {
+    "rule_1_determinism": true,
+    "rule_2_detection": true,
+    "rule_3_power": true,
+    "rule_4_acknowledgement": true,
+    "rule_5_presence": true,
+    "rule_6_noninterference": true,
+    "verdict": "disputes and who-knows pass on real text"
+  },
+  "data_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+  "annotations_sha256": "44dc0791aa1bc55108b76de7c8ea889a6f5aa7f4d87cdf560ba6ef1734084c0c"
+}
