@@ -36,6 +36,18 @@ python -m unittest discover -s tests -p test_per_viewer_retention.py
 See the [private retention contract](per_viewer_retention.md) for the tested
 surface and the additional work before changing the default.
 
+Run the recorded private retention comparison and local performance benchmark
+to a new output stem:
+
+```bash
+results_dir="$(mktemp -d)"
+python -I experiments/private_retention_verification.py --trials 500 \
+  --output "$results_dir/private_retention_verification"
+```
+
+Compare the paired outcomes with the [recorded private retention report](../experiments/results/private_retention_verification.md).
+Compare performance only under a matching workload and comparable runtime.
+
 ## LongMemEval v3 and detector baselines
 
 Place the cleaned LongMemEval S file at
@@ -81,3 +93,6 @@ python -I experiments/longmemeval_evidence_review_packet.py \
 
 The [evidence review guide](longmemeval_evidence_review_packet.md) explains
 how to distribute the blinded packets and adjudicate the ballots.
+Use the [adjudication command](longmemeval_adjudication.md) after both ballots
+are returned. The [paraphrase dispute packet](longmemeval_paraphrase_review.md)
+has a separate generator and reviewer rubric.
