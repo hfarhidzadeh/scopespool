@@ -154,6 +154,8 @@ class ServerTests(unittest.TestCase):
                 alice.call(operation, **arguments)
         with self.assertRaisesRegex(RemoteError, "unexpected argument: viewers"):
             alice.call("search", query="launch", viewers=["bob"])
+        with self.assertRaisesRegex(RemoteError, "unexpected argument: record_access"):
+            alice.call("search", query="launch", record_access=True)  # no traces from members
         with self.assertRaisesRegex(RemoteError, "unexpected argument: speaker"):
             alice.call("add_memory", content="x", kind="fact", channel="design", speaker="bob")
         with self.assertRaisesRegex(RemoteError, "authentication failed"):

@@ -25,9 +25,15 @@ settings: a team memory that nobody read has score about 0.043 and is archived
 survives.
 
 Conditions, each a separate store built identically:
-- default: alice's search records access (the default);
+- default: alice's search with ``record_access`` left out;
+- opt-in: the same search with ``record_access=True``;
 - silent: the same search with ``record_access=False``;
 - none: alice does not search.
+In run 1 (store before the fix, reports in
+``experiments/results/audience_access_channel_run1_superseded/``) "default" recorded
+the access; there was no opt-in condition because opting in was the default. The
+store now makes a read for named viewers silent unless ``record_access=True``, and
+this run measures the fix (run 2).
 
 Observers (they read only with ``record_access=False``, so they leave no trace).
 - bob (member of ``team`` only) reads ``list_memories`` before and after alice's
@@ -43,42 +49,48 @@ Checks, per trial.
 1. Determinism (control): the trial run twice gives the same result.
 2. Observer control: in the silent and none conditions, bob's changed set is
    empty and every team memory is archived after the prune (survivors none).
-3. Ranking: in the default condition, for each of the 8 topic queries, bob's
-   ranked results (memories, order, scores, links) before and after alice's
-   search are identical.
-4. Hidden: carol's view (memories and counters) is identical before and after
-   alice's search and after the prune except for archiving, in the default
-   condition (her memories are all pruned in every condition, so her counters
-   and survivors are compared); and none of bob's changed memories is outside
-   ``team``.
-5. Trace: in the default condition bob's changed set is empty.
+3. Ranking: in the default and in the opt-in condition, for each of the 8 topic
+   queries, bob's ranked results (memories, order, scores, links) before and
+   after alice's search are identical.
+4. Hidden: in the default and in the opt-in condition, carol's view (memories
+   and counters) is identical before and after alice's search and none of her
+   memories survives the prune (she read nothing and nobody read hers); and
+   none of bob's changed memories is outside ``team``.
+5. Trace: in the default condition bob's changed set is empty and none of his
+   team memories survives the prune.
 
 Rules 1, 2 are controls. Rules 3, 4 are the access guarantees this
-experiment can confirm. Rule 5 is the question: it holds only if a read leaves
-nothing another member can observe.
+experiment can confirm, even when a reader opts in. Rule 5 is the question for
+the default: it holds only if a read leaves nothing another member can observe.
 
 Decision rule, fixed before running:
   Verdict "inconclusive (control <n> failed)" if rule 1 or 2 fails in any trial.
   Otherwise, if rules 3 and 4 hold in every trial:
-    "reads leave no trace" if rule 5 holds in every trial; else
-    "reads leave a trace other members can see" with the guess accuracy.
+    if rule 5 fails: "reads leave a trace other members can see" with the guess
+    accuracy of the default;
+    if rule 5 holds and bob can still name the topic after an opt-in read in any
+    trial: "reads leave no trace by default; opting in still does" with that
+    count;
+    otherwise "reads leave no trace".
   If rule 3 or 4 fails in any trial: "a read changes what others can observe
   beyond the memories it returned (rules <list> failed, first failing seed
   <s>)".
 
-Reported, not part of the verdict: how often bob detects that someone read (any
-change) from counters and from survivors; bob's accuracy at naming the topic,
-from counters and from survivors, with a 95% Wilson interval, against chance
-(1/8); how often the changed set holds exactly the memories alice's search
-returned that bob can see; how often bob's changed set shows alice's read time
-(last_accessed_at equal to day 150).
+Reported, not part of the verdict, for the default and for the opt-in condition
+separately: how often bob detects that someone read (any change) from counters
+and from survivors; bob's accuracy at naming the topic, from counters and from
+survivors, with a 95% Wilson interval, against chance (1/8); and, for opt-in,
+how often the changed set holds exactly the memories alice's search returned that
+bob can see and shows alice's read time (last_accessed_at equal to day 150).
 
 Validation (positive controls against the store), fixed before running; each
 fault is put into the store one at a time:
   record-foreign (a search also records access on matching memories outside the
-    reader's view): rule 4 fails in at least 95% of trials.
+    reader's view, whatever ``record_access`` says unless it is False): rule 4
+    fails in at least 95% of trials.
   popularity-boost (the lexical score is multiplied by 1 + 0.5 * access_count):
-    rule 3 fails in at least 95% of trials.
+    rule 3 fails in at least 95% of trials (through the opt-in condition, since
+    default reads change no counter).
 
 Default: 500 trials (seeds 0 to 499).
 
@@ -242,8 +254,8 @@ def play(trial: dict, condition: str, flaw=None) -> dict:
         clock.days = READ_DAY
         returned = []
         if condition != "none":
-            results = store.search(topic_token(trial["topic"]), limit=5, viewers=["alice"],
-                                   record_access=condition == "default")
+            options = {} if condition == "default" else {"record_access": condition == "optin"}
+            results = store.search(topic_token(trial["topic"]), limit=5, viewers=["alice"], **options)
             returned = [r.memory.id for r in results]
         bob_after, carol_after = state(store, "bob"), state(store, "carol")
         rank_after = ranking(store, "bob")
@@ -265,25 +277,32 @@ def play(trial: dict, condition: str, flaw=None) -> dict:
 
 
 def run(trial: dict, flaw=None) -> dict:
-    default, silent, none = (play(trial, c, flaw) for c in ("default", "silent", "none"))
+    default, optin, silent, none = (
+        play(trial, c, flaw) for c in ("default", "optin", "silent", "none"))
     rng = random.Random("guess-{}".format(trial["seed"]))
     by_counters, _ = guess(default["changed"], default["team"], rng)
     by_prune, _ = guess(default["survivors"], default["team"], rng)
+    opt_counters, _ = guess(optin["changed"], optin["team"], rng)
+    opt_prune, _ = guess(optin["survivors"], optin["team"], rng)
     quiet = (silent, none)
     return {
         "seed": trial["seed"],
         "observer": all(not q["changed"] and not q["survivors"] and not q["survivors_carol"]
                         and q["carol_same"] and q["ranking_same"] for q in quiet),
-        "ranking": default["ranking_same"],
-        "hidden": (default["carol_same"] and not default["survivors_carol"]
-                   and default["changed"] <= default["team_ids"]),
-        "trace": not default["changed"],
+        "ranking": default["ranking_same"] and optin["ranking_same"],
+        "hidden": all(c["carol_same"] and not c["survivors_carol"]
+                      and c["changed"] <= c["team_ids"] for c in (default, optin)),
+        "trace": not default["changed"] and not default["survivors"],
         "detected_counters": bool(default["changed"]),
         "detected_prune": bool(default["survivors"]),
         "right_counters": by_counters == trial["topic"],
         "right_prune": by_prune == trial["topic"],
-        "exact": default["changed"] == default["returned_visible"],
-        "time_visible": default["time_visible"],
+        "optin_detected_counters": bool(optin["changed"]),
+        "optin_detected_prune": bool(optin["survivors"]),
+        "optin_right_counters": opt_counters == trial["topic"],
+        "optin_right_prune": opt_prune == trial["topic"],
+        "exact": optin["changed"] == optin["returned_visible"],
+        "time_visible": optin["time_visible"],
     }
 
 
@@ -315,8 +334,9 @@ def summarise(trials: list) -> dict:
     }
     count = len(trials)
     rates = {name: sum(bool(t[name]) for t in trials) for name in
-             ("detected_counters", "detected_prune", "right_counters", "right_prune", "exact",
-              "time_visible")}
+             ("detected_counters", "detected_prune", "right_counters", "right_prune",
+              "optin_detected_counters", "optin_detected_prune", "optin_right_counters",
+              "optin_right_prune", "exact", "time_visible")}
     return {"checks": checks, "rates": rates,
             "intervals": {name: wilson(value, count) for name, value in rates.items()}}
 
@@ -334,7 +354,9 @@ def decide(summary: dict, trials: int) -> dict:
                    "(rules {} failed, first failing seed {})".format(
                        ", ".join(map(str, failed_guarantees)), min(seeds)))
     elif holds_[5]:
-        verdict = "reads leave no trace"
+        opted = summary["rates"].get("optin_right_counters", 0)
+        verdict = ("reads leave no trace by default; opting in still does (topic named from counters "
+                   "in {} of {} trials)".format(opted, trials) if opted else "reads leave no trace")
     else:
         rates = summary["rates"]
         verdict = ("reads leave a trace other members can see (topic named from counters in "
@@ -393,19 +415,24 @@ def render(report: dict) -> str:
         "",
         "Reported, not part of the verdict (the observer is bob, a member of `team` who did not read):",
         "",
-        "- Sees that someone read, from the counters: {}; from the survivors of a later prune: {}.".format(
-            _share(rates["detected_counters"], trials), _share(rates["detected_prune"], trials)),
-        "- Names alice's topic from the counters: {}; from the prune survivors: {}.".format(
+        "- Default read (`record_access` left out). Sees that someone read, from the counters: {}; from"
+        " the survivors of a later prune: {}. Names alice's topic from the counters: {}; from the survivors: {}.".format(
+            _share(rates["detected_counters"], trials), _share(rates["detected_prune"], trials),
             _share(rates["right_counters"], trials), _share(rates["right_prune"], trials)),
-        "- Changed set equals exactly the returned memories bob can see: {}.".format(
-            _share(rates["exact"], trials)),
-        "- Sees the read's time (last_accessed_at on every changed memory): {}.".format(
-            _share(rates["time_visible"], trials)),
+        "- Opt-in read (`record_access=True`). Sees that someone read, from the counters: {}; from the"
+        " survivors: {}. Names alice's topic from the counters: {}; from the survivors: {}.".format(
+            _share(rates["optin_detected_counters"], trials), _share(rates["optin_detected_prune"], trials),
+            _share(rates["optin_right_counters"], trials), _share(rates["optin_right_prune"], trials)),
+        "- Opt-in: changed set equals exactly the returned memories bob can see: {}; shows the read's time"
+        " (last_accessed_at on every changed memory): {}.".format(
+            _share(rates["exact"], trials), _share(rates["time_visible"], trials)),
         "",
         "Limits: one reader, one query, and unique topic tokens, which is the easy case for an"
-        " observer; real reads are noisier but leave the same counters. The counters belong to the"
-        " memory, so every member who can see it sees them. A read with `record_access=False` (the"
-        " CLI's `--peek`) leaves no trace in this experiment. No mitigation is built or tested here.",
+        " observer. The counters belong to the memory, so a reader who opts in with"
+        " `record_access=True` (the CLI's `--record`) still tells every member who can see it what"
+        " they looked up; the server does not let members opt in. With the default, reads for named"
+        " viewers no longer count as accesses, so they no longer keep a memory from being pruned;"
+        " retention then depends on reads without viewers, or on opted-in reads.",
         "",
     ]
     return "\n".join(lines)

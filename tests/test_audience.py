@@ -292,9 +292,13 @@ class VisibilityTests(AudienceCase):
         self.assertEqual(len(self.store.list_memories()), 3)
 
     def test_only_shown_memories_count_as_accessed(self):
-        self.store.search("launch", viewers="bob")
+        self.store.search("launch", viewers="bob", record_access=True)
         self.assertEqual(self.store.get_memory(self.design.id).access_count, 1)
         self.assertEqual(self.store.get_memory(self.ops.id).access_count, 0)
+
+    def test_a_read_for_viewers_does_not_count_unless_asked(self):
+        self.store.search("launch", viewers="bob")
+        self.assertEqual(self.store.get_memory(self.design.id).access_count, 0)
 
 
 class HiddenMemoriesChangeNothingTests(AudienceCase):

@@ -10,17 +10,16 @@ See the docstring of `experiments/audience_access_channel.py` for the design and
 | 2 | Observer control: with a silent read or none, the observer sees no change (control) | 100 of 100 (100.0%, 95% interval 96.3 to 100.0%) | every trial | True |
 | 3 | Ranking: another member's ranked results are unchanged by a read | 0 of 100 (0.0%, 95% interval 0.0 to 3.7%) | every trial | False |
 | 4 | Hidden: a member of another channel sees no change; nothing outside the channel changes | 100 of 100 (100.0%, 95% interval 96.3 to 100.0%) | every trial | True |
-| 5 | Trace: another member of the channel sees no change after a read | 0 of 100 (0.0%, 95% interval 0.0 to 3.7%) | every trial | False |
+| 5 | Trace: another member of the channel sees no change after a read | 100 of 100 (100.0%, 95% interval 96.3 to 100.0%) | every trial | True |
 
 **Verdict: a read changes what others can observe beyond the memories it returned (rules 3 failed, first failing seed 0)**
 
 Reported, not part of the verdict (the observer is bob, a member of `team` who did not read):
 
-- Sees that someone read, from the counters: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%); from the survivors of a later prune: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%).
-- Names alice's topic from the counters: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%); from the prune survivors: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%).
-- Changed set equals exactly the returned memories bob can see: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%).
-- Sees the read's time (last_accessed_at on every changed memory): 100 of 100 (100.0%, 95% interval 96.3 to 100.0%).
+- Default read (`record_access` left out). Sees that someone read, from the counters: 0 of 100 (0.0%, 95% interval 0.0 to 3.7%); from the survivors of a later prune: 0 of 100 (0.0%, 95% interval 0.0 to 3.7%). Names alice's topic from the counters: 0 of 100 (0.0%, 95% interval 0.0 to 3.7%); from the survivors: 0 of 100 (0.0%, 95% interval 0.0 to 3.7%).
+- Opt-in read (`record_access=True`). Sees that someone read, from the counters: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%); from the survivors: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%). Names alice's topic from the counters: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%); from the survivors: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%).
+- Opt-in: changed set equals exactly the returned memories bob can see: 100 of 100 (100.0%, 95% interval 96.3 to 100.0%); shows the read's time (last_accessed_at on every changed memory): 100 of 100 (100.0%, 95% interval 96.3 to 100.0%).
 
-Limits: one reader, one query, and unique topic tokens, which is the easy case for an observer; real reads are noisier but leave the same counters. The counters belong to the memory, so every member who can see it sees them. A read with `record_access=False` (the CLI's `--peek`) leaves no trace in this experiment. No mitigation is built or tested here.
+Limits: one reader, one query, and unique topic tokens, which is the easy case for an observer. The counters belong to the memory, so a reader who opts in with `record_access=True` (the CLI's `--record`) still tells every member who can see it what they looked up; the server does not let members opt in. With the default, reads for named viewers no longer count as accesses, so they no longer keep a memory from being pruned; retention then depends on reads without viewers, or on opted-in reads.
 
 Validation: rule 3 failed in 100 of 100 trials (100.0%): detected.

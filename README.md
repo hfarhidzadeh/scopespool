@@ -180,9 +180,13 @@ against every memory). Each is 0 when the memory did not match that way. A
 caller can use them to stay silent when even the best match is weak; see
 [LongMemEval: silence](#longmemeval-silence).
 
-Each search counts as an access, which protects memories from pruning. Use
-`search --peek` (or `record_access=False` in Python) for exploratory or
-evaluation queries that should not affect pruning.
+A search without viewers counts as an access, which protects memories from
+pruning. Use `search --peek` (or `record_access=False` in Python) for exploratory
+or evaluation queries that should not affect pruning. A search for named viewers
+(`--viewers`, `for_viewers`, the server) does not count by default, because the
+counters belong to the memory and every member who can see it would see them change;
+`--record` (or `record_access=True`) opts in. Such reads therefore no longer keep a
+memory from being pruned.
 
 ## Channels and viewers
 
@@ -350,12 +354,15 @@ the viewer's own channel (positive control). The data were written alongside
 the code, so this shows the mechanism, not how often it matters in real use.
 Results: `experiments/results/audience_side_channel.md`.
 
-Reads are recorded by default, and the counters they update are shared. In
-`experiments/audience_access_channel.py` (500 trials) another member of the channel
-named the topic of a reader's query from the memories whose `access_count` changed in
-every trial, and also from what a later `prune` kept; nothing changed for members of other
-channels. A read with `record_access=False` (`--peek`) leaves no trace. This is an open
-exposure: no mitigation is built. Results: `experiments/results/audience_access_channel.md`.
+A read used to leave a trace: the counters it updates are shared, and in
+`experiments/audience_access_channel.py` another member of the channel named the topic of a
+reader's query from the memories whose `access_count` changed in 500 of 500 trials, and also
+from what a later `prune` kept (first run, kept in `audience_access_channel_run1_superseded/`).
+Reads for named viewers are now silent by default; in the second run (500 trials) bob saw
+nothing in any trial, nothing changed for members of other channels, and rankings were
+unchanged. A reader who opts in with `record_access=True` or `--record` still leaves the trace
+(500 of 500), and the server does not let members opt in. Results:
+`experiments/results/audience_access_channel.md`.
 
 On real text, `experiments/longmemeval_shared_workspace.py` treats LongMemEval
 question histories as shared workspaces (private, shared and team channels,

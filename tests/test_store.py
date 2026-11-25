@@ -205,6 +205,20 @@ class MemoryStoreTests(unittest.TestCase):
         self.store.search("gamma")
         self.assertEqual(self.store.get_memory(memory.id).access_count, 1)
 
+    def test_reads_for_viewers_do_not_record_access_unless_asked(self):
+        self.store.join_channel("team", "alice")
+        self.store.join_channel("team", "bob")
+        memory = self.store.add_memory("Shared delta.", "fact", channel="team", speaker="alice")
+        self.store.search("delta", viewers=["bob"])
+        self.store.for_viewers(["bob"]).search("delta")
+        self.assertEqual(self.store.get_memory(memory.id).access_count, 0)
+        self.store.search("delta", viewers=["bob"], record_access=True)
+        self.assertEqual(self.store.get_memory(memory.id).access_count, 1)
+        self.store.search("delta")  # no viewers: counts, as before
+        self.assertEqual(self.store.get_memory(memory.id).access_count, 2)
+        self.store.search("delta", viewers=["bob"], record_access=False)
+        self.assertEqual(self.store.get_memory(memory.id).access_count, 2)
+
     def test_results_carry_raw_signals_that_the_normalised_score_hides(self):
         # Three memories; "alpha" is in two, "beta" in one, "zeta" in none.
         first = self.store.add_memory("alpha beta", "fact")

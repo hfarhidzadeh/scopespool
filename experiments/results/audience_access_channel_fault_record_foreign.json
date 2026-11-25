@@ -232,6 +232,10 @@
       "detected_prune": 100,
       "right_counters": 100,
       "right_prune": 100,
+      "optin_detected_counters": 100,
+      "optin_detected_prune": 100,
+      "optin_right_counters": 100,
+      "optin_right_prune": 100,
       "exact": 0,
       "time_visible": 100
     },
@@ -249,6 +253,22 @@
         1.0000000000000002
       ],
       "right_prune": [
+        0.9630065012310038,
+        1.0000000000000002
+      ],
+      "optin_detected_counters": [
+        0.9630065012310038,
+        1.0000000000000002
+      ],
+      "optin_detected_prune": [
+        0.9630065012310038,
+        1.0000000000000002
+      ],
+      "optin_right_counters": [
+        0.9630065012310038,
+        1.0000000000000002
+      ],
+      "optin_right_prune": [
         0.9630065012310038,
         1.0000000000000002
       ],

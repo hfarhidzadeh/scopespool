@@ -14,9 +14,10 @@ sys.modules[spec.name] = ac
 spec.loader.exec_module(ac)
 
 
-def summary(trials, failed, right=None):
+def summary(trials, failed, right=None, optin=0):
     rates = {name: trials for name in ("detected_counters", "detected_prune", "right_counters",
                                        "right_prune", "exact", "time_visible")}
+    rates["optin_right_counters"] = optin
     if right is not None:
         rates["right_counters"] = right
     return {
@@ -26,13 +27,19 @@ def summary(trials, failed, right=None):
     }
 
 
-def verdict(trials=10, right=None, **failed):
-    return ac.decide(summary(trials, failed, right), trials)["verdict"]
+def verdict(trials=10, right=None, optin=0, **failed):
+    return ac.decide(summary(trials, failed, right, optin), trials)["verdict"]
 
 
 class DecisionRuleTests(unittest.TestCase):
     def test_no_trace_when_every_rule_holds(self):
         self.assertEqual(verdict(), "reads leave no trace")
+
+    def test_no_trace_by_default_but_opt_in_still_leaves_one(self):
+        self.assertEqual(
+            verdict(optin=10),
+            "reads leave no trace by default; opting in still does (topic named from counters "
+            "in 10 of 10 trials)")
 
     def test_a_trace_is_reported_with_the_guess_accuracy(self):
         self.assertEqual(
@@ -74,13 +81,15 @@ class TrialTests(unittest.TestCase):
         self.assertEqual(ac.run_trial(4), ac.run_trial(4))
         json.dumps(ac.run_trial(4))
 
-    def test_the_current_store_leaves_a_trace_but_keeps_the_guarantees(self):
+    def test_the_current_store_is_silent_by_default_and_leaves_a_trace_only_when_asked(self):
         for seed in range(6):
             result = ac.run_trial(seed)
             self.assertTrue(result["determinism"] and result["observer"], seed)
             self.assertTrue(result["ranking"] and result["hidden"], seed)
-            self.assertFalse(result["trace"], seed)
-            self.assertTrue(result["right_counters"] and result["right_prune"], seed)
+            self.assertTrue(result["trace"], seed)
+            self.assertFalse(result["detected_counters"] or result["detected_prune"], seed)
+            self.assertFalse(result["right_counters"] or result["right_prune"], seed)
+            self.assertTrue(result["optin_right_counters"] and result["optin_right_prune"], seed)
             self.assertTrue(result["exact"] and result["time_visible"], seed)
 
 

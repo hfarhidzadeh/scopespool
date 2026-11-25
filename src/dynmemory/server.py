@@ -36,7 +36,7 @@ from .store import MemoryStore
 
 #: Reads run as the verified audience; each lists the arguments a client may pass.
 READS = {
-    "search": ("query", "kind", "limit", "record_access"),
+    "search": ("query", "kind", "limit"),  # reads from members never count as accesses
     "get_memory": ("memory_id",),
     "history": ("memory_id",),
     "list_memories": ("include_archived", "limit"),

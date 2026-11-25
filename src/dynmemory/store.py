@@ -231,7 +231,7 @@ class AudienceReader:
         *,
         kind: Optional[Union[MemoryType, str]] = None,
         limit: int = 10,
-        record_access: bool = True,
+        record_access: Optional[bool] = None,
     ) -> list[SearchResult]:
         return self._store.search(
             query,
@@ -2219,10 +2219,19 @@ class MemoryStore:
         *,
         kind: Optional[Union[MemoryType, str]] = None,
         limit: int = 10,
-        record_access: bool = True,
+        record_access: Optional[bool] = None,
         viewers: Optional[Union[str, Iterable[str]]] = None,
     ) -> list[SearchResult]:
         """Rank active memories for a query.
+
+        ``record_access`` says whether the read counts as an access (it adds 1
+        to each returned memory's ``access_count`` and sets ``last_accessed_at``,
+        which pruning uses). By default a read for named ``viewers`` does not
+        count: the counters belong to the memory, so every member who can see
+        it would see them change and could tell what someone else looked up
+        (``experiments/audience_access_channel.py``). A read without
+        ``viewers`` (single-user or administrative use) counts by default.
+        ``record_access=True`` opts a viewer read in, and leaves that trace.
 
         Each result's ``links`` lists its relationships to the other results,
         the links behind its graph score, and every ``contradicts`` link to an
@@ -2249,6 +2258,8 @@ class MemoryStore:
             except ValueError as error:
                 raise ValueError("unsupported memory type: {}".format(kind)) from error
         viewer_ids = self._read_viewers(viewers)
+        if record_access is None:
+            record_access = viewers is None
         visible, visible_parameters = self._visible(viewer_ids)
 
         query_tokens = self._TOKEN_PATTERN.findall(query.lower())

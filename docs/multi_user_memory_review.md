@@ -1114,11 +1114,19 @@ and decision rule were fixed in the docstring before the recorded run.
 - **Validation:** a fault that records access outside the reader's view failed the
   hidden-channel rule in 100 of 100 trials; a fault that boosts scores by access count
   failed the ranking rule in 100 of 100.
-- **Not decided:** how to close it. Options: make reads with `viewers` silent by default;
-  keep counters per viewer or audience; hide counters from member views while `prune` still
-  reflects reads. No mitigation is built or tested.
+- **Fix and rerun (run 2, 2026-11-25):** `search` with `viewers` no longer counts as an
+  access unless `record_access=True` (CLI `--record`); the server does not accept
+  `record_access` from members. Run 1's reports are kept in
+  `experiments/results/audience_access_channel_run1_superseded/`. Run 2 (500 trials, same
+  rules plus an opt-in condition): rules 1 to 5 held in every trial; with the default, bob
+  saw no change and named no topic in any trial (0 of 500, from counters or prune
+  survivors); with an explicit opt-in he still named it in 500 of 500. Both injected faults
+  were caught again (100 of 100 each). Cost: reads for viewers no longer keep a memory
+  from being pruned, so retention depends on reads without viewers or opted-in reads;
+  per-viewer counters would keep read-driven retention without the leak and were not built.
 - **Limits:** one reader and one query with unique topic tokens (the easy case for an
-  observer); no mitigation; the counters belong to the memory by design.
+  observer); the counters belong to the memory by design, so an opted-in read still leaves
+  the trace.
 
 **LongMemEval version 3: required evidence and supersession as two annotations, 2026-11-24.**
 The converter took the order of the evidence turns as the order of replacement and

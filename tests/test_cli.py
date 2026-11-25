@@ -117,6 +117,13 @@ class CliTests(unittest.TestCase):
 
         _, out, _ = self.run_cli("--viewers", "carol", "search", "launch", "--peek")
         self.assertEqual(json.loads(out), [])
+        self.run_cli("--viewers", "carol", "search", "review")
+        _, out, _ = self.run_cli("get", thursday)
+        self.assertEqual(json.loads(out)["access_count"], 0)  # silent by default with viewers
+        self.run_cli("--viewers", "carol", "search", "review", "--record")
+        _, out, _ = self.run_cli("get", thursday)
+        self.assertGreaterEqual(json.loads(out)["access_count"], 1)
+
         _, out, _ = self.run_cli("--viewers", "carol", "disputes")
         (dispute,) = json.loads(out)
         self.assertTrue(dispute["open"])

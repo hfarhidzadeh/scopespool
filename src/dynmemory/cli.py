@@ -147,10 +147,17 @@ def _parser() -> argparse.ArgumentParser:
     search.add_argument("query")
     search.add_argument("--type", choices=[kind.value for kind in MemoryType])
     search.add_argument("--limit", type=int, default=10)
-    search.add_argument(
+    mode = search.add_mutually_exclusive_group()
+    mode.add_argument(
         "--peek",
         action="store_true",
-        help="do not count this search as an access",
+        help="do not count this search as an access (the default with --viewers)",
+    )
+    mode.add_argument(
+        "--record",
+        action="store_true",
+        help="count this search as an access even with --viewers; other members "
+        "can then see it in the access counters",
     )
 
     get = commands.add_parser("get", help="show one memory")
@@ -374,7 +381,7 @@ def _run(args: argparse.Namespace) -> int:
             args.query,
             kind=args.type,
             limit=args.limit,
-            record_access=not args.peek,
+            record_access=True if args.record else (False if args.peek else None),
             viewers=viewers,
         )
         _print_json(
