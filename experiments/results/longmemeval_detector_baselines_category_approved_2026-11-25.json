@@ -1,0 +1,790 @@
+{
+  "semantic": "sentence-transformers",
+  "questions": 64,
+  "controls": {
+    "c1_never_is_none": true,
+    "c2_oracle_candidate": true
+  },
+  "verdict": "overlap: not usable (a, b, e); hash: not usable (a, b, c, d, e); minilm: not usable (a, b, c, d, e)",
+  "readings": {
+    "overlap": {
+      "score": {
+        "name": "overlap",
+        "positives": {
+          "n": 51,
+          "fired": 0,
+          "correct": 0,
+          "wrong": 0,
+          "recall": 0.0
+        },
+        "current": {
+          "n": 44,
+          "fired": 0,
+          "correct": 0,
+          "wrong": 0,
+          "recall": 0.0
+        },
+        "negatives": {
+          "n": 13,
+          "fired": 0
+        },
+        "controls": {
+          "n": 640,
+          "fired": 14
+        }
+      },
+      "vs_random": {
+        "questions": 44,
+        "mean": -0.2,
+        "ci95": [
+          -0.2,
+          -0.2
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 0,
+        "worse": 44,
+        "same": 0
+      },
+      "rr_gain": {
+        "questions": 44,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "p": 1.0,
+        "better": 0,
+        "worse": 0,
+        "same": 44
+      },
+      "oracle_gain": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "recovery": 0.0,
+      "failed": [
+        "a: recall on current positives below 0.5",
+        "b: does not beat random with p < 0.05",
+        "e: recovers less than half of the oracle's rank gain, or not significantly"
+      ]
+    },
+    "hash": {
+      "score": {
+        "name": "hash",
+        "positives": {
+          "n": 51,
+          "fired": 31,
+          "correct": 12,
+          "wrong": 19,
+          "recall": 0.23529411764705882
+        },
+        "current": {
+          "n": 44,
+          "fired": 27,
+          "correct": 11,
+          "wrong": 16,
+          "recall": 0.25
+        },
+        "negatives": {
+          "n": 13,
+          "fired": 5
+        },
+        "controls": {
+          "n": 640,
+          "fired": 155
+        }
+      },
+      "vs_random": {
+        "questions": 44,
+        "mean": 0.05,
+        "ci95": [
+          -0.06363636363636371,
+          0.18636363636363626
+        ],
+        "p": 0.4982350176498235,
+        "better": 11,
+        "worse": 33,
+        "same": 0
+      },
+      "rr_gain": {
+        "questions": 44,
+        "mean": 0.06628787878787878,
+        "ci95": [
+          0.023484848484848494,
+          0.11704545454545458
+        ],
+        "p": 0.00390625,
+        "better": 9,
+        "worse": 0,
+        "same": 35
+      },
+      "oracle_gain": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "recovery": 0.42372881355932196,
+      "failed": [
+        "a: recall on current positives below 0.5",
+        "b: does not beat random with p < 0.05",
+        "c: fires on more than 5% of control turns",
+        "d: fires on more than 20% of negatives",
+        "e: recovers less than half of the oracle's rank gain, or not significantly"
+      ]
+    },
+    "minilm": {
+      "score": {
+        "name": "minilm",
+        "positives": {
+          "n": 51,
+          "fired": 27,
+          "correct": 9,
+          "wrong": 18,
+          "recall": 0.17647058823529413
+        },
+        "current": {
+          "n": 44,
+          "fired": 22,
+          "correct": 9,
+          "wrong": 13,
+          "recall": 0.20454545454545456
+        },
+        "negatives": {
+          "n": 13,
+          "fired": 7
+        },
+        "controls": {
+          "n": 640,
+          "fired": 236
+        }
+      },
+      "vs_random": {
+        "questions": 44,
+        "mean": 0.00454545454545456,
+        "ci95": [
+          -0.10909090909090917,
+          0.11818181818181817
+        ],
+        "p": 1.0,
+        "better": 9,
+        "worse": 35,
+        "same": 0
+      },
+      "rr_gain": {
+        "questions": 44,
+        "mean": 0.054924242424242424,
+        "ci95": [
+          0.016666666666666666,
+          0.10037878787878789
+        ],
+        "p": 0.0078125,
+        "better": 8,
+        "worse": 0,
+        "same": 36
+      },
+      "oracle_gain": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "recovery": 0.3510895883777239,
+      "failed": [
+        "a: recall on current positives below 0.5",
+        "b: does not beat random with p < 0.05",
+        "c: fires on more than 5% of control turns",
+        "d: fires on more than 20% of negatives",
+        "e: recovers less than half of the oracle's rank gain, or not significantly"
+      ]
+    },
+    "never": {
+      "score": {
+        "name": "never",
+        "positives": {
+          "n": 51,
+          "fired": 0,
+          "correct": 0,
+          "wrong": 0,
+          "recall": 0.0
+        },
+        "current": {
+          "n": 44,
+          "fired": 0,
+          "correct": 0,
+          "wrong": 0,
+          "recall": 0.0
+        },
+        "negatives": {
+          "n": 13,
+          "fired": 0
+        },
+        "controls": {
+          "n": 640,
+          "fired": 0
+        }
+      },
+      "vs_random": {
+        "questions": 44,
+        "mean": -0.2,
+        "ci95": [
+          -0.2,
+          -0.2
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 0,
+        "worse": 44,
+        "same": 0
+      },
+      "rr_gain": {
+        "questions": 44,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "p": 1.0,
+        "better": 0,
+        "worse": 0,
+        "same": 44
+      },
+      "oracle_gain": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "recovery": 0.0,
+      "failed": []
+    },
+    "top": {
+      "score": {
+        "name": "top",
+        "positives": {
+          "n": 51,
+          "fired": 51,
+          "correct": 25,
+          "wrong": 26,
+          "recall": 0.49019607843137253
+        },
+        "current": {
+          "n": 44,
+          "fired": 44,
+          "correct": 23,
+          "wrong": 21,
+          "recall": 0.5227272727272727
+        },
+        "negatives": {
+          "n": 13,
+          "fired": 13
+        },
+        "controls": {
+          "n": 640,
+          "fired": 639
+        }
+      },
+      "vs_random": {
+        "questions": 44,
+        "mean": 0.3227272727272729,
+        "ci95": [
+          0.16363636363636358,
+          0.45909090909090955
+        ],
+        "p": 0.00021999780002199978,
+        "better": 23,
+        "worse": 21,
+        "same": 0
+      },
+      "rr_gain": {
+        "questions": 44,
+        "mean": 0.1306818181818182,
+        "ci95": [
+          0.0765151515151515,
+          0.1916666666666667
+        ],
+        "p": 1.999980000199998e-05,
+        "better": 18,
+        "worse": 0,
+        "same": 26
+      },
+      "oracle_gain": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "recovery": 0.8353510895883778,
+      "failed": []
+    },
+    "oracle-cand": {
+      "score": {
+        "name": "oracle-cand",
+        "positives": {
+          "n": 51,
+          "fired": 49,
+          "correct": 49,
+          "wrong": 0,
+          "recall": 0.9607843137254902
+        },
+        "current": {
+          "n": 44,
+          "fired": 44,
+          "correct": 44,
+          "wrong": 0,
+          "recall": 1.0
+        },
+        "negatives": {
+          "n": 13,
+          "fired": 0
+        },
+        "controls": {
+          "n": 640,
+          "fired": 0
+        }
+      },
+      "vs_random": {
+        "questions": 44,
+        "mean": 0.8,
+        "ci95": [
+          0.8,
+          0.8
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 44,
+        "worse": 0,
+        "same": 0
+      },
+      "rr_gain": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "oracle_gain": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "recovery": 1.0,
+      "failed": []
+    }
+  },
+  "candidate_recall": {
+    "targets": 53,
+    "in_candidates": 49,
+    "questions": 49,
+    "positives": 51
+  },
+  "tables": {
+    "none": {
+      "current": {
+        "n": 44,
+        "rr": 0.5242424242424242,
+        "all_required": 0.9545454545454546
+      },
+      "previous": {
+        "n": 7,
+        "rr": 0.4404761904761904,
+        "all_required": 1.0
+      },
+      "both": {
+        "n": 6,
+        "rr": 0.8333333333333334,
+        "all_required": 1.0
+      },
+      "latest_event": {
+        "n": 2,
+        "rr": 0.5,
+        "all_required": 0.5
+      },
+      "context": {
+        "n": 5,
+        "rr": 0.6,
+        "all_required": 1.0
+      },
+      "all": {
+        "n": 64,
+        "rr": 0.5492187499999999,
+        "all_required": 0.953125
+      }
+    },
+    "oracle": {
+      "current": {
+        "n": 44,
+        "rr": 0.6806818181818182,
+        "all_required": 0.9545454545454546
+      },
+      "previous": {
+        "n": 7,
+        "rr": 0.32142857142857145,
+        "all_required": 0.7142857142857143
+      },
+      "both": {
+        "n": 6,
+        "rr": 0.6944444444444445,
+        "all_required": 0.16666666666666666
+      },
+      "latest_event": {
+        "n": 2,
+        "rr": 0.5,
+        "all_required": 0.5
+      },
+      "context": {
+        "n": 5,
+        "rr": 0.6,
+        "all_required": 1.0
+      },
+      "all": {
+        "n": 64,
+        "rr": 0.6307291666666668,
+        "all_required": 0.84375
+      }
+    },
+    "overlap": {
+      "current": {
+        "n": 44,
+        "rr": 0.5242424242424242,
+        "all_required": 0.9545454545454546
+      },
+      "previous": {
+        "n": 7,
+        "rr": 0.4404761904761904,
+        "all_required": 1.0
+      },
+      "both": {
+        "n": 6,
+        "rr": 0.8333333333333334,
+        "all_required": 1.0
+      },
+      "latest_event": {
+        "n": 2,
+        "rr": 0.5,
+        "all_required": 0.5
+      },
+      "context": {
+        "n": 5,
+        "rr": 0.6,
+        "all_required": 1.0
+      },
+      "all": {
+        "n": 64,
+        "rr": 0.5492187499999999,
+        "all_required": 0.953125
+      }
+    },
+    "hash": {
+      "current": {
+        "n": 44,
+        "rr": 0.5905303030303028,
+        "all_required": 0.9545454545454546
+      },
+      "previous": {
+        "n": 7,
+        "rr": 0.5119047619047619,
+        "all_required": 1.0
+      },
+      "both": {
+        "n": 6,
+        "rr": 0.9166666666666666,
+        "all_required": 0.8333333333333334
+      },
+      "latest_event": {
+        "n": 2,
+        "rr": 0.5,
+        "all_required": 0.5
+      },
+      "context": {
+        "n": 5,
+        "rr": 0.8,
+        "all_required": 1.0
+      },
+      "all": {
+        "n": 64,
+        "rr": 0.6260416666666667,
+        "all_required": 0.9375
+      }
+    },
+    "minilm": {
+      "current": {
+        "n": 44,
+        "rr": 0.5791666666666665,
+        "all_required": 0.9545454545454546
+      },
+      "previous": {
+        "n": 7,
+        "rr": 0.5119047619047619,
+        "all_required": 1.0
+      },
+      "both": {
+        "n": 6,
+        "rr": 0.8333333333333334,
+        "all_required": 1.0
+      },
+      "latest_event": {
+        "n": 2,
+        "rr": 0.5,
+        "all_required": 0.5
+      },
+      "context": {
+        "n": 5,
+        "rr": 0.7,
+        "all_required": 1.0
+      },
+      "all": {
+        "n": 64,
+        "rr": 0.6026041666666667,
+        "all_required": 0.953125
+      }
+    },
+    "top": {
+      "current": {
+        "n": 44,
+        "rr": 0.6549242424242424,
+        "all_required": 0.9545454545454546
+      },
+      "previous": {
+        "n": 7,
+        "rr": 0.39285714285714285,
+        "all_required": 0.7142857142857143
+      },
+      "both": {
+        "n": 6,
+        "rr": 0.9166666666666666,
+        "all_required": 0.5
+      },
+      "latest_event": {
+        "n": 2,
+        "rr": 0.5,
+        "all_required": 0.5
+      },
+      "context": {
+        "n": 5,
+        "rr": 0.9,
+        "all_required": 1.0
+      },
+      "all": {
+        "n": 64,
+        "rr": 0.6651041666666668,
+        "all_required": 0.875
+      }
+    },
+    "random": {
+      "current": {
+        "n": 44,
+        "rr": 0.5662878787878789,
+        "all_required": 0.9545454545454546
+      },
+      "previous": {
+        "n": 7,
+        "rr": 0.3511904761904762,
+        "all_required": 0.7714285714285715
+      },
+      "both": {
+        "n": 6,
+        "rr": 0.8583333333333334,
+        "all_required": 0.8833333333333334
+      },
+      "latest_event": {
+        "n": 2,
+        "rr": 0.5,
+        "all_required": 0.5
+      },
+      "context": {
+        "n": 5,
+        "rr": 0.6900000000000001,
+        "all_required": 1.0
+      },
+      "all": {
+        "n": 64,
+        "rr": 0.5777343749999999,
+        "all_required": 0.9171875
+      }
+    }
+  },
+  "sweep": [
+    {
+      "detector": "overlap",
+      "threshold": 0.2,
+      "recall_current": 0.29545454545454547,
+      "wrong_positives": 16,
+      "negatives_fired": 4,
+      "controls_fired": 180,
+      "controls_n": 640
+    },
+    {
+      "detector": "overlap",
+      "threshold": 0.3,
+      "recall_current": 0.11363636363636363,
+      "wrong_positives": 7,
+      "negatives_fired": 0,
+      "controls_fired": 58,
+      "controls_n": 640
+    },
+    {
+      "detector": "overlap",
+      "threshold": 0.4,
+      "recall_current": 0.06818181818181818,
+      "wrong_positives": 2,
+      "negatives_fired": 0,
+      "controls_fired": 21,
+      "controls_n": 640
+    },
+    {
+      "detector": "overlap",
+      "threshold": 0.5,
+      "recall_current": 0.0,
+      "wrong_positives": 0,
+      "negatives_fired": 0,
+      "controls_fired": 14,
+      "controls_n": 640
+    },
+    {
+      "detector": "overlap",
+      "threshold": 0.6,
+      "recall_current": 0.0,
+      "wrong_positives": 0,
+      "negatives_fired": 0,
+      "controls_fired": 6,
+      "controls_n": 640
+    },
+    {
+      "detector": "hash",
+      "threshold": 0.4,
+      "recall_current": 0.38636363636363635,
+      "wrong_positives": 33,
+      "negatives_fired": 13,
+      "controls_fired": 530,
+      "controls_n": 640
+    },
+    {
+      "detector": "hash",
+      "threshold": 0.5,
+      "recall_current": 0.38636363636363635,
+      "wrong_positives": 31,
+      "negatives_fired": 13,
+      "controls_fired": 371,
+      "controls_n": 640
+    },
+    {
+      "detector": "hash",
+      "threshold": 0.6,
+      "recall_current": 0.25,
+      "wrong_positives": 19,
+      "negatives_fired": 5,
+      "controls_fired": 155,
+      "controls_n": 640
+    },
+    {
+      "detector": "hash",
+      "threshold": 0.7,
+      "recall_current": 0.09090909090909091,
+      "wrong_positives": 7,
+      "negatives_fired": 0,
+      "controls_fired": 47,
+      "controls_n": 640
+    },
+    {
+      "detector": "hash",
+      "threshold": 0.8,
+      "recall_current": 0.0,
+      "wrong_positives": 1,
+      "negatives_fired": 0,
+      "controls_fired": 10,
+      "controls_n": 640
+    },
+    {
+      "detector": "minilm",
+      "threshold": 0.4,
+      "recall_current": 0.3409090909090909,
+      "wrong_positives": 29,
+      "negatives_fired": 13,
+      "controls_fired": 401,
+      "controls_n": 640
+    },
+    {
+      "detector": "minilm",
+      "threshold": 0.5,
+      "recall_current": 0.2727272727272727,
+      "wrong_positives": 27,
+      "negatives_fired": 8,
+      "controls_fired": 331,
+      "controls_n": 640
+    },
+    {
+      "detector": "minilm",
+      "threshold": 0.6,
+      "recall_current": 0.20454545454545456,
+      "wrong_positives": 18,
+      "negatives_fired": 7,
+      "controls_fired": 236,
+      "controls_n": 640
+    },
+    {
+      "detector": "minilm",
+      "threshold": 0.7,
+      "recall_current": 0.13636363636363635,
+      "wrong_positives": 11,
+      "negatives_fired": 2,
+      "controls_fired": 139,
+      "controls_n": 640
+    },
+    {
+      "detector": "minilm",
+      "threshold": 0.8,
+      "recall_current": 0.09090909090909091,
+      "wrong_positives": 3,
+      "negatives_fired": 1,
+      "controls_fired": 45,
+      "controls_n": 640
+    }
+  ],
+  "annotations": "longmemeval_knowledge_update_annotations_v3_category_approved_2026-11-25.json",
+  "annotations_sha256": "a2b75e3795557b9aa15fe84fda8eaba2284458ba947eafc22e353698936ae2b8",
+  "data_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+  "annotation_review": "The project owner accepted 9 proposed category decisions on 2026-11-25; remaining required-evidence groups and update relations are provisional and partly AI-derived."
+}

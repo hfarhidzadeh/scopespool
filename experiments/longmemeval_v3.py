@@ -17,11 +17,10 @@ questions for which every required group has a turn in the top 10. For a
 question with one group it equals ``first hit@10``; for a question that needs two
 pieces it is stricter, and the gap is what the old metric overstated.
 
-Data. LongMemEval_S (cleaned), the 68 annotated knowledge-update questions with
-required evidence (2 of the 70 are excluded by annotation). One store per
-question, its memories the user's turns, its links each turn ``related_to`` the
-next in its session. Cohorts are the annotation's category: current (47),
-previous (9), both (6), latest_event (3), context (3).
+Data. LongMemEval_S (cleaned), restricted to questions included by the selected
+annotation file. One store per question, its memories the user's turns, its
+links each turn ``related_to`` the next in its session. Cohorts follow the
+selected annotation's categories.
 
 Configurations. Embedder: lexical, or MiniLM hybrid (``all-MiniLM-L6-v2``, default
 similarity floor 0.3). Updates: kept (every turn stays searchable) or applied (the
@@ -69,10 +68,11 @@ Decision rule, fixed before running. Readings are reported per embedder.
   Otherwise "no clear effect". With only 6 questions needing two pieces, the
   "both" figures are descriptive.
 
-Sensitivity. The five questions where the labels are contested (2133c1b5,
-cf22b7bf, 5c40ec5b, 26bdc477, 42ec0761: three recommended by the AI review and
-two more proposed in an AI-filled sheet; none adjudicated by a human) are
-dropped and every reading is recomputed.
+Sensitivity. The five questions whose labels were originally contested (2133c1b5,
+cf22b7bf, 5c40ec5b, 26bdc477, 42ec0761: three recommended by the first AI
+review and two more proposed in an AI-filled sheet) are omitted and every
+reading is recomputed. Later category acceptance is recorded in the selected
+annotation file.
 
 Runs.
   Run 1 (reports in ``experiments/results/longmemeval_v3_run1_superseded/``):
@@ -88,6 +88,8 @@ Runs.
   statistics are those of run 1; only the annotations changed. The sensitivity run below
   now drops rows whose category was contested before, so it shows how much the
   contested rows matter whatever their final category.
+  Later runs can pass a different annotation file and output stem explicitly;
+  the report records their annotation path and hash.
 
 Run from the project root (the MiniLM backend needs the venv in
 ``memory/embedding-environment.md``):
@@ -138,6 +140,19 @@ STATS = _load_stats()
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def annotation_review(path: Path) -> str:
+    """Describe the selected annotation's recorded approval scope."""
+    approval = json.loads(path.read_text(encoding="utf-8")).get("review", {}).get("category_approval")
+    if approval:
+        return ("The project owner accepted {} proposed category decisions on {}; remaining"
+                " required-evidence groups and update relations are provisional and partly AI-derived."
+                " Not comparable with versions 1 and 2.").format(
+                    len(approval["decisions"]), approval["date"])
+    return ("Annotations are provisional; see the selected file's review metadata for category"
+            " decisions. Required-evidence groups and update relations remain partly AI-derived."
+            " Not comparable with versions 1 and 2.")
 
 
 def with_updates(eval_set: dict, updates: list) -> dict:
@@ -329,8 +344,7 @@ def render(report: dict) -> str:
         "# LongMemEval knowledge updates, version 3 (provisional)", "",
         "Real LongMemEval text; no LLM. {} questions annotated for required evidence"
         " and supersession; semantic backend: {}.".format(m["questions"], report["semantic"]),
-        "Annotations: the researcher's five category decisions plus a source-evidence review whose reviewer is not"
-        " recorded; the rest is AI-derived and not human-adjudicated. Not comparable with versions 1 and 2.",
+        report["annotation_review"],
         "Annotations: `{}`. Data sha256 {}; annotations sha256 {}.".format(
             report["annotations"], report["data_sha256"][:16], report["annotations_sha256"][:16]),
         "See the docstring of `experiments/longmemeval_v3.py` for the design and decision rule.", "",
@@ -353,7 +367,7 @@ def render(report: dict) -> str:
         "- C. Semantic minus lexical, updates kept, all {} questions: {}".format(m["questions"], fmt(m["C"])),
         "- C. Same, the {} questions needing two pieces: {}".format(m["sizes"]["both"], fmt(m["C_both"])), "",
         "## Cohorts (depth 10)", ""] + table_lines(m["tables"]) + [
-        "", "## Sensitivity: the 5 contested questions dropped ({} questions)".format(s["questions"]), "",
+        "", "## Sensitivity: the five originally disputed IDs omitted ({} questions)".format(s["questions"]), "",
         "- A, lexical: {}; semantic: {}".format(fmt(s["A"]["lexical"]), fmt(s["A"]["semantic"])),
         "- B, lexical: {}; semantic: {}".format(fmt(s["B"]["lexical"]), fmt(s["B"]["semantic"])),
         "- C: {}".format(fmt(s["C"])), "",
@@ -386,6 +400,7 @@ def main(argv=None) -> int:
         "semantic": arguments.semantic, "controls": outcome["controls"], "main": main_result,
         "sensitivity": readings(eval_sets, outcome["rows"], set(CONTESTED)),
         "decision": decide(outcome["controls"], main_result),
+        "annotation_review": annotation_review(arguments.annotations),
         "data_sha256": sha256(arguments.data), "annotations_sha256": sha256(arguments.annotations),
         "annotations": str(arguments.annotations.relative_to(ROOT))
         if arguments.annotations.is_relative_to(ROOT) else arguments.annotations.name,

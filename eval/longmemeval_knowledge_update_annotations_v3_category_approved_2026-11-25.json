@@ -1,0 +1,1309 @@
+{
+  "description": "Version 3 annotation candidate with nine disputed category recommendations accepted by the project owner on 2026-11-25. This acceptance is not a blind human reannotation of all 70 questions; remaining required-evidence groups, update relations, and flags are provisional and partly AI-derived. Separate from annotation snapshots used for recorded earlier runs.",
+  "source_labels": "eval/longmemeval_knowledge_update_labels.json",
+  "annotations": {
+    "6a1eabeb": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_a25d4a91_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_a25d4a91_1:4",
+          "new": "answer_a25d4a91_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "6aeb4375": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_3f9693b7_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_3f9693b7_1:8",
+          "new": "answer_3f9693b7_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "830ce83f": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_0b1a0942_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_0b1a0942_1:2",
+          "new": "answer_0b1a0942_2:2",
+          "relation": "supersedes"
+        },
+        {
+          "old": "answer_0b1a0942_1:4",
+          "new": "answer_0b1a0942_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "852ce960": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_3a6f1e82_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_3a6f1e82_1:2",
+          "new": "answer_3a6f1e82_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "945e3d21": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_6a4f8626_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_6a4f8626_1:4",
+          "new": "answer_6a4f8626_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "d7c942c3": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_eecb10d9_2:4"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_eecb10d9_1:8",
+          "new": "answer_eecb10d9_2:4",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "71315a70": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_c44b9df4_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_c44b9df4_1:4",
+          "new": "answer_c44b9df4_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "89941a93": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_e1403127_2:4"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_e1403127_1:4",
+          "new": "answer_e1403127_2:4",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "ce6d2d27": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_73540165_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_73540165_1:4",
+          "new": "answer_73540165_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "a1eacc2a": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_0eb23770_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_0eb23770_1:2",
+          "new": "answer_0eb23770_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "184da446": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_e2f4f947_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_e2f4f947_1:0",
+          "new": "answer_e2f4f947_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "4d6b87c8": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_766ab8da_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_766ab8da_1:2",
+          "new": "answer_766ab8da_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "0f05491a": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_d6d2eba8_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_d6d2eba8_1:10",
+          "new": "answer_d6d2eba8_2:6",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "08e075c7": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_cdbe2250_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_cdbe2250_1:2",
+          "new": "answer_cdbe2250_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "f9e8c073": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_b191df5b_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_b191df5b_1:4",
+          "new": "answer_b191df5b_2:6",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "2698e78f": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_9282283d_2:4"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_9282283d_1:2",
+          "new": "answer_9282283d_2:4",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "b6019101": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_67074b4b_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_67074b4b_1:4",
+          "new": "answer_67074b4b_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "45dc21b6": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_07664d43_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_07664d43_1:0",
+          "new": "answer_07664d43_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "e493bb7c": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_1a374afa_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_1a374afa_1:4",
+          "new": "answer_1a374afa_2:6",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "72e3ee87": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_d7de9a6a_2:8"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_d7de9a6a_1:0",
+          "new": "answer_d7de9a6a_2:8",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "01493427": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_a7b44747_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_a7b44747_1:6",
+          "new": "answer_a7b44747_2:6",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "6a27ffc2": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_77f32504_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_77f32504_1:0",
+          "new": "answer_77f32504_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "2133c1b5": {
+      "category": "exclude",
+      "original_category": "current",
+      "required_groups": [],
+      "supersession": [],
+      "flags": [
+        "answer-bearing session is dated after the question"
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "18bc8abd": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_fff743f5_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_fff743f5_1:2",
+          "new": "answer_fff743f5_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "db467c8c": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_611b6e83_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_611b6e83_1:2",
+          "new": "answer_611b6e83_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "7a87bd0c": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_d08a934d_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_d08a934d_1:0",
+          "new": "answer_d08a934d_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "e61a7584": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_f25c32f5_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_f25c32f5_1:10",
+          "new": "answer_f25c32f5_2:6",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "1cea1afa": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_79c395a9_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_79c395a9_1:0",
+          "new": "answer_79c395a9_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "ed4ddc30": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_babbaccb_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_babbaccb_1:2",
+          "new": "answer_babbaccb_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "8fb83627": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_966cecbb_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_966cecbb_1:2",
+          "new": "answer_966cecbb_2:6",
+          "relation": "supersedes"
+        },
+        {
+          "old": "answer_966cecbb_1:10",
+          "new": "answer_966cecbb_2:6",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "b01defab": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_8c0712af_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_8c0712af_1:2",
+          "new": "answer_8c0712af_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "0e4e4c46": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_f2f998c7_2:8"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_f2f998c7_1:2",
+          "new": "answer_f2f998c7_2:8",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "4b24c848": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_2cec623b_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_2cec623b_1:4",
+          "new": "answer_2cec623b_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "603deb26": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_8afdebac_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_8afdebac_1:4",
+          "new": "answer_8afdebac_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "59524333": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_b28f2c7a_2:4"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_b28f2c7a_1:4",
+          "new": "answer_b28f2c7a_2:4",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "5831f84d": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_8d63a897_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_8d63a897_1:0",
+          "new": "answer_8d63a897_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "affe2881": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_90de9b4d_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_90de9b4d_1:4",
+          "new": "answer_90de9b4d_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "cc5ded98": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_a5b68517_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_a5b68517_1:4",
+          "new": "answer_a5b68517_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "7401057b": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_94650bfa_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_94650bfa_1:4",
+          "new": "answer_94650bfa_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "cf22b7bf": {
+      "category": "context",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_ae3a122b_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_ae3a122b_1:8",
+          "new": "answer_ae3a122b_2:2",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "different measurement intervals, no older total"
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "a2f3aa27": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_5126c02d_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_5126c02d_1:2",
+          "new": "answer_5126c02d_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [
+        "the newer count is approximate (close to 1300)"
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "c7dc5443": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_0cdbca92_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_0cdbca92_1:0",
+          "new": "answer_0cdbca92_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "06db6396": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_da72b1b4_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_da72b1b4_1:4",
+          "new": "answer_da72b1b4_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "3ba21379": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_cd345582_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_cd345582_1:0",
+          "new": "answer_cd345582_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "dad224aa": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_4a97ae40_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_4a97ae40_1:2",
+          "new": "answer_4a97ae40_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "ba61f0b9": {
+      "category": "current",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_f377cda7_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_f377cda7_1:2",
+          "new": "answer_f377cda7_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "42ec0761": {
+      "category": "context",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_e3892371_2:6"
+        ]
+      ],
+      "supersession": [],
+      "flags": [
+        "The earlier turn reports misplacing the usual screwdriver. The later turn establishes ownership of a spare, which could already have been owned."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "5c40ec5b": {
+      "category": "context",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_1cb52d0a_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_1cb52d0a_1:6",
+          "new": "answer_1cb52d0a_2:0",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "earlier turn gives no exact earlier count"
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "26bdc477": {
+      "category": "context",
+      "original_category": "current",
+      "required_groups": [
+        [
+          "answer_f762ad8d_2:0"
+        ]
+      ],
+      "supersession": [],
+      "flags": [
+        "The earlier turn gives three example locations, without an earlier total. The newer turn gives the total of five."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "07741c45": {
+      "category": "exclude",
+      "original_category": "current",
+      "required_groups": [],
+      "supersession": [],
+      "flags": [
+        "The user discusses planned shoe-rack storage and later says they look forward to storing the sneakers there; current rack storage is unconfirmed."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "07741c44": {
+      "category": "previous",
+      "original_category": "previous",
+      "required_groups": [
+        [
+          "answer_7e9ad7b4_1:2"
+        ]
+      ],
+      "supersession": [],
+      "flags": [
+        "The older under-bed location is supported, but the shoe-rack turn is a future plan, not a confirmed replacement."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "50635ada": {
+      "category": "exclude",
+      "original_category": "previous",
+      "required_groups": [],
+      "supersession": [],
+      "flags": [
+        "The older turn establishes Premier Silver eligibility only. The newer turn establishes Premier Gold status. The benchmark assumes the older eligibility meant attainment.",
+        "The older user turn establishes Silver eligibility, not previous Silver status; the benchmark answer is unsupported."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "e66b632c": {
+      "category": "previous",
+      "original_category": "previous",
+      "required_groups": [
+        [
+          "answer_ac0140ce_1:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_ac0140ce_1:2",
+          "new": "answer_ac0140ce_2:8",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "0ddfec37": {
+      "category": "previous",
+      "original_category": "previous",
+      "required_groups": [
+        [
+          "answer_a22b654d_1:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_a22b654d_1:0",
+          "new": "answer_a22b654d_2:0",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "The early count is for the first three months of collecting. The later count is for a different rolling window."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "dfde3500": {
+      "category": "previous",
+      "original_category": "previous",
+      "required_groups": [
+        [
+          "answer_35d6c0be_1:8"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_35d6c0be_1:8",
+          "new": "answer_35d6c0be_2:2",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "Wednesday is the schedule with Juan. The later Thursday meeting is with Maria, identified as a tutor in the same session. It gives no new weekday for Juan."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "9bbe84a2": {
+      "category": "previous",
+      "original_category": "previous",
+      "required_groups": [
+        [
+          "answer_c6a0c6c2_1:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_c6a0c6c2_1:0",
+          "new": "answer_c6a0c6c2_2:8",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [
+        "The later turn explicitly calls level 150 the current goal. The earlier 100 target had a year-end deadline, so the new goal does not establish a replacement deadline."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "10e09553": {
+      "category": "previous",
+      "original_category": "previous",
+      "required_groups": [
+        [
+          "answer_67be2c38_1:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_67be2c38_1:2",
+          "new": "answer_67be2c38_2:2",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "two separate fishing trips"
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "0977f2af": {
+      "category": "exclude",
+      "original_category": "previous",
+      "required_groups": [],
+      "supersession": [],
+      "flags": [
+        "two purchases; event order ambiguous",
+        "The Air Fryer was bought May 20; the Instant Pot purchase date is unstated. Their purchase order is unproven."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "89941a94": {
+      "category": "previous",
+      "original_category": "previous",
+      "required_groups": [
+        [
+          "answer_e1403127_1:4"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_e1403127_1:4",
+          "new": "answer_e1403127_2:4",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "question says gravel bike, source says hybrid; newer turn also lists older bikes; unresolved",
+        "The older turn supports prior road-bike ownership. The newer list also supports it if hybrid is the intended purchase."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "031748ae": {
+      "category": "both",
+      "original_category": "both",
+      "required_groups": [
+        [
+          "answer_8748f791_1:10"
+        ],
+        [
+          "answer_8748f791_2:2"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_8748f791_1:10",
+          "new": "answer_8748f791_2:2",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "6071bd76": {
+      "category": "both",
+      "original_category": "both",
+      "required_groups": [
+        [
+          "answer_4dac77cb_1:0"
+        ],
+        [
+          "answer_4dac77cb_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_4dac77cb_1:0",
+          "new": "answer_4dac77cb_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "c4ea545c": {
+      "category": "both",
+      "original_category": "both",
+      "required_groups": [
+        [
+          "answer_d3bf812b_1:4"
+        ],
+        [
+          "answer_d3bf812b_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_d3bf812b_1:4",
+          "new": "answer_d3bf812b_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "f685340e": {
+      "category": "both",
+      "original_category": "both",
+      "required_groups": [
+        [
+          "answer_25df025b_1:0"
+        ],
+        [
+          "answer_25df025b_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_25df025b_1:0",
+          "new": "answer_25df025b_2:0",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [
+        "Weekly and every other week are supported. An unmarked old turn describes one Sunday plan, which does not establish that every older session took place on Sundays."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "c6853660": {
+      "category": "both",
+      "original_category": "both",
+      "required_groups": [
+        [
+          "answer_626e93c4_1:0"
+        ],
+        [
+          "answer_626e93c4_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_626e93c4_1:0",
+          "new": "answer_626e93c4_2:6",
+          "relation": "supersedes"
+        }
+      ],
+      "flags": [
+        "The benchmark-marked newer turn proposes two cups. The later user turn in the same session confirms the change and supplies the required evidence and update endpoint."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "69fee5aa": {
+      "category": "both",
+      "original_category": "both",
+      "required_groups": [
+        [
+          "answer_d6028d6e_1:8"
+        ],
+        [
+          "answer_d6028d6e_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_d6028d6e_1:8",
+          "new": "answer_d6028d6e_2:0",
+          "relation": "adds_to"
+        }
+      ],
+      "flags": [
+        "37 plus one: an increment, not a replacement total"
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "9ea5eabc": {
+      "category": "exclude",
+      "original_category": "latest_event",
+      "required_groups": [],
+      "supersession": [],
+      "flags": [
+        "Hawaii and Paris are separate trips",
+        "Paris is the later report. The actual trip dates are unstated.",
+        "Paris was last month relative to May 28; Hawaii was called recent without a trip date. Mention order does not establish which trip was most recent."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "41698283": {
+      "category": "latest_event",
+      "original_category": "latest_event",
+      "required_groups": [
+        [
+          "answer_c7ddc051_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_c7ddc051_1:2",
+          "new": "answer_c7ddc051_2:0",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "two separate lens purchases",
+        "The later turn calls the zoom lens new without giving a purchase date."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "7e974930": {
+      "category": "latest_event",
+      "original_category": "latest_event",
+      "required_groups": [
+        [
+          "answer_c9f5693c_2:6"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_c9f5693c_1:2",
+          "new": "answer_c9f5693c_2:6",
+          "relation": "independent"
+        }
+      ],
+      "flags": [
+        "separate market visits; one session lists later sales as done"
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "5a4f22c0": {
+      "category": "context",
+      "original_category": "context",
+      "required_groups": [
+        [
+          "answer_b0f3dfff_2:0"
+        ]
+      ],
+      "supersession": [
+        {
+          "old": "answer_b0f3dfff_1:2",
+          "new": "answer_b0f3dfff_2:0",
+          "relation": "independent"
+        }
+      ],
+      "flags": [],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    },
+    "618f13b2": {
+      "category": "exclude",
+      "original_category": "exclude",
+      "required_groups": [],
+      "supersession": [],
+      "flags": [
+        "Cleaned timestamps put the six-wear report before the four-wear report for the same pair. The benchmark answer relies on the reversed cumulative order."
+      ],
+      "status": "provisional: derived from AI labels and AI review, not human-adjudicated"
+    }
+  },
+  "review": {
+    "base_annotations": "eval/longmemeval_knowledge_update_annotations_v3_reviewed.json",
+    "base_annotations_sha256": "44dc0791aa1bc55108b76de7c8ea889a6f5aa7f4d87cdf560ba6ef1734084c0c",
+    "review_sheet": "experiments/results/label_review/sheet_labeled_ai_audited_2026-11-25.csv",
+    "review_sheet_sha256": "484a3aff45f8b5c3754c8e39d34d0efe7f006a6108c9c801bf313e767f07dc1e",
+    "reviewer_type": "AI evidence audit; nine category decisions accepted by project owner; other annotations remain provisional",
+    "newly_excluded": {
+      "50635ada": "The older user turn establishes Silver eligibility, not previous Silver status; the benchmark answer is unsupported.",
+      "07741c45": "The user discusses planned shoe-rack storage and later says they look forward to storing the sneakers there; current rack storage is unconfirmed.",
+      "9ea5eabc": "Paris was last month relative to May 28; Hawaii was called recent without a trip date. Mention order does not establish which trip was most recent.",
+      "0977f2af": "The Air Fryer was bought May 20; the Instant Pot purchase date is unstated. Their purchase order is unproven."
+    },
+    "removed_supersession_edges": [
+      "07741c44"
+    ],
+    "category_counts": {
+      "both": 6,
+      "context": 5,
+      "current": 44,
+      "exclude": 6,
+      "latest_event": 2,
+      "previous": 7
+    },
+    "category_approval": {
+      "date": "2026-11-25",
+      "source": "project owner's agreement with the proposed categories in this conversation",
+      "scope": "nine category disagreements in the 2026-11-25 AI audit",
+      "decisions": {
+        "2133c1b5": "exclude",
+        "5c40ec5b": "context",
+        "cf22b7bf": "context",
+        "26bdc477": "context",
+        "42ec0761": "context",
+        "50635ada": "exclude",
+        "07741c45": "exclude",
+        "9ea5eabc": "exclude",
+        "0977f2af": "exclude"
+      },
+      "limit": "Acceptance of these recommendations does not certify an independent human review of all 70 categories or every required-evidence and supersession annotation."
+    },
+    "ai_audited_source": "eval/longmemeval_knowledge_update_annotations_v3_ai_audited_2026-11-25.json",
+    "ai_audited_source_sha256": "1bafb599005dd2052e4950a395c6e08e8fd1d5496b8c057caff68f79da1f7324"
+  }
+}

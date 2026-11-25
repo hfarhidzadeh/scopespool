@@ -6,6 +6,24 @@ The GitHub repository was renamed to [ScopeSpool](https://github.com/hfarhidzade
 The applied rename covers the repository name. The installed package and
 command currently use `memvane`, and Python imports use `dynmemory`.
 
+## ScopeSpool exact-name check, 2026-11-25
+
+An [exact-name GitHub repository search](https://api.github.com/search/repositories?q=scopespool%20in%3Aname&per_page=100)
+returned only [this repository](https://github.com/hfarhidzadeh/scopespool).
+Exact package lookups returned no entry on [PyPI](https://pypi.org/pypi/scopespool/json),
+[npm](https://registry.npmjs.org/scopespool), or
+[crates.io](https://crates.io/api/v1/crates/scopespool). Broad quoted web
+searches found no independent exact-name software project. This is a
+time-limited public software check.
+
+RDAP lookups returned no registry record for `scopespool.com`, `.net`, `.org`,
+`.dev`, `.ai`, `.io`, or `.app` at the time of checking; for example, see the
+[`.com` lookup](https://rdap.verisign.com/com/v1/domain/scopespool.com).
+An absent RDAP record is not a guarantee that a domain can be registered.
+Formal trademark clearance remains open; use the
+[USPTO trademark search](https://tmsearch.uspto.gov/search/) before a public
+launch.
+
 ## Memvane collision check, 2026-11-24
 
 **Recommendation: choose a different public name.** A second public project

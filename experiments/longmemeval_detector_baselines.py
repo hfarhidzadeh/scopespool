@@ -1,21 +1,22 @@
 """Update-detector baselines on LongMemEval (version 3, reviewed annotations).
 
-Status: provisional. The ground truth is the v3 reviewed annotation
-(``eval/longmemeval_knowledge_update_annotations_v3_reviewed.json``): the
-researcher's five category decisions and a source-evidence review whose reviewer
-is not recorded; the rest is derived from AI labels and is not human-adjudicated.
+Status: provisional. Ground truth comes from the selected v3 annotation file.
+The default reviewed file records five category decisions; a later candidate
+records project-owner acceptance of nine proposed category decisions. Other
+evidence and update annotations remain partly AI-derived and provisional.
 The detectors are the shipped baselines of ``dynmemory.detection`` at their
-default settings. They had never been measured on real conversations.
+default settings. This experiment measures them on real conversations.
 
 Question. When a new message arrives, does a baseline detector name the earlier
 memory it replaces, and stay quiet when nothing is replaced? And if its decisions
 were applied, how much of the oracle's retrieval gain would it recover, and what
 would it archive wrongly?
 
-Data. The 68 annotated knowledge-update questions of LongMemEval_S (cleaned). One
-store per question, its memories the user's turns in session order, no links.
-For each question the *new turn* N is the first marked evidence turn of the
-latest evidence session. Positives are questions whose annotation has a
+Data. Included annotated knowledge-update questions of LongMemEval_S (cleaned).
+One store per question, its memories the user's turns in session order, no links.
+For each positive question the *new turn* N is the annotated supersession endpoint;
+for a negative it is the first marked turn in the latest evidence session.
+Positives are questions whose annotation has a
 ``supersedes`` edge; the true targets are the old turns of those edges. Negatives
 are annotated questions with none (context, separate events, additions): the
 right answer is "no update". Control turns are 10 random turns per question that
@@ -128,6 +129,17 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def annotation_review(path: Path) -> str:
+    """Describe the selected annotation's recorded approval scope."""
+    approval = json.loads(path.read_text(encoding="utf-8")).get("review", {}).get("category_approval")
+    if approval:
+        return ("The project owner accepted {} proposed category decisions on {}; remaining"
+                " required-evidence groups and update relations are provisional and partly AI-derived.").format(
+                    len(approval["decisions"]), approval["date"])
+    return ("Annotations are provisional; see the selected file's review metadata for category"
+            " decisions. Required-evidence groups and update relations remain partly AI-derived.")
+
+
 def mean(values) -> float:
     values = list(values)
     return sum(values) / len(values) if values else float("nan")
@@ -137,11 +149,18 @@ def prepare(question: dict, annotation: dict, eval_set: dict) -> dict:
     """Everything one question needs: store, positions, N, targets, control turns."""
     _, _, evidence = question_memories(question)
     latest = max(rank for rank, _ in evidence)
-    new_key = next(key for rank, key in evidence if rank == latest)
-    targets = [e["old"] for e in annotation["supersession"] if e["relation"] == "supersedes"]
+    edges = [e for e in annotation["supersession"] if e["relation"] == "supersedes"]
+    targets = [e["old"] for e in edges]
+    endpoints = {e["new"] for e in edges}
+    if len(endpoints) > 1:
+        raise ValueError("{}: detector baseline requires one new endpoint".format(eval_set["id"]))
+    new_key = next(iter(endpoints)) if endpoints else next(key for rank, key in evidence if rank == latest)
     keys = list(eval_set["memories"])
     position = {key: index for index, key in enumerate(keys)}
-    evidence_keys = {key for _, key in evidence}
+    if new_key not in position or any(old not in position or position[old] >= position[new_key]
+                                      for old in targets):
+        raise ValueError("{}: update endpoint or target is missing or out of order".format(eval_set["id"]))
+    evidence_keys = {key for _, key in evidence} | {new_key}
     rng = random.Random("detectors-{}".format(eval_set["id"]))
     pool = [k for k in keys if k not in evidence_keys and position[k] >= MIN_POSITION]
     controls = rng.sample(pool, min(CONTROL_TURNS, len(pool)))
@@ -384,8 +403,7 @@ def render(report: dict) -> str:
                                       report["semantic"]),
         "Annotations: `{}` (sha256 {}); data sha256 {}.".format(
             report["annotations"], report["annotations_sha256"][:16], report["data_sha256"][:16]),
-        "Ground truth is the researcher's five category decisions plus a source-evidence review whose reviewer"
-        " is not recorded; the rest is AI-derived, not human-adjudicated.",
+        report["annotation_review"],
         "See the docstring of `experiments/longmemeval_detector_baselines.py` for the design and rule.", "",
         "## Controls", "",
         "- C1 (`never` equals no updates and fires 0 times): {}".format(c["c1_never_is_none"]),
@@ -488,6 +506,7 @@ def main(argv=None) -> int:
         "annotations": str(arguments.annotations.relative_to(ROOT))
         if arguments.annotations.is_relative_to(ROOT) else arguments.annotations.name,
         "annotations_sha256": sha256(arguments.annotations), "data_sha256": sha256(arguments.data),
+        "annotation_review": annotation_review(arguments.annotations),
     }
     text = render(report)
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

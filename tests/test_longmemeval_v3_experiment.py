@@ -104,7 +104,9 @@ class RunTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             data, notes = Path(directory) / "d.json", Path(directory) / "a.json"
             data.write_text(json.dumps(QUESTIONS))
-            notes.write_text(json.dumps({"annotations": ANNOTATIONS}))
+            notes.write_text(json.dumps({"annotations": ANNOTATIONS, "review": {
+                "category_approval": {"date": "2026-11-25", "decisions": {"q0": "current"}}
+            }}))
             output = Path(directory) / "report"
             with contextlib.redirect_stdout(io.StringIO()) as printed:
                 ex.main(["--data", str(data), "--annotations", str(notes), "--semantic", "ngram",
@@ -114,6 +116,7 @@ class RunTests(unittest.TestCase):
         self.assertEqual(report["decision"]["failed_controls"], [])
         self.assertEqual(report["main"]["questions"], len(EVAL_SETS))
         self.assertIn(report["decision"]["verdict"], text)
+        self.assertIn("accepted 1 proposed category decisions", text)
         self.assertEqual(printed.getvalue().strip(), text.strip())
 
 

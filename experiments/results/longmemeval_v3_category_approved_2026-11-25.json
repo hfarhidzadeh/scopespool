@@ -1,0 +1,696 @@
+{
+  "semantic": "sentence-transformers",
+  "controls": {
+    "c1_unchanged": true,
+    "c2_zero": true,
+    "c3_shift": 0.0,
+    "c3_detail": {
+      "lexical": 0.0,
+      "semantic": 0.0
+    }
+  },
+  "main": {
+    "questions": 64,
+    "tables": {
+      "lexical/kept": {
+        "current": {
+          "n": 44,
+          "first_hit": 0.9545454545454546,
+          "all_required": 0.9545454545454546,
+          "group_coverage": 0.9545454545454546,
+          "rr": 0.5242424242424242,
+          "stale_first": 0.4772727272727273
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.4404761904761904,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.8333333333333334,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 0.5,
+          "all_required": 0.5,
+          "group_coverage": 0.5,
+          "rr": 0.5,
+          "stale_first": null
+        },
+        "context": {
+          "n": 5,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.6,
+          "stale_first": null
+        },
+        "all": {
+          "n": 64,
+          "first_hit": 0.953125,
+          "all_required": 0.953125,
+          "group_coverage": 0.953125,
+          "rr": 0.5492187499999999,
+          "stale_first": 0.4772727272727273
+        }
+      },
+      "lexical/applied": {
+        "current": {
+          "n": 44,
+          "first_hit": 0.9545454545454546,
+          "all_required": 0.9545454545454546,
+          "group_coverage": 0.9545454545454546,
+          "rr": 0.6806818181818182,
+          "stale_first": 0.0
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 0.7142857142857143,
+          "all_required": 0.7142857142857143,
+          "group_coverage": 0.7142857142857143,
+          "rr": 0.32142857142857145,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 1.0,
+          "all_required": 0.16666666666666666,
+          "group_coverage": 0.5833333333333334,
+          "rr": 0.6944444444444445,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 0.5,
+          "all_required": 0.5,
+          "group_coverage": 0.5,
+          "rr": 0.5,
+          "stale_first": null
+        },
+        "context": {
+          "n": 5,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.6,
+          "stale_first": null
+        },
+        "all": {
+          "n": 64,
+          "first_hit": 0.921875,
+          "all_required": 0.84375,
+          "group_coverage": 0.8828125,
+          "rr": 0.6307291666666668,
+          "stale_first": 0.0
+        }
+      },
+      "semantic/kept": {
+        "current": {
+          "n": 44,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.3752795815295815,
+          "stale_first": 0.6590909090909091
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.2976190476190476,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 1.0,
+          "all_required": 0.8333333333333334,
+          "group_coverage": 0.9166666666666666,
+          "rr": 0.611111111111111,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.35,
+          "stale_first": null
+        },
+        "context": {
+          "n": 5,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.4066666666666666,
+          "stale_first": null
+        },
+        "all": {
+          "n": 64,
+          "first_hit": 1.0,
+          "all_required": 0.984375,
+          "group_coverage": 0.9921875,
+          "rr": 0.3905567956349205,
+          "stale_first": 0.6590909090909091
+        }
+      },
+      "semantic/applied": {
+        "current": {
+          "n": 44,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.5147997835497834,
+          "stale_first": 0.0
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 0.7142857142857143,
+          "all_required": 0.7142857142857143,
+          "group_coverage": 0.7142857142857143,
+          "rr": 0.24999999999999997,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 0.8333333333333334,
+          "all_required": 0.16666666666666666,
+          "group_coverage": 0.5,
+          "rr": 0.4166666666666667,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.35,
+          "stale_first": null
+        },
+        "context": {
+          "n": 5,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.4066666666666666,
+          "stale_first": null
+        },
+        "all": {
+          "n": 64,
+          "first_hit": 0.953125,
+          "all_required": 0.890625,
+          "group_coverage": 0.921875,
+          "rr": 0.46303943452380925,
+          "stale_first": 0.0
+        }
+      }
+    },
+    "A": {
+      "lexical": {
+        "questions": 44,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "p": 1.0,
+        "better": 0,
+        "worse": 0,
+        "same": 44
+      },
+      "semantic": {
+        "questions": 44,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "p": 1.0,
+        "better": 0,
+        "worse": 0,
+        "same": 44
+      }
+    },
+    "B": {
+      "lexical": {
+        "questions": 7,
+        "mean": -1.0,
+        "ci95": [
+          -1.0,
+          -1.0
+        ],
+        "p": 0.015625,
+        "better": 0,
+        "worse": 7,
+        "same": 0
+      },
+      "semantic": {
+        "questions": 7,
+        "mean": -0.8571428571428571,
+        "ci95": [
+          -1.0,
+          -0.5714285714285714
+        ],
+        "p": 0.03125,
+        "better": 0,
+        "worse": 6,
+        "same": 1
+      }
+    },
+    "C": {
+      "questions": 64,
+      "mean": 0.03125,
+      "ci95": [
+        -0.03125,
+        0.09375
+      ],
+      "p": 0.625,
+      "better": 3,
+      "worse": 1,
+      "same": 60
+    },
+    "C_both": {
+      "questions": 6,
+      "mean": -0.16666666666666666,
+      "ci95": [
+        -0.5,
+        0.0
+      ],
+      "p": 1.0,
+      "better": 0,
+      "worse": 1,
+      "same": 5
+    },
+    "A_rr": {
+      "lexical": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "semantic": {
+        "questions": 44,
+        "mean": 0.139520202020202,
+        "ci95": [
+          0.08630952380952382,
+          0.20037878787878782
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 30,
+        "worse": 2,
+        "same": 12
+      }
+    },
+    "A_stale": {
+      "lexical": {
+        "questions": 44,
+        "mean": -0.4772727272727273,
+        "ci95": [
+          -0.6363636363636364,
+          -0.3409090909090909
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 0,
+        "worse": 21,
+        "same": 23
+      },
+      "semantic": {
+        "questions": 44,
+        "mean": -0.6590909090909091,
+        "ci95": [
+          -0.7954545454545454,
+          -0.5227272727272727
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 0,
+        "worse": 29,
+        "same": 15
+      }
+    },
+    "sizes": {
+      "current": 44,
+      "need_old": 7,
+      "both": 6
+    }
+  },
+  "sensitivity": {
+    "questions": 60,
+    "tables": {
+      "lexical/kept": {
+        "current": {
+          "n": 44,
+          "first_hit": 0.9545454545454546,
+          "all_required": 0.9545454545454546,
+          "group_coverage": 0.9545454545454546,
+          "rr": 0.5242424242424242,
+          "stale_first": 0.4772727272727273
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.4404761904761904,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.8333333333333334,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 0.5,
+          "all_required": 0.5,
+          "group_coverage": 0.5,
+          "rr": 0.5,
+          "stale_first": null
+        },
+        "context": {
+          "n": 1,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.5,
+          "stale_first": null
+        },
+        "all": {
+          "n": 60,
+          "first_hit": 0.95,
+          "all_required": 0.95,
+          "group_coverage": 0.95,
+          "rr": 0.5441666666666666,
+          "stale_first": 0.4772727272727273
+        }
+      },
+      "lexical/applied": {
+        "current": {
+          "n": 44,
+          "first_hit": 0.9545454545454546,
+          "all_required": 0.9545454545454546,
+          "group_coverage": 0.9545454545454546,
+          "rr": 0.6806818181818182,
+          "stale_first": 0.0
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 0.7142857142857143,
+          "all_required": 0.7142857142857143,
+          "group_coverage": 0.7142857142857143,
+          "rr": 0.32142857142857145,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 1.0,
+          "all_required": 0.16666666666666666,
+          "group_coverage": 0.5833333333333334,
+          "rr": 0.6944444444444445,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 0.5,
+          "all_required": 0.5,
+          "group_coverage": 0.5,
+          "rr": 0.5,
+          "stale_first": null
+        },
+        "context": {
+          "n": 1,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.5,
+          "stale_first": null
+        },
+        "all": {
+          "n": 60,
+          "first_hit": 0.9166666666666666,
+          "all_required": 0.8333333333333334,
+          "group_coverage": 0.875,
+          "rr": 0.6311111111111113,
+          "stale_first": 0.0
+        }
+      },
+      "semantic/kept": {
+        "current": {
+          "n": 44,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.3752795815295815,
+          "stale_first": 0.6590909090909091
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.2976190476190476,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 1.0,
+          "all_required": 0.8333333333333334,
+          "group_coverage": 0.9166666666666666,
+          "rr": 0.611111111111111,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.35,
+          "stale_first": null
+        },
+        "context": {
+          "n": 1,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.3333333333333333,
+          "stale_first": null
+        },
+        "all": {
+          "n": 60,
+          "first_hit": 1.0,
+          "all_required": 0.9833333333333333,
+          "group_coverage": 0.9916666666666667,
+          "rr": 0.3882605820105819,
+          "stale_first": 0.6590909090909091
+        }
+      },
+      "semantic/applied": {
+        "current": {
+          "n": 44,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.5147997835497834,
+          "stale_first": 0.0
+        },
+        "previous": {
+          "n": 7,
+          "first_hit": 0.7142857142857143,
+          "all_required": 0.7142857142857143,
+          "group_coverage": 0.7142857142857143,
+          "rr": 0.24999999999999997,
+          "stale_first": null
+        },
+        "both": {
+          "n": 6,
+          "first_hit": 0.8333333333333334,
+          "all_required": 0.16666666666666666,
+          "group_coverage": 0.5,
+          "rr": 0.4166666666666667,
+          "stale_first": null
+        },
+        "latest_event": {
+          "n": 2,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.35,
+          "stale_first": null
+        },
+        "context": {
+          "n": 1,
+          "first_hit": 1.0,
+          "all_required": 1.0,
+          "group_coverage": 1.0,
+          "rr": 0.3333333333333333,
+          "stale_first": null
+        },
+        "all": {
+          "n": 60,
+          "first_hit": 0.95,
+          "all_required": 0.8833333333333333,
+          "group_coverage": 0.9166666666666666,
+          "rr": 0.46557539682539656,
+          "stale_first": 0.0
+        }
+      }
+    },
+    "A": {
+      "lexical": {
+        "questions": 44,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "p": 1.0,
+        "better": 0,
+        "worse": 0,
+        "same": 44
+      },
+      "semantic": {
+        "questions": 44,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "p": 1.0,
+        "better": 0,
+        "worse": 0,
+        "same": 44
+      }
+    },
+    "B": {
+      "lexical": {
+        "questions": 7,
+        "mean": -1.0,
+        "ci95": [
+          -1.0,
+          -1.0
+        ],
+        "p": 0.015625,
+        "better": 0,
+        "worse": 7,
+        "same": 0
+      },
+      "semantic": {
+        "questions": 7,
+        "mean": -0.8571428571428571,
+        "ci95": [
+          -1.0,
+          -0.5714285714285714
+        ],
+        "p": 0.03125,
+        "better": 0,
+        "worse": 6,
+        "same": 1
+      }
+    },
+    "C": {
+      "questions": 60,
+      "mean": 0.03333333333333333,
+      "ci95": [
+        -0.03333333333333333,
+        0.1
+      ],
+      "p": 0.625,
+      "better": 3,
+      "worse": 1,
+      "same": 56
+    },
+    "C_both": {
+      "questions": 6,
+      "mean": -0.16666666666666666,
+      "ci95": [
+        -0.5,
+        0.0
+      ],
+      "p": 1.0,
+      "better": 0,
+      "worse": 1,
+      "same": 5
+    },
+    "A_rr": {
+      "lexical": {
+        "questions": 44,
+        "mean": 0.15643939393939396,
+        "ci95": [
+          0.09318181818181817,
+          0.2246212121212121
+        ],
+        "p": 2.999970000299997e-05,
+        "better": 20,
+        "worse": 1,
+        "same": 23
+      },
+      "semantic": {
+        "questions": 44,
+        "mean": 0.139520202020202,
+        "ci95": [
+          0.08630952380952382,
+          0.20037878787878782
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 30,
+        "worse": 2,
+        "same": 12
+      }
+    },
+    "A_stale": {
+      "lexical": {
+        "questions": 44,
+        "mean": -0.4772727272727273,
+        "ci95": [
+          -0.6363636363636364,
+          -0.3409090909090909
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 0,
+        "worse": 21,
+        "same": 23
+      },
+      "semantic": {
+        "questions": 44,
+        "mean": -0.6590909090909091,
+        "ci95": [
+          -0.7954545454545454,
+          -0.5227272727272727
+        ],
+        "p": 9.99990000099999e-06,
+        "better": 0,
+        "worse": 29,
+        "same": 15
+      }
+    },
+    "sizes": {
+      "current": 44,
+      "need_old": 7,
+      "both": 6
+    }
+  },
+  "decision": {
+    "failed_controls": [],
+    "verdict": "lexical: applying supersession, current-value questions: no clear effect; questions that need the old evidence: hurts; semantic: applying supersession, current-value questions: no clear effect; questions that need the old evidence: hurts; semantic vs lexical: no clear effect"
+  },
+  "annotation_review": "The project owner accepted 9 proposed category decisions on 2026-11-25; remaining required-evidence groups and update relations are provisional and partly AI-derived. Not comparable with versions 1 and 2.",
+  "data_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+  "annotations_sha256": "a2b75e3795557b9aa15fe84fda8eaba2284458ba947eafc22e353698936ae2b8",
+  "annotations": "longmemeval_knowledge_update_annotations_v3_category_approved_2026-11-25.json"
+}

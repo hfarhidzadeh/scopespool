@@ -1,4 +1,5 @@
 import contextlib
+import copy
 import importlib.util
 import io
 import json
@@ -6,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from dynmemory import longmemeval_v3 as v3
 
@@ -76,6 +78,26 @@ class PrepareTests(unittest.TestCase):
             if p["positive"]:
                 self.assertIn(p["targets"][0], [k for k, _ in p["cands_new"]])
 
+    def test_positive_uses_annotated_confirmation_and_excludes_it_from_controls(self):
+        question = copy.deepcopy(QUESTIONS[0])
+        question["haystack_sessions"][-1].extend([
+            {"role": "assistant", "content": "Do you want to confirm that?"},
+            {"role": "user", "content": "Yes, my topic0x count is now 9 in total."},
+        ])
+        annotation = copy.deepcopy(ANNOTATIONS["q0"])
+        annotation["supersession"][0]["new"] = "b0:2"
+        annotation["required_groups"] = [["b0:2"]]
+        eval_set, _ = v3.convert_question(question, annotation)
+        with mock.patch.object(db, "CONTROL_TURNS", 100):
+            prepared = db.prepare(question, annotation, eval_set)
+        self.assertEqual(prepared["new"], "b0:2")
+        self.assertEqual(prepared["targets"], ["a0:0"])
+        self.assertNotIn("b0:2", prepared["controls"])
+
+    def test_negative_keeps_latest_marked_turn_as_probe(self):
+        prepared = next(p for p in items() if p["category"] == "context")
+        self.assertEqual(prepared["new"], "b5:0")
+
 
 class DetectorTests(unittest.TestCase):
     def setUp(self):
@@ -122,7 +144,9 @@ class MainTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             data, notes = Path(directory) / "d.json", Path(directory) / "a.json"
             data.write_text(json.dumps(QUESTIONS))
-            notes.write_text(json.dumps({"annotations": ANNOTATIONS}))
+            notes.write_text(json.dumps({"annotations": ANNOTATIONS, "review": {
+                "category_approval": {"date": "2026-11-25", "decisions": {"q0": "current"}}
+            }}))
             output = Path(directory) / "report"
             with contextlib.redirect_stdout(io.StringIO()) as printed:
                 db.main(["--data", str(data), "--annotations", str(notes), "--semantic", "ngram",
@@ -131,6 +155,7 @@ class MainTests(unittest.TestCase):
             text = output.with_suffix(".md").read_text()
         self.assertTrue(all(report["controls"].values()))
         self.assertIn(report["verdict"], text)
+        self.assertIn("accepted 1 proposed category decisions", text)
         self.assertEqual(printed.getvalue().strip(), text.strip())
 
 
