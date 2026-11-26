@@ -57,5 +57,22 @@ timeouts in 288 private mixed searches at 4,096 memories and eight readers
 After the split, private and silent mixed p95 latencies were within 6% of each
 other at 4,096 memories, but both arms took about 5.6 s at p95 under eight
 concurrent readers, and one of 12 repetitions missed a provisional performance
-flag. Server integration needs its own verification, and the provisional flags
-are not yet release budgets.
+flag.
+
+Three more runs on the version that also splits shared counted reads (commit
+bad83c8) all passed the gate in 12 of 12 pairs:
+[Python 3.9 / SQLite 3.39](../experiments/results/private_retention_scale_py39.md),
+[the same with the n-gram embedder](../experiments/results/private_retention_scale_ngram_py39.md)
+and [Python 3.14 / SQLite 3.53](../experiments/results/private_retention_scale_py314.md).
+No run had a lock error. Private tracking costs some throughput: at 1,024 and
+4,096 memories it was 7–26% lower than silent on Python 3.14 and 0–32% lower
+on 3.9, and at 256 memories it adds about 3 ms per search (p95 6.2 against
+9.5 ms on 3.14), consistent with the extra write transaction. Missed
+provisional flags (4, 0 and 5 of 12) fall on both sides of a ratio of 1,
+including pairs where silent ran first, so they look mostly like noise; the
+machine's load average was about 4 to 16 with an editor open. Hybrid ranking
+is about 3.5 times slower serially (p95 319 against 96 ms at 4,096), and
+Python 3.14 is a little faster serially but no better under concurrency, both
+in line with per-search Python work over every visible memory being the main
+cost. Server integration needs its own performance measurement, and the
+provisional flags are not yet release budgets.
