@@ -207,16 +207,15 @@ def top_candidates(eval_set, new_key, count):
     earlier = keys[: keys.index(new_key)]
     if not earlier:
         return []
-    store = MemoryStore(":memory:")
-    key_of = {}
-    for key in earlier:
-        memory = eval_set["memories"][key]
-        key_of[store.add_memory(memory["content"], memory["kind"]).id] = key
-    results = store.search(
-        eval_set["memories"][new_key]["content"], limit=count, record_access=False
-    )
-    store.close()
-    return [key_of[result.memory.id] for result in results]
+    with MemoryStore(":memory:") as store:
+        key_of = {}
+        for key in earlier:
+            memory = eval_set["memories"][key]
+            key_of[store.add_memory(memory["content"], memory["kind"]).id] = key
+        results = store.search(
+            eval_set["memories"][new_key]["content"], limit=count, record_access=False
+        )
+        return [key_of[result.memory.id] for result in results]
 
 
 def control_turns(eval_set, exclude, count, seed):

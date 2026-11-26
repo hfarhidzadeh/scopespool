@@ -1,0 +1,746 @@
+{
+  "passed": true,
+  "pairs": [
+    {
+      "memories": 256,
+      "readers": 2,
+      "pair": 1,
+      "order": [
+        "silent",
+        "private"
+      ],
+      "arms": {
+        "silent": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 7.3768944999998975,
+                "p95_ms": 7.424949999999875
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 7.233721500000012,
+                "p95_ms": 7.822905999999907
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 12.291734499999762,
+                "p95_ms": 13.834464000000324
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 2.7658550000002613,
+                "p95_ms": 8.137716999999878
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 12,
+              "successes": 12,
+              "success_latency": {
+                "samples": 12,
+                "p50_ms": 1.670151499999939,
+                "p95_ms": 2.371412000000017
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 0.15180119600000008,
+          "concurrent_successes_per_second": 158.10152115007043,
+          "shared_archived": 219,
+          "eligible_by_reader": [
+            105,
+            50
+          ],
+          "retained_by_reader": [
+            0,
+            0
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        },
+        "private": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 15.721461500000089,
+                "p95_ms": 19.470802999999925
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 15.647631500000037,
+                "p95_ms": 21.318635000000086
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 14.612701999999977,
+                "p95_ms": 27.848187000000024
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 2.8614600000000934,
+                "p95_ms": 8.43248799999996
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 12,
+              "successes": 12,
+              "success_latency": {
+                "samples": 12,
+                "p50_ms": 9.305888499999915,
+                "p95_ms": 20.366111999999603
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 0.22771665799999985,
+          "concurrent_successes_per_second": 105.39413414366908,
+          "shared_archived": 219,
+          "eligible_by_reader": [
+            105,
+            50
+          ],
+          "retained_by_reader": [
+            105,
+            50
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        }
+      },
+      "exact_match": {
+        "warmup": true,
+        "serial": true,
+        "concurrent": true,
+        "observer": true,
+        "applied_prune": true
+      },
+      "passed": true
+    },
+    {
+      "memories": 256,
+      "readers": 2,
+      "pair": 2,
+      "order": [
+        "private",
+        "silent"
+      ],
+      "arms": {
+        "private": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 14.562893999999549,
+                "p95_ms": 17.156640999999695
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 15.816331499999947,
+                "p95_ms": 18.35376800000077
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 22.711960499999684,
+                "p95_ms": 31.159034999999946
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 2.836016999999913,
+                "p95_ms": 8.373273000000125
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 12,
+              "successes": 12,
+              "success_latency": {
+                "samples": 12,
+                "p50_ms": 8.294148000000057,
+                "p95_ms": 14.97369500000012
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 0.278880225,
+          "concurrent_successes_per_second": 86.0584503616203,
+          "shared_archived": 219,
+          "eligible_by_reader": [
+            99,
+            54
+          ],
+          "retained_by_reader": [
+            99,
+            54
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        },
+        "silent": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 9.481805500000107,
+                "p95_ms": 12.485180999999734
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 9.174055000000347,
+                "p95_ms": 12.072548999999988
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 20.92508550000005,
+                "p95_ms": 129.1987059999995
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 3.4481130000001414,
+                "p95_ms": 12.160961000000192
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 12,
+              "successes": 12,
+              "success_latency": {
+                "samples": 12,
+                "p50_ms": 1.794666999999972,
+                "p95_ms": 2.116063999999973
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 0.3794606699999994,
+          "concurrent_successes_per_second": 63.247661477011675,
+          "shared_archived": 219,
+          "eligible_by_reader": [
+            99,
+            54
+          ],
+          "retained_by_reader": [
+            0,
+            0
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        }
+      },
+      "exact_match": {
+        "warmup": true,
+        "serial": true,
+        "concurrent": true,
+        "observer": true,
+        "applied_prune": true
+      },
+      "passed": true
+    },
+    {
+      "memories": 1024,
+      "readers": 4,
+      "pair": 1,
+      "order": [
+        "silent",
+        "private"
+      ],
+      "arms": {
+        "silent": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 20.676872000000124,
+                "p95_ms": 20.852268999998813
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 23.053118999999178,
+                "p95_ms": 163.12507799999844
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 48,
+              "successes": 48,
+              "success_latency": {
+                "samples": 48,
+                "p50_ms": 173.21859549999985,
+                "p95_ms": 234.04025900000036
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 4.480311000000015,
+                "p95_ms": 29.06247499999992
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 1.5837109999994325,
+                "p95_ms": 1.8217749999998034
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 2.1588532480000016,
+          "concurrent_successes_per_second": 22.23402634915922,
+          "shared_archived": 877,
+          "eligible_by_reader": [
+            99,
+            53,
+            53,
+            50
+          ],
+          "retained_by_reader": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        },
+        "private": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 27.80021699999935,
+                "p95_ms": 29.756785000000008
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 28.25268149999971,
+                "p95_ms": 32.74325499999975
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 48,
+              "successes": 48,
+              "success_latency": {
+                "samples": 48,
+                "p50_ms": 171.59403750000024,
+                "p95_ms": 196.39016999999725
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 4.392127999999218,
+                "p95_ms": 24.68133500000036
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 6.323534999999936,
+                "p95_ms": 9.47560200000197
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 2.0604430690000015,
+          "concurrent_successes_per_second": 23.29596033114175,
+          "shared_archived": 877,
+          "eligible_by_reader": [
+            99,
+            53,
+            53,
+            50
+          ],
+          "retained_by_reader": [
+            99,
+            53,
+            53,
+            50
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        }
+      },
+      "exact_match": {
+        "warmup": true,
+        "serial": true,
+        "concurrent": true,
+        "observer": true,
+        "applied_prune": true
+      },
+      "passed": true
+    },
+    {
+      "memories": 1024,
+      "readers": 4,
+      "pair": 2,
+      "order": [
+        "private",
+        "silent"
+      ],
+      "arms": {
+        "private": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 30.767024999999393,
+                "p95_ms": 34.50313000000094
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 28.760870999999355,
+                "p95_ms": 30.34191100000072
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 48,
+              "successes": 48,
+              "success_latency": {
+                "samples": 48,
+                "p50_ms": 171.02962599999927,
+                "p95_ms": 273.7372879999995
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 4.318642999997735,
+                "p95_ms": 24.861960999999155
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 6.023142000000092,
+                "p95_ms": 9.630047000001696
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 2.2376330600000003,
+          "concurrent_successes_per_second": 21.451238300885667,
+          "shared_archived": 877,
+          "eligible_by_reader": [
+            103,
+            49,
+            49,
+            51
+          ],
+          "retained_by_reader": [
+            103,
+            49,
+            49,
+            51
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        },
+        "silent": {
+          "phases": {
+            "warmup": {
+              "attempts": 4,
+              "successes": 4,
+              "success_latency": {
+                "samples": 4,
+                "p50_ms": 20.74413750000126,
+                "p95_ms": 21.888109999999017
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "serial": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 20.547390999999138,
+                "p95_ms": 21.074958999999893
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "concurrent": {
+              "attempts": 48,
+              "successes": 48,
+              "success_latency": {
+                "samples": 48,
+                "p50_ms": 163.3560420000002,
+                "p95_ms": 384.31040300000063
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "observer": {
+              "attempts": 15,
+              "successes": 15,
+              "success_latency": {
+                "samples": 15,
+                "p50_ms": 4.384786999999335,
+                "p95_ms": 25.976027999998763
+              },
+              "errors": {},
+              "error_latency": null
+            },
+            "personal_list": {
+              "attempts": 24,
+              "successes": 24,
+              "success_latency": {
+                "samples": 24,
+                "p50_ms": 2.110522000000614,
+                "p95_ms": 2.650636999998568
+              },
+              "errors": {},
+              "error_latency": null
+            }
+          },
+          "concurrent_wall_seconds": 2.2029629889999995,
+          "concurrent_successes_per_second": 21.788836326201217,
+          "shared_archived": 877,
+          "eligible_by_reader": [
+            103,
+            49,
+            49,
+            51
+          ],
+          "retained_by_reader": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "checks": {
+            "all_calls_completed": true,
+            "observer_unchanged_by_reads": true,
+            "observer_probes_nonempty": true,
+            "observer_lists_empty": true,
+            "personal_ids_and_counts_match": true
+          }
+        }
+      },
+      "exact_match": {
+        "warmup": true,
+        "serial": true,
+        "concurrent": true,
+        "observer": true,
+        "applied_prune": true
+      },
+      "passed": true
+    }
+  ],
+  "config": {
+    "smoke": false,
+    "sizes": [
+      [
+        256,
+        2
+      ],
+      [
+        1024,
+        4
+      ]
+    ],
+    "repetitions": 2,
+    "warmup": 4,
+    "serial": 24,
+    "concurrent_per_reader": 12,
+    "personal_rounds": 6,
+    "search_limit": 5,
+    "client_timeout_s": 10.0
+  },
+  "source_sha256": {
+    "src/dynmemory/store.py": "4e49c69ef178138f7ff219aef817289cfcdfa0dfc174b1ce52682b74d4f6aa8c",
+    "src/dynmemory/server.py": "dda5a98d6a374ac1dfc3c14eac930a52fd8fb0f824469391a49fe3c8bdccf0fd",
+    "src/dynmemory/auth.py": "9bac91d71e0eb03bae3b30aa0c3455e97b7e3fb018b50121eae4ac9dee08df37",
+    "src/dynmemory/cli.py": "fc06331162bea6825c49995755b5fb6eae19930654a32900ff7e9608fb4e43b3",
+    "experiments/private_retention_socket.py": "fe640cfd5d6089efb244ca94a584600801717cb18c96d42d016ed719fac06c7d",
+    "experiments/private_retention_scale.py": "b4730c321795b193aeac617541618fbcdd41911f40f58418217bee133a0ffd90",
+    "experiments/private_retention_verification.py": "818233fae5ac36cbcd7718bf848784d42dc168649bf39e3456f5d8ec0e29d380"
+  },
+  "python": "3.9.6",
+  "sqlite": "3.39.5",
+  "platform": "macOS-13.7.8-x86_64-i386-64bit",
+  "elapsed_seconds": 25.577765767
+}

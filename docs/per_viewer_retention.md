@@ -32,13 +32,13 @@ Use a fixture with a query-visible memory eligible for shared pruning and compar
 
 `tests/test_per_viewer_retention.py` includes the paired comparison over 500 seeds. It compares observer search results, history and lists, their personal lists, and shared prune previews and outcomes. It also checks expiration, leave and rejoin, source-channel departure, retraction, restore, migration, and concurrent increments.
 
-The [recorded private retention experiment](../experiments/results/private_retention_verification.md)
-compares no read, the named default, explicit silence, and private tracking.
-All five checks and the personal retention benefit held across 500 paired
-trials. It also records SQLite timings and storage growth on a 256-memory
-fixture. That report was recorded before ranking and recording were split
-into two transactions; the regression tests above, including the 500-seed
-paired comparison, pass on the split version.
+The [post-split experiment](../experiments/results/private_retention_verification_post_split.md)
+repeats the [original verification](../experiments/results/private_retention_verification.md)
+on revision `8140298`, after both private and shared reads moved counting into a
+separate transaction. All six checks passed on each of 500 seeds. On the
+256-memory measurement fixture, both arms pruned the same 219 memories.
+The tracking reader retained 34 entries and the silent reader retained zero.
+After expiry both lists were empty, and cleanup removed all 160 private rows.
 
 `tests/test_private_retention_races.py` runs events between ranking and
 recording: the reader leaving the memory's channel or its source channel, a
@@ -74,5 +74,41 @@ machine's load average was about 4 to 16 with an editor open. Hybrid ranking
 is about 3.5 times slower serially (p95 319 against 96 ms at 4,096), and
 Python 3.14 is a little faster serially but no better under concurrency, both
 in line with per-search Python work over every visible memory being the main
-cost. Server integration needs its own performance measurement, and the
-provisional flags are not yet release budgets.
+cost. The performance flags are provisional.
+
+Search ranks from a few columns per visible memory and builds full memories
+only for the results, and prune scores from a few columns and builds full
+memories only for its candidates. An equivalence test
+(`tests/test_lean_scan.py`) compares rankings, scores, links, prune previews
+and applied prunes with the earlier implementation across randomized stores;
+it compares against commit 8140298 and skips where that commit is absent, as
+in CI's shallow checkout. Alternating the two versions in one sitting at
+4,096 memories with eight readers, serial search took 83–105 ms against
+238–360 ms (median), concurrent p95 fell from 7.4–9.5 s to 4.0–4.6 s, and
+concurrent throughput rose from 1.7–2.0 to 3.3–3.7 searches/s. The machine was
+loaded, so only the ratios are meaningful. Prune preview alone was unchanged
+(256 against 253 ms with 3,385 candidates); most of its cost is building the
+candidates themselves.
+
+The [authenticated socket benchmark](../experiments/results/private_retention_socket.md)
+runs the scale benchmark's three sizes through a separate CLI server process
+with signed tokens, with two prune previews alongside the concurrent calls.
+Its gate was fixed in the script's docstring on 2026-11-26: every request
+completes; silent and private arms return identical searches, observer probes,
+previews and applied prune; each private reader's list equals its own archived
+results and silent lists are empty; and no other member gains a list or a
+private row. The first recorded run under that gate
+([run 2](../experiments/results/private_retention_socket_run2_superseded/private_retention_socket.md))
+failed: 3 of 1,512 requests, silent and private, were refused with
+`ConnectionRefusedError` at 4,096 memories and eight readers. The client opens
+a connection per call, and socketserver's default listen queue of 5
+overflowed while request threads held the GIL. The server now uses
+`socket.SOMAXCONN`, and `tests/test_auth_server.py` checks that 32
+connections wait in the queue (it fails with the old size). Run 3, on the
+same store with only that change, passed all four criteria in 12 of 12 pairs
+(1,512 of 1,512 requests). At 4,096 memories and eight readers, concurrent
+throughput was 7.4–10.3 calls/s and p95 1.4–1.7 s in both arms. A fault that
+records private access for the wrong member failed the attribution criteria in
+2 of 2 pairs ([fault report](../experiments/results/private_retention_socket_fault.md)).
+An earlier socket run at two sizes without a fixed gate is kept in
+`experiments/results/private_retention_socket_run1_superseded/`.

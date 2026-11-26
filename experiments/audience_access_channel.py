@@ -157,8 +157,7 @@ def topic_token(topic: int) -> str:
     return "t{}tok".format(topic)
 
 
-def build(clock: Clock) -> tuple:
-    store = MemoryStore(":memory:")
+def build(store: MemoryStore) -> tuple:
     for member, channel in (("alice", "team"), ("bob", "team"), ("alice", "solo"),
                             ("carol", "other")):
         store.join_channel(channel, member)
@@ -178,7 +177,7 @@ def build(clock: Clock) -> tuple:
         noise.append(writer.add_memory(
             "unrelated item {} about the budget".format(number), MemoryType.FACT,
             channel="team").id)
-    return store, team, noise
+    return team, noise
 
 
 def state(store: MemoryStore, member: str) -> dict:
@@ -246,8 +245,8 @@ def fault(name):
 
 def play(trial: dict, condition: str, flaw=None) -> dict:
     clock = Clock()
-    with mock.patch.object(MemoryStore, "_now", staticmethod(clock)), fault(flaw):
-        store, team, noise = build(clock)
+    with mock.patch.object(MemoryStore, "_now", staticmethod(clock)), fault(flaw), MemoryStore(":memory:") as store:
+        team, noise = build(store)
         team_ids = {i for ids in team.values() for i in ids}
         bob_before, carol_before = state(store, "bob"), state(store, "carol")
         rank_before = ranking(store, "bob")
@@ -263,7 +262,6 @@ def play(trial: dict, condition: str, flaw=None) -> dict:
         store.prune(dry_run=False, as_of=clock.at(PRUNE_DAY))
         survivors_bob = set(state(store, "bob")) & team_ids
         survivors_carol = set(state(store, "carol"))
-        store.close()
     moved = changed(bob_before, bob_after)
     stamp = clock.at(READ_DAY).strftime("%Y-%m-%d")
     return {

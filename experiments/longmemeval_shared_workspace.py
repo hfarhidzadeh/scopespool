@@ -602,8 +602,7 @@ def rank_metrics(top, gold):
     return {"rr": 0.0, "hit10": 0.0, "hit5": 0.0}
 
 
-def reference_store(plan, visible, embedder):
-    store = MemoryStore(":memory:")
+def reference_labels(store, plan, visible, embedder):
     ids = {}
     for write in plan["writes"]:
         if write["label"] in visible:
@@ -612,7 +611,7 @@ def reference_store(plan, visible, embedder):
         if a in visible and b in visible:
             store.relate(ids[a], ids[b], relation)
     store.embedder = embedder
-    return store, {memory_id: label for label, memory_id in ids.items()}
+    return {memory_id: label for label, memory_id in ids.items()}
 
 
 def run_workspace(
@@ -634,9 +633,10 @@ def run_workspace(
     if COLLECT_HITS:
         result["hits"] = []
     CURRENT["joiner"] = plan["joiner"]
-    store = MemoryStore(":memory:")
     pooled_cache, ref_cache, built_cache, audit_done = {}, {}, {}, set()
-    try:
+    with contextlib.ExitStack() as stores:
+        stores.callback(CURRENT.update, joiner=None)
+        store = stores.enter_context(MemoryStore(":memory:"))
         ids = {}
         for member in plan["members"]:
             store.join_channel(private(member), member)
@@ -669,7 +669,8 @@ def run_workspace(
 
         def reference_for(visible_key, visible, query):
             if visible_key not in ref_cache:
-                ref_cache[visible_key] = reference_store(plan, visible, embedder)
+                ref = stores.enter_context(MemoryStore(":memory:"))
+                ref_cache[visible_key] = ref, reference_labels(ref, plan, visible, embedder)
             ref, ref_labels = ref_cache[visible_key]
             return view_of(ref.search(query, limit=BIG, record_access=False), ref_labels)
 
@@ -748,12 +749,11 @@ def run_workspace(
                                     for a, b in parsed[plan["owner_question"][it["owner"]]]["links"]
                                 ],
                             }
-                            solo, solo_ids = _build_store(owner_set, owner_set["links"], embedder,
-                                                          apply_updates=False)
-                            solo_labels = {mid: key for key, mid in solo_ids.items()}
-                            built_cache[solo_key] = view_of(
-                                solo.search(it["query"], limit=BIG, record_access=False), solo_labels)
-                            solo.close()
+                            with _build_store(owner_set, owner_set["links"], embedder,
+                                              apply_updates=False) as (solo, solo_ids):
+                                solo_labels = {mid: key for key, mid in solo_ids.items()}
+                                built_cache[solo_key] = view_of(
+                                    solo.search(it["query"], limit=BIG, record_access=False), solo_labels)
                         klass, _ = compare(built, built_cache[solo_key], strip=it["owner"] + "/")
                         result["classes"]["solo-" + klass] = result["classes"].get("solo-" + klass, 0) + 1
                         if klass != "exact":
@@ -812,11 +812,6 @@ def run_workspace(
                 store.join_channel(GENERAL, plan["joiner"])
                 store.leave_channel(GENERAL, plan["leaver"])
             read_items(plan["post_items"], plan["post"], "post")
-    finally:
-        for ref, _ in ref_cache.values():
-            ref.close()
-        store.close()
-        CURRENT["joiner"] = None
     return result
 
 

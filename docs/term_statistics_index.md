@@ -1,0 +1,33 @@
+# Decision on a lexical term index
+
+**2026-11-26. Defer a persistent index.** First measure the lean search and prune paths on the same Python 3.9 workload. At 1,024 memories, the current server handled about 21–23 concurrent searches/s with four authenticated clients in both retention modes. The scratch prototype's roughly 9–12 ms measured lexical scoring on a prebuilt index. It excluded index construction, updates, decryption, graph retrieval, and socket traffic. [Python 3.9 scale workload](../experiments/results/private_retention_scale_py39.md) · [Socket measurements](../experiments/results/private_retention_socket.md)
+
+## What an index would have to preserve
+
+ScopeSpool scores the active memories visible to the entire requested audience, after source visibility, claim resolution, and any kind filter. BM25 uses the size and mean length of that exact collection, including memories with zero matches. Document frequency must come from the same collection. Query coverage includes the weight of missing query terms. Repeated query words, tie ordering by creation time and ID, graph-only hits, and the inputs to rank fusion all affect public results.
+
+For an unencrypted prototype, store a token count per memory and a frequency per distinct token and memory ID. Tokenize the content and memory key with the store's existing tokenizer. Join both index lookups and collection totals to the visible, active IDs within one read snapshot. Membership changes and ordinary prune or restore then take effect at query time. A database-wide count or IDF would change a reader's scores when another channel changes.
+
+Claim resolution is the hard part of that join. `_visible` is SQL, but `_claim_view` removes replaced channel claims in Python after the rows are fetched, and the scan computes collection size, mean length and document frequency only over what remains. An index must exclude the same replaced IDs from all three totals, not only from the result list. Either compute the replaced set first and pass it into the SQL as an exclusion list, or fetch per-ID lengths and postings for the visible set and subtract the replaced IDs' contributions in Python. Each viewer set can see a different replaced set, so the replaced IDs cannot be stored with the postings.
+
+## Writes, migration, and erasure
+
+Build the postings in the transaction that creates a memory. Delete a retracted derivation's postings and length in the same transaction that clears its text and vectors. A rebuild indexes the new ID using only surviving sources. `relate(..., "supersedes")` also changes indexed text: for memories without a channel it copies the older memory's `memory_key` onto a keyless superseding memory, and `_lexical_scores` tokenizes content plus key, so that memory's postings and length must be rewritten in the same transaction. A scan of `store.py` on 2026-11-26 found no other write that changes `content` or `memory_key` (memory creation in `_add_memory`, retraction, and that key copy); archiving, prune, restore, staleness and access counters change only which IDs are visible, which the query-time join handles. An interrupted write must roll back the memory and its index together. Migrate older databases under the same transactional guarantees, and test a failed migration and a successful retry.
+
+Cleartext postings would put source vocabulary in backups of a keyed database, outside the content pads destroyed by retraction. The initial design keeps keyed stores on the scan path. Opening an existing database with a key, restoring a backup, or changing an embedder must preserve the documented erasure behavior. Any future encrypted index needs its own backup and erasure evidence.
+
+The existing erasure checks do not all cover an index. The real-text retraction experiment (`experiments/longmemeval_retraction.py`) searches stored values for distinctive 6-token shingles, so it cannot find single-token postings left behind. The retraction canary experiment (`experiments/audience_retraction_canary.py`) plants unique single tokens and scans for them, so it is the check that would detect leftover postings. It already reads every table listed in `sqlite_master`, so new index tables (including FTS5 shadow tables) would be scanned without changes; a keyed store's separate key file is checked separately.
+
+SQLite's built-in FTS5 index only gained a `secure-delete` option, which removes forensic traces from the inverted index on delete, in SQLite 3.42.0 (released 2023-05-16). The recorded runtime (Python 3.9.6) uses SQLite 3.39.5, which lacks it; Python 3.14 here uses SQLite 3.53.4, which has it. An FTS5 index is therefore unsafe for erasure on the recorded runtime, and a custom postings table, or a minimum SQLite version of 3.42.0, would be required. [SQLite 3.42.0 release notes](https://www.sqlite.org/releaselog/3_42_0.html)
+
+## Decision criteria
+
+The decision stays with the researcher. A rule that could be adopted before any build, so the outcome is not chosen after seeing it:
+
+- **Revisit threshold.** After the lean scan lands, rerun the Python 3.9 scale workload. Revisit an index only if lexical scoring (`_lexical_scores` plus building the active-memory map) is still more than half of serial search time at 4,096 memories in a cProfile of the benchmark's own query mix, or if serial p95 at 4,096 memories stays above 50 ms.
+- **Equivalence tolerance.** An index is acceptable only if, for every query in the comparison suite, it returns the same result IDs in the same order as the scan, and every score field (lexical, coverage, vector, fused, final) differs by at most 1e-9. Any tie broken differently counts as a failure.
+- **Erasure.** The canary experiment, whose scan covers every table, must find no retracted token in 100% of trials, and a new fault control (an index that keeps postings after retraction) must fail it.
+
+Reconsider an index if lexical scoring remains a measured bottleneck after the lean changes. Compare search results and all score fields against the scan for different viewers, kinds, repeated and absent terms, retractions, rebuilds, competing claims, and hybrid ranking. Run the existing retention gate and retraction experiments, and inspect postings and document lengths explicitly after retraction. Measure write, rebuild, migration, and storage costs alongside end-to-end search on the same fixtures.
+
+Process workers pose a separate engineering decision. Revocations currently live in a `TokenAuthority` instance. Before serving tokens across workers, define revocation visibility for every process and after restart, and exercise that contract over the socket. Use the socket measurements to decide whether parallel ranking would justify that change.

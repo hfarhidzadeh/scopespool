@@ -10,6 +10,7 @@ import unittest
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest import mock
 
 from dynmemory import Link, MemoryStore, MemoryType, Relationship
 from dynmemory.store import SCHEMA_VERSION
@@ -254,11 +255,11 @@ class MemoryStoreTests(unittest.TestCase):
     def test_coverage_does_not_depend_on_the_hash_seed(self):
         script = (
             "from dynmemory import MemoryStore\n"
-            "store = MemoryStore(':memory:')\n"
-            "for text in ('alpha beta gamma delta', 'alpha epsilon zeta', 'eta theta iota'):\n"
-            "    store.add_memory(text, 'fact')\n"
-            "results = store.search('alpha beta gamma zeta kappa lambda mu', record_access=False)\n"
-            "print([repr(result.coverage) for result in results])\n"
+            "with MemoryStore(':memory:') as store:\n"
+            "    for text in ('alpha beta gamma delta', 'alpha epsilon zeta', 'eta theta iota'):\n"
+            "        store.add_memory(text, 'fact')\n"
+            "    results = store.search('alpha beta gamma zeta kappa lambda mu', record_access=False)\n"
+            "    print([repr(result.coverage) for result in results])\n"
         )
         outputs = set()
         for seed in ("1", "2", "3", "4"):
@@ -637,6 +638,24 @@ class MemoryStoreTests(unittest.TestCase):
         memory = store.add_memory("Keep this for this process.", MemoryType.FACT)
 
         self.assertEqual(store.get_memory(memory.id), memory)
+
+    def test_in_memory_database_closes_when_initialization_fails(self):
+        connections = []
+        connect = sqlite3.connect
+
+        def track_connection(*args, **kwargs):
+            connection = connect(*args, **kwargs)
+            self.addCleanup(connection.close)
+            connections.append(connection)
+            return connection
+
+        with mock.patch("dynmemory.store.sqlite3.connect", side_effect=track_connection):
+            with self.assertRaises(sqlite3.OperationalError):
+                MemoryStore(":memory:", key_path=self.temp_dir.name)
+        self.assertTrue(connections)
+        for connection in connections:
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
 
 
 if __name__ == "__main__":

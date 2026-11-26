@@ -81,8 +81,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from dynmemory import MemoryStore, SentenceTransformerEmbedder  # noqa: E402
-from dynmemory.evaluation import CachedEmbedder  # noqa: E402
+from dynmemory import SentenceTransformerEmbedder  # noqa: E402
+from dynmemory.evaluation import CachedEmbedder, _build_store  # noqa: E402
 from dynmemory.longmemeval import question_memories  # noqa: E402
 
 DATA = ROOT / "data" / "longmemeval" / "longmemeval_s_cleaned.json"
@@ -222,28 +222,22 @@ def random_word_queries(twins, vocabulary, seed=0):
     }
 
 
-def build_store(question, embedder):
-    memories, _, evidence = question_memories(question)
-    store = MemoryStore(":memory:")
-    ids = {key: store.add_memory(m["content"], m["kind"]).id for key, m in memories.items()}
-    store.embedder = embedder  # attached last, so the first search embeds every memory at once
-    return store, {memory_id: key for key, memory_id in ids.items()}, {key for _, key in evidence}
-
-
 def measure(question, embedder, queries):
     """Gate statistics (and evidence hits) of each named query against the question's store."""
-    store, key_of, evidence = build_store(question, embedder)
+    memories, _, marked = question_memories(question)
+    evidence = {key for _, key in marked}
     measured = {}
-    for name, text in queries.items():
-        results = store.search(text, limit=len(key_of), record_access=False)
-        measured[name] = {
-            "values": gate_values(results),
-            "hit": {
-                signal: evidence_hit(results, key_of, evidence, signal + "_score")
-                for signal in ("lexical", "vector")
-            },
-        }
-    store.close()
+    with _build_store({"memories": memories}, [], embedder, apply_updates=False) as (store, ids):
+        key_of = {memory_id: key for key, memory_id in ids.items()}
+        for name, text in queries.items():
+            results = store.search(text, limit=len(key_of), record_access=False)
+            measured[name] = {
+                "values": gate_values(results),
+                "hit": {
+                    signal: evidence_hit(results, key_of, evidence, signal + "_score")
+                    for signal in ("lexical", "vector")
+                },
+            }
     return measured
 
 

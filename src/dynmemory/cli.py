@@ -357,12 +357,16 @@ def _run(args: argparse.Namespace) -> int:
         print(TokenAuthority(_read_secret(args.secret_file)).issue(args.member, ttl_seconds=args.ttl))
         return 0
 
-    store = MemoryStore(
+    with MemoryStore(
         args.db,
         embedder=_embedder(args),
         link_carryover=args.link_carryover,
         key_path=args.key_file,
-    )
+    ) as store:
+        return _run_store_command(args, store)
+
+
+def _run_store_command(args: argparse.Namespace, store: MemoryStore) -> int:
     viewers = args.viewers
     writer = store.for_writer(args.as_member) if args.as_member else None
 

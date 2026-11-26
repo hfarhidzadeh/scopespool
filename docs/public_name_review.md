@@ -24,6 +24,35 @@ Formal trademark clearance remains open; use the
 [USPTO trademark search](https://tmsearch.uspto.gov/search/) before a public
 launch.
 
+## Near names and package registries, 2026-11-26
+
+A repeat of the exact-name checks again found only this repository on GitHub
+and no `scopespool` entry on PyPI or npm. The closest name in the same field is
+the Rust crate `spool-memory` (version 0.2.4, created May 18, 2026), described
+as a "Local-first developer memory system — persistent, structured knowledge
+for AI coding tools". It is not an exact match, but its description overlaps
+with ScopeSpool's. [crates.io entry](https://crates.io/crates/spool-memory)
+· [Repository](https://github.com/lukylong/Spool)
+
+The PyPI names used by the current alias and Python module were also
+unclaimed at the time of checking: both [`memvane`](https://pypi.org/pypi/memvane/json)
+and [`dynmemory`](https://pypi.org/pypi/dynmemory/json) returned 404. Registry
+occupancy can change at any time.
+
+## Trademark register status, 2026-11-26
+
+The US federal register search remains open. The USPTO search application
+requires an interactive browser, and this run could read its official search
+instructions but could not retrieve live trademark results. The verified
+federal hit count is unknown. A formal search also needs the intended
+territories and the goods or services in scope.
+
+For the US word-mark search, start with `CM:scopespool` and
+`CM:"scope spool"`, then expand to spelling and pronunciation variants
+and related goods or services. Record the date, queries and serial numbers of
+potential conflicts. The USPTO also includes common-law uses in its guidance
+for a comprehensive clearance search. [Federal search guidance](https://www.uspto.gov/trademarks/search/federal-trademark-searching) · [Comprehensive search guidance](https://www.uspto.gov/trademarks/search/comprehensive-clearance-search-similar-trademarks)
+
 ## Memvane collision check, 2026-11-24
 
 **Recommendation: choose a different public name.** A second public project

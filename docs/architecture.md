@@ -347,6 +347,10 @@ a Markdown and JSON report to `experiments/results/`.
 | `audience_retraction_canary.py` | Does retraction erase the text, rebuild correctly, and leave earlier encrypted copies unreadable? |
 | `audience_disputes_who_knows.py` | Do hidden claims or acknowledgements change dispute tables or who-knows answers? |
 | `longmemeval_cross_user_disputes.py` | The same on real LongMemEval update turns: is the dispute shown, and do hidden claims change it? |
+| `private_retention_verification.py` | Does private tracking leave shared pruning and observers unchanged while keeping a personal list? |
+| `private_retention_scale.py` | Does private retention hold, without lock errors, at 256 to 4,096 memories and 2 to 8 readers? |
+| `private_retention_socket.py` | The same end to end through the authenticated socket server |
+| `evermembench_control.py` | Does the EverMemBench loader key every evidence reference correctly (canary control)? |
 
 Results from single-user LongMemEval runs are marked provisional until the
 [label review](longmemeval_label_review.md) findings are resolved.
@@ -361,7 +365,9 @@ PYTHONPATH=src python3 -m unittest discover -s tests
 
 | Area | Files |
 | --- | --- |
-| Store, CLI, embeddings, links | `test_store.py`, `test_cli.py`, `test_embeddings.py`, `test_link_carryover.py` |
+| Store, CLI, embeddings, links | `test_store.py`, `test_cli.py`, `test_embeddings.py`, `test_link_carryover.py`, `test_lean_scan.py` |
+| Private retention and read transactions | `test_per_viewer_retention.py`, `test_private_retention_races.py`, `test_shared_access_transactions.py`, `test_private_retention_scale.py`, `test_private_retention_socket.py` |
+| EverMemBench loader and control | `test_evermembench.py` |
 | Evaluation harness and conversion | `test_eval.py`, `test_longmemeval.py`, `test_longmemeval_v3.py`, `test_longmemeval_v3_experiment.py`, `test_longmemeval_detector_baselines.py`, `test_experiment_statistics.py`, `test_update_detection.py` |
 | Channels, viewers, writers, sources | `test_audience.py`, `test_claim_resolution.py` |
 | Disputes, who-knows, encryption, rebuild | `test_disputes_who_knows.py`, `test_encryption_and_rebuild.py` |

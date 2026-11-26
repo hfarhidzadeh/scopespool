@@ -102,6 +102,28 @@ class BetweenTransactionTests(unittest.TestCase):
         shown = {result.memory.id: result.memory.access_count for result in results}
         self.assertEqual(shown, {hidden.id: 0, kept.id: 1})
 
+    def test_returned_counter_uses_the_ranked_snapshot_plus_the_readers_own_read(self):
+        memory = add_stale(self.store, "launch checklist")
+        bob_time = timestamp(NOW + timedelta(seconds=5))
+        with MemoryStore(self.store.db_path) as second_store:
+            bob = second_store.for_viewers("bob")
+            record_alice = self.store._record_shared_access
+
+            def record_after_bob(memory_ids, viewer_ids, now):
+                with mock.patch.object(second_store, "_now", return_value=bob_time):
+                    [result] = bob.search("launch", record_access=True)
+                self.assertEqual(result.memory.id, memory.id)
+                self.assertEqual(self.counts()[memory.id], (1, bob_time))
+                return record_alice(memory_ids, viewer_ids, now)
+
+            with mock.patch.object(self.store, "_record_shared_access", side_effect=record_after_bob):
+                [result] = self.alice.search("launch", record_access=True)
+
+        self.assertEqual(result.memory.id, memory.id)
+        self.assertEqual((result.memory.access_count, result.memory.last_accessed_at),
+                         (1, timestamp(NOW)))
+        self.assertEqual(self.counts()[memory.id], (2, bob_time))
+
     def test_retracting_a_source_between_transactions_counts_nothing_for_it(self):
         writer = self.store.for_writer("alice")
         message = writer.add_message("launch", channel="team")

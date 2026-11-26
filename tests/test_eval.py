@@ -1,12 +1,14 @@
 import copy
 import json
 import re
+import sqlite3
 import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest import mock
 
-from dynmemory import NGramHashEmbedder
+from dynmemory import MemoryStore, NGramHashEmbedder
 from dynmemory.evaluation import (
     CachedEmbedder,
     PermutedEmbedder,
@@ -91,6 +93,15 @@ class SyntheticSetTests(unittest.TestCase):
 class ControlTests(unittest.TestCase):
     def setUp(self):
         self.eval_set = load_eval_set(EVAL_SET)
+
+    def test_failed_store_population_closes_the_database(self):
+        broken = {"memories": {"m": {"content": "", "kind": "fact"}}, "queries": []}
+        with MemoryStore(":memory:") as store, mock.patch("dynmemory.evaluation.MemoryStore", return_value=store):
+            keeper = store._keeper
+            with self.assertRaisesRegex(ValueError, "content"):
+                retrieval_report(broken, seeds=1)
+            with self.assertRaises(sqlite3.ProgrammingError):
+                keeper.execute("SELECT 1")
 
     def test_wrong_links_never_reuse_a_true_neighbour(self):
         true_pairs = {

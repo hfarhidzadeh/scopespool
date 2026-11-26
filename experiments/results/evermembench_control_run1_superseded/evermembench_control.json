@@ -1,0 +1,170 @@
+{
+  "dataset": "EverMind-AI/EverMemBench-Dynamic",
+  "revision": "a6b210a32248e841967b7b64a64281d2ff3f669d",
+  "input_sha256": {
+    "01/dialogue.json": "16e4fc66c47eb742cc75097ab5ea6d95e1fae8963841391e58a8e4ec35ace2dc",
+    "01/qa_01.json": "358e22d138e24c5e655fc2c09e7f63e22e25603a065d65c946ab30ed57884d3c",
+    "02/dialogue.json": "37008035d1f7804a12079e4475f612a2b194b3c1c321c7a674e50d8ee57f4e0f",
+    "02/qa_02.json": "46ac2dbe2e88b0752f9777feae4c430b033137dd84f1fe1bd749338dc4b1b446",
+    "03/dialogue.json": "eeb18a989e6b4f59ae23d91fcc69d8ddbee8c917793c81ae623ecee9388dc8b5",
+    "03/qa_03.json": "81b35a8349bdbfb0f5232dfb00a48779170f3eaa2b499ad5b09de5704c19d9e7",
+    "04/dialogue.json": "3870ce44dfef56cebdc0236c19825eb0c5ea84e028b466e9f9fdb59349cbd56c",
+    "04/qa_04.json": "47579156659cdedab6419d5ffa2f3030ca2a917bd3c3f134eaf16db318769797",
+    "05/dialogue.json": "0434cd414d01ed4fb22e37c016ee647c3d0ea5e94fe1edf7d72dcf4ae42158e8",
+    "05/qa_05.json": "2e5038135dcc6f8ae98b3bcbf956f0d03f9086335436c84504552a2124910d2b"
+  },
+  "code_sha256": {
+    "src/dynmemory/store.py": "4e49c69ef178138f7ff219aef817289cfcdfa0dfc174b1ce52682b74d4f6aa8c",
+    "src/dynmemory/evermembench.py": "0193ed7f96ef12c5891c6ef7a5c50fe1edf48bb93efbb85523cca31224948a80",
+    "experiments/evermembench_control.py": "a27016888e2d47b3688872f301a2b94b2bce1e762bd46e1d55a4db4d149e5e31"
+  },
+  "python": "3.14.8",
+  "criterion": "All eligible questions hit every R entry in lexical top 10.",
+  "control": "Append one unique token to the original question and one raw message per reference entry. Reset those messages before the next question. Full topic store, no graph links or embedder. A token-only query diagnoses the first failure per topic. An unplanted token must return zero results.",
+  "passed": false,
+  "totals": {
+    "messages": 51023,
+    "links": 47453,
+    "questions": 2400,
+    "eligible": 2212,
+    "eligible_cross_group": 625,
+    "over_ten_entries": 188,
+    "resolved_message_references": 72291,
+    "all_required_hits": 117,
+    "failed_questions": 2095,
+    "unplanted_token_hits": 0,
+    "all_required_at_10": 0.05289330922242315
+  },
+  "topics": [
+    {
+      "topic": "01",
+      "messages": 10222,
+      "links": 9499,
+      "questions": 488,
+      "eligible": 444,
+      "eligible_cross_group": 126,
+      "over_ten_entries": 44,
+      "resolved_message_references": 15509,
+      "all_required_hits": 22,
+      "all_required_at_10": 0.04954954954954955,
+      "unplanted_token_hits": 0,
+      "failed_questions": 422,
+      "first_failed_ids": [
+        "F_SH_Top01_001",
+        "F_SH_Top01_002",
+        "F_SH_Top01_005",
+        "F_SH_Top01_006",
+        "F_SH_Top01_007"
+      ],
+      "token_only_first_failure": {
+        "question_id": "F_SH_Top01_001",
+        "exact_planted_set": true,
+        "all_required": true
+      }
+    },
+    {
+      "topic": "02",
+      "messages": 10106,
+      "links": 9391,
+      "questions": 471,
+      "eligible": 433,
+      "eligible_cross_group": 129,
+      "over_ten_entries": 38,
+      "resolved_message_references": 13873,
+      "all_required_hits": 25,
+      "all_required_at_10": 0.057736720554272515,
+      "unplanted_token_hits": 0,
+      "failed_questions": 408,
+      "first_failed_ids": [
+        "F_SH_Top02_003",
+        "F_SH_Top02_004",
+        "F_SH_Top02_005",
+        "F_SH_Top02_007",
+        "F_SH_Top02_008"
+      ],
+      "token_only_first_failure": {
+        "question_id": "F_SH_Top02_003",
+        "exact_planted_set": true,
+        "all_required": true
+      }
+    },
+    {
+      "topic": "03",
+      "messages": 10638,
+      "links": 9915,
+      "questions": 467,
+      "eligible": 439,
+      "eligible_cross_group": 68,
+      "over_ten_entries": 28,
+      "resolved_message_references": 14537,
+      "all_required_hits": 21,
+      "all_required_at_10": 0.04783599088838269,
+      "unplanted_token_hits": 0,
+      "failed_questions": 418,
+      "first_failed_ids": [
+        "F_SH_Top03_001",
+        "F_SH_Top03_002",
+        "F_SH_Top03_004",
+        "F_SH_Top03_008",
+        "F_SH_Top03_009"
+      ],
+      "token_only_first_failure": {
+        "question_id": "F_SH_Top03_001",
+        "exact_planted_set": true,
+        "all_required": true
+      }
+    },
+    {
+      "topic": "04",
+      "messages": 10003,
+      "links": 9315,
+      "questions": 481,
+      "eligible": 434,
+      "eligible_cross_group": 155,
+      "over_ten_entries": 47,
+      "resolved_message_references": 14288,
+      "all_required_hits": 24,
+      "all_required_at_10": 0.055299539170506916,
+      "unplanted_token_hits": 0,
+      "failed_questions": 410,
+      "first_failed_ids": [
+        "F_SH_Top04_002",
+        "F_SH_Top04_005",
+        "F_SH_Top04_007",
+        "F_SH_Top04_008",
+        "F_SH_Top04_009"
+      ],
+      "token_only_first_failure": {
+        "question_id": "F_SH_Top04_002",
+        "exact_planted_set": true,
+        "all_required": true
+      }
+    },
+    {
+      "topic": "05",
+      "messages": 10054,
+      "links": 9333,
+      "questions": 493,
+      "eligible": 462,
+      "eligible_cross_group": 147,
+      "over_ten_entries": 31,
+      "resolved_message_references": 14084,
+      "all_required_hits": 25,
+      "all_required_at_10": 0.05411255411255411,
+      "unplanted_token_hits": 0,
+      "failed_questions": 437,
+      "first_failed_ids": [
+        "F_SH_Top05_003",
+        "F_SH_Top05_004",
+        "F_SH_Top05_006",
+        "F_SH_Top05_008",
+        "F_SH_Top05_010"
+      ],
+      "token_only_first_failure": {
+        "question_id": "F_SH_Top05_003",
+        "exact_planted_set": true,
+        "all_required": true
+      }
+    }
+  ]
+}

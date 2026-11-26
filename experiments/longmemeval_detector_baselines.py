@@ -146,7 +146,7 @@ def mean(values) -> float:
 
 
 def prepare(question: dict, annotation: dict, eval_set: dict) -> dict:
-    """Everything one question needs: store, positions, N, targets, control turns."""
+    """Prepare one question's probes, targets and earlier BM25 candidates."""
     _, _, evidence = question_memories(question)
     latest = max(rank for rank, _ in evidence)
     edges = [e for e in annotation["supersession"] if e["relation"] == "supersedes"]
@@ -164,25 +164,26 @@ def prepare(question: dict, annotation: dict, eval_set: dict) -> dict:
     rng = random.Random("detectors-{}".format(eval_set["id"]))
     pool = [k for k in keys if k not in evidence_keys and position[k] >= MIN_POSITION]
     controls = rng.sample(pool, min(CONTROL_TURNS, len(pool)))
-    store, ids = _build_store(eval_set, [], None, apply_updates=False)
+    with _build_store(eval_set, [], None, apply_updates=False) as (store, ids):
+        keys_by_id = {memory_id: key for key, memory_id in ids.items()}
+
+        def candidates_for(key):
+            text = eval_set["memories"][key]["content"]
+            found = []
+            for result in store.search(text, limit=BIG, record_access=False):
+                other = keys_by_id[result.memory.id]
+                if position[other] < position[key]:
+                    found.append((other, result.memory))
+                    if len(found) == CANDIDATES:
+                        break
+            return found
+
+        cands_new = candidates_for(new_key)
+        cands_controls = {key: candidates_for(key) for key in controls}
     return {"id": eval_set["id"], "set": eval_set, "annotation": annotation, "new": new_key,
             "targets": targets, "positive": bool(targets), "position": position,
-            "store": store, "ids": ids, "keys": {v: k for k, v in ids.items()},
+            "cands_new": cands_new, "cands_controls": cands_controls,
             "controls": controls, "category": annotation["category"]}
-
-
-def candidates_for(prepared: dict, key: str) -> list:
-    """The five best BM25 matches among the turns before ``key``: (key, memory)."""
-    store, position = prepared["store"], prepared["position"]
-    text = prepared["set"]["memories"][key]["content"]
-    found = []
-    for result in store.search(text, limit=BIG, record_access=False):
-        other = prepared["keys"][result.memory.id]
-        if position[other] < position[key]:
-            found.append((other, result.memory))
-            if len(found) == CANDIDATES:
-                break
-    return found
 
 
 def decide_with(detector, prepared: dict, key: str, cands: list):
@@ -328,9 +329,6 @@ def conditions(result: dict) -> list:
 
 
 def run_all(items: list, semantic) -> dict:
-    for p in items:
-        p["cands_new"] = candidates_for(p, p["new"])
-        p["cands_controls"] = {k: candidates_for(p, k) for k in p["controls"]}
     detectors = make_detectors(semantic)
     controls = {"never": Never(), "top": Top()}
     detections = {name: run_detector(d, items) for name, d in {**detectors, **controls}.items()}

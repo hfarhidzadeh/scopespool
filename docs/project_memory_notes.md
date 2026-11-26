@@ -1,12 +1,12 @@
 # ScopeSpool project memory notes
 
-Updated 2026-11-25 with the accepted LongMemEval category decisions, corrected v3 and detector runs, and the ScopeSpool name check. Stage B, retraction run 3, and shared read traces remain documented below.
+Updated 2026-11-26. The post-split retention verification, the Stage C literature corrections, and the open human evidence decisions are recorded below.
 
 ## Stage B and links
 
 - The [Stage B run](../experiments/results/longmemeval_shared_workspace.md) covered 601 workspaces and 18,177 reads. There were zero observed leaks, all rankings matched their visibility reference, and all 2,704 visible canaries were found. Owner RR@10 was 0.6464 with filtering before ranking and 0.6568 with filtering after ranking over all candidates. The difference of −0.0104 was within the preset 0.02 margin.
 - The [`links-ignore` fault](../experiments/results/longmemeval_shared_workspace_fault_links_ignore.md) exposed 1,450 hidden link endpoints in 408 reads. Only 175 reads matched their reference. All six Stage B fault controls showed their expected pattern.
-- Stage B uses real text in constructed workspaces with silent reads. Cross-user disputes on real text are a separate follow-up.
+- Stage B uses real text in constructed workspaces with silent reads. A subsequent [cross-user dispute experiment](../experiments/results/longmemeval_cross_user_disputes.md) tested exact restatements. The reworded pairs await independent review.
 - Rebuild should carry links over, preserving source IDs and audience/workspace scope. Rebuild drops links whose other end has no live counterpart (retracted without a rebuild, or pruned). It does not check reader scope: reads filter links by audience as for any link.
 
 ## Spot check
@@ -38,8 +38,14 @@ Updated 2026-11-25 with the accepted LongMemEval category decisions, corrected v
 
 - The [before run](../experiments/results/audience_access_channel_run1_superseded/audience_access_channel.md) held rules 1–4 in 500/500 synthetic trials. The trace rule held in 0/500.
 - Commit `f7427f1` made reads that supply `viewers` silent by default. The [after run](../experiments/results/audience_access_channel.md) passed all five rules in 500/500 trials, and the observer identified the topic in 0/500 default reads from either counters or prune outcomes. Explicit `record_access=True` still uses shared counters and affects shared pruning. The authenticated server offers silent reads.
-- The [private retention contract](per_viewer_retention.md) defines a singleton Python opt-in. Private activity gives the reader a personal list of recently used memories after shared pruning. Across 500 paired trials, tracking gave the reader a personal result in every trial and left all compared observer outputs and shared prune decisions identical. These trials exercise the Python API. Performance and authenticated server integration remain open.
-- The [recorded retention run](../experiments/results/private_retention_verification.md) passed all five checks and the personal retention check in 500/500 paired trials. In the local 256-memory SQLite benchmark, serial search p95 was 7.751 ms silent and 8.306 ms with private tracking. The checkpointed database grew by 40,960 bytes for 160 private rows. Expiry hid all personal results and cleanup removed every private row. This measures one workload and runtime.
+- A named reader can opt into private retention through Python, the local CLI, or the authenticated Unix socket. The CLI can restore a pruned memory, which removes it from the reader's personal list. [Private retention contract](per_viewer_retention.md)
+- Revision `8140298` passed all six private-retention checks on 500/500 seeds after both transaction splits. In the 256-memory timing fixture, both arms pruned 219 memories. The tracked reader retained 34 while the silent reader retained zero. All 160 private rows were removed on expiry cleanup. [Post-split verification](../experiments/results/private_retention_verification_post_split.md)
+- The Python 3.9 store benchmark passed its availability, visibility, and retention gate on all 12 pairs. The 4,096-memory private arm had a median mixed-search p95 of 3.77 s with eight readers. Persistent term statistics are deferred pending the lean-scan comparison. [Scale benchmark](../experiments/results/private_retention_scale_py39.md) · [Index decision](term_statistics_index.md)
+- The authenticated server completed 776/776 local socket requests across four paired repetitions, with exact shared outputs and the expected private list for every reader. At 1,024 memories and four clients, throughput spanned 21.45–23.30 concurrent searches/s with tracking and 21.79–22.23 with silent reads. [Socket measurement](../experiments/results/private_retention_socket.md)
+
+## Stage C evidence
+
+EverMemBench-Dynamic gives passage coordinates and SocialMemBench gives turn IDs and excerpts. The released GroupMemBench question records contain the question, answer, asker and question ID, so message-level recall there needs additional evidence labels. The survey also corrects the domain counts and error denominator for GroupMemBench, the SocialMemBench v2 scores, and the release licences. [Multi-user memory review](multi_user_memory_review.md)
 
 ## LongMemEval v3
 

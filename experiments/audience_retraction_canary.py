@@ -468,13 +468,13 @@ def main(argv=None) -> int:
         parser.error("--trials must be positive")
     trials = [run_trial(seed, arguments.fault) for seed in range(arguments.trials)]
     summary = summarise(trials)
+    with MemoryStore(":memory:") as store:
+        secure_delete = getattr(store, "secure_delete", "not available")
     report = {
         "trials": arguments.trials,
         "fault": arguments.fault,
         "store_schema_version": SCHEMA_VERSION,
-        "store_secure_delete": getattr(
-            MemoryStore(":memory:"), "secure_delete", "not available"
-        ),
+        "store_secure_delete": secure_delete,
         "summary": summary,
         "decision": decide(summary, arguments.trials),
     }

@@ -173,6 +173,14 @@ class CliTests(unittest.TestCase):
         code, out, err = self.run_cli("--viewers", "bob", "retained")
         self.assertEqual((code, json.loads(out)), (0, []), err)
 
+        code, out, err = self.run_cli("restore", memory)
+        self.assertEqual(code, 0, err)
+        restored = json.loads(out)
+        self.assertEqual(restored["id"], memory)
+        self.assertIsNone(restored["archived_at"])
+        code, out, err = self.run_cli("--viewers", "alice", "retained")
+        self.assertEqual((code, json.loads(out)), (0, []), err)
+
     def test_private_needs_one_viewer_and_excludes_peek_and_record(self):
         self.run_cli("channel", "join", "design", "alice")
         for args in (("--viewers", "alice,bob", "search", "launch", "--private"),

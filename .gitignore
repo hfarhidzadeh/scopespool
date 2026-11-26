@@ -10,3 +10,11 @@ dist/
 
 # Local memory databases
 *.sqlite3
+
+# Finder metadata
+.DS_Store
+
+# Local reviewer exports can include the key or the blinded repeat indicator.
+# The published sheets already tracked by Git remain available for reproduction.
+/experiments/results/label_review/**/*.csv
+/experiments/results/spot_check/**/*.csv

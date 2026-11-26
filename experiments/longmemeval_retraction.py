@@ -328,8 +328,7 @@ def build(store: MemoryStore, trial: dict) -> tuple:
     return message_ids, memory_ids
 
 
-def reference_store(trial: dict, embedder) -> MemoryStore:
-    store = MemoryStore(":memory:")
+def populate_reference(store: MemoryStore, trial: dict, embedder) -> None:
     for member in MEMBERS:
         store.join_channel(CHANNEL, member)
     retracted = set(trial["retract"])
@@ -348,7 +347,6 @@ def reference_store(trial: dict, embedder) -> MemoryStore:
         if a in ids and b in ids:
             store.relate(ids[a], ids[b], "related_to")
     store.embedder = embedder
-    return store
 
 
 def read_panel(store: MemoryStore, trial: dict) -> list:
@@ -520,9 +518,9 @@ def run(trial: dict, flaw=None) -> dict:
 
         panel_after = read_panel(store, trial)
         reads_ok = reads_ok and not leaked(trial, evidence, store, panel_after, message_ids)
-        reference = reference_store(trial, embedder)
-        classes = [compare(a, b) for a, b in zip(panel_after, read_panel(reference, trial))]
-        reference.close()
+        with MemoryStore(":memory:") as reference:
+            populate_reference(reference, trial, embedder)
+            classes = [compare(a, b) for a, b in zip(panel_after, read_panel(reference, trial))]
         store.close()
         # Link carryover is part of the never-written equivalence check for
         # both linked and unlinked trials.

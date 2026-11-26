@@ -106,6 +106,24 @@ def short_directory():
 
 
 @unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix domain sockets are not available")
+class ListenQueueTests(unittest.TestCase):
+    def test_connections_wait_while_the_accept_loop_lags(self):
+        # No serve_forever: every connection must wait in the listen queue.
+        directory = short_directory()
+        self.addCleanup(shutil.rmtree, directory, True)
+        store = MemoryStore(directory / "s.sqlite3")
+        server = ScopeSpoolServer(directory / "s.sock", store, TokenAuthority(b"s" * 32))
+        self.addCleanup(server.server_close)
+        connections = []
+        self.addCleanup(lambda: [connection.close() for connection in connections])
+        for _ in range(32):
+            connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            connections.append(connection)
+            connection.settimeout(2)
+            connection.connect(str(directory / "s.sock"))
+
+
+@unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix domain sockets are not available")
 class ServerTests(unittest.TestCase):
     def setUp(self):
         self.directory = short_directory()

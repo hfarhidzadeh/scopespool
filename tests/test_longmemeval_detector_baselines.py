@@ -51,11 +51,7 @@ ANNOTATIONS = v3.derive_annotations(QUESTIONS, LABELS)
 def items():
     eval_sets, _ = v3.convert(QUESTIONS, ANNOTATIONS)
     wanted = {s["id"]: s for s in eval_sets}
-    built = [db.prepare(q, ANNOTATIONS[q["question_id"]], wanted[q["question_id"]]) for q in QUESTIONS]
-    for p in built:
-        p["cands_new"] = db.candidates_for(p, p["new"])
-        p["cands_controls"] = {k: db.candidates_for(p, k) for k in p["controls"]}
-    return built
+    return [db.prepare(q, ANNOTATIONS[q["question_id"]], wanted[q["question_id"]]) for q in QUESTIONS]
 
 
 class PrepareTests(unittest.TestCase):

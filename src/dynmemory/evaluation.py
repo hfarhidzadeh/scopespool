@@ -20,9 +20,10 @@ import inspect
 import json
 import math
 import random
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Callable, Optional, Sequence, Union
+from typing import Callable, Iterator, Optional, Sequence, Union
 
 from .embeddings import Embedder
 from .store import LinkCarryover, MemoryStore, MemoryType, Relationship, retention_score
@@ -334,6 +335,7 @@ def _ordered_updates(eval_set: dict) -> list[dict]:
     )
 
 
+@contextmanager
 def _build_store(
     eval_set: dict,
     links: Sequence[dict],
@@ -341,25 +343,25 @@ def _build_store(
     *,
     link_carryover: str = LinkCarryover.KEEP.value,
     apply_updates: bool = True,
-) -> tuple[MemoryStore, dict[str, str]]:
+) -> Iterator[tuple[MemoryStore, dict[str, str]]]:
     """Add the memories in order, then the links, then the set's updates."""
-    store = MemoryStore(":memory:", link_carryover=link_carryover)
-    ids = {
-        key: store.add_memory(memory["content"], memory["kind"]).id
-        for key, memory in eval_set["memories"].items()
-    }
-    for link in links:
-        store.relate(
-            ids[link["source"]],
-            ids[link["target"]],
-            link.get("relation", Relationship.RELATED_TO.value),
-        )
-    if apply_updates:
-        for update in _ordered_updates(eval_set):
-            store.relate(ids[update["new"]], ids[update["old"]], Relationship.SUPERSEDES)
-    # Attached last, so the first search embeds every memory in one batch.
-    store.embedder = embedder
-    return store, ids
+    with MemoryStore(":memory:", link_carryover=link_carryover) as store:
+        ids = {
+            key: store.add_memory(memory["content"], memory["kind"]).id
+            for key, memory in eval_set["memories"].items()
+        }
+        for link in links:
+            store.relate(
+                ids[link["source"]],
+                ids[link["target"]],
+                link.get("relation", Relationship.RELATED_TO.value),
+            )
+        if apply_updates:
+            for update in _ordered_updates(eval_set):
+                store.relate(ids[update["new"]], ids[update["old"]], Relationship.SUPERSEDES)
+        # Attached last, so the first search embeds every memory in one batch.
+        store.embedder = embedder
+        yield store, ids
 
 
 def query_rows(
@@ -378,15 +380,14 @@ def query_rows(
     """
     rows = []
     for set_index, eval_set in enumerate(eval_sets):
-        store, ids = _build_store(
+        with _build_store(
             eval_set,
             links_for(eval_set),
             embedder_for(eval_set),
             link_carryover=link_carryover,
             apply_updates=apply_updates,
-        )
-        keys = {memory_id: key for key, memory_id in ids.items()}
-        with store:
+        ) as (store, ids):
+            keys = {memory_id: key for key, memory_id in ids.items()}
             for query in eval_set["queries"]:
                 relevant = set(query["relevant"])
                 stale = set(query.get("stale", []))

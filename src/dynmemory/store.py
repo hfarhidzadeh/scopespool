@@ -15,7 +15,9 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Mapping, Optional, Sequence, Union
+from typing import (
+    Callable, Iterable, Iterator, Mapping, NamedTuple, Optional, Sequence, Union,
+)
 
 from .embeddings import Embedder
 
@@ -215,6 +217,20 @@ class _ClaimView:
     replaced: Mapping[str, tuple[str, str]]
     statuses: Mapping[str, str]
     conflicts: tuple[Link, ...]
+
+
+class _RankRow(NamedTuple):
+    """The fields ranking reads; full memories are built only for results.
+
+    ``access_count`` is unused by ranking itself but kept for the
+    popularity-boost fault in ``experiments/audience_access_channel.py``.
+    """
+
+    id: str
+    content: Optional[str]
+    memory_key: Optional[str]
+    created_at: str
+    access_count: int
 
 
 class AudienceReader:
@@ -440,7 +456,11 @@ class MemoryStore:
             Path(self.db_path).resolve().parent.mkdir(
                 parents=True, exist_ok=True
             )
-        self._initialize()
+        try:
+            self._initialize()
+        except BaseException:
+            self.close()
+            raise
 
     def close(self) -> None:
         """Release an in-memory database; file databases need no closing."""
@@ -2368,15 +2388,23 @@ class MemoryStore:
 
         with self._transaction(write=False) as connection:
             view = self._claim_view(connection, viewer_ids)
-            sql = "SELECT * FROM memories WHERE archived_at IS NULL" + visible
+            sql = (
+                "SELECT memories.id, memories.content, memories.memory_key,"
+                " memories.created_at, memories.access_count"
+                " FROM memories WHERE archived_at IS NULL" + visible
+            )
             parameters = list(visible_parameters)
             if kind_value is not None:
                 sql += " AND kind = ?"
                 parameters.append(kind_value)
+            # Ranking reads only these fields, so full memories (the costly
+            # part of a scan) are built later for the returned ids alone.
             active_memories = {
-                row["id"]: self._memory_from_row(row)
+                row[0]: _RankRow(
+                    row[0], self._open("m:" + row[0], row[1]), row[2], row[3], row[4]
+                )
                 for row in connection.execute(sql, parameters).fetchall()
-                if row["id"] not in view.replaced
+                if row[0] not in view.replaced
             }
             if not active_memories:
                 return []
@@ -2473,9 +2501,10 @@ class MemoryStore:
                     ):
                         links_by_memory[memory_id].add(link)
 
+            result_rows = self._rows_by_id(connection, ranked_ids)
             results = []
             for memory_id in ranked_ids:
-                memory = active_memories[memory_id]
+                memory = self._memory_from_row(result_rows[memory_id])
                 matched_by = "+".join(
                     name
                     for name, scores in (
@@ -2826,7 +2855,7 @@ class MemoryStore:
         )
 
     def _lexical_scores(
-        self, memories: Mapping[str, Memory], query_tokens: Sequence[str]
+        self, memories: Mapping[str, _RankRow], query_tokens: Sequence[str]
     ) -> tuple[dict[str, float], dict[str, float]]:
         """BM25-style scores and query coverage of memories sharing a query token.
 
@@ -2892,7 +2921,7 @@ class MemoryStore:
     def _vector_scores(
         self,
         connection: sqlite3.Connection,
-        memories: Mapping[str, Memory],
+        memories: Mapping[str, _RankRow],
         query_vector: array,
         viewers: Optional[tuple[str, ...]] = None,
     ) -> dict[str, float]:
@@ -2924,7 +2953,7 @@ class MemoryStore:
         return scores
 
     @staticmethod
-    def _ranked(scores: Mapping[str, float], memories: Mapping[str, Memory]) -> list[str]:
+    def _ranked(scores: Mapping[str, float], memories: Mapping[str, _RankRow]) -> list[str]:
         """Order by score; equal scores put the newer memory first."""
         return sorted(
             scores,
@@ -2942,6 +2971,24 @@ class MemoryStore:
             for rank, memory_id in enumerate(ranking, start=1):
                 fused[memory_id] = fused.get(memory_id, 0.0) + 1.0 / (self._RRF_K + rank)
         return fused
+
+    def _rows_by_id(
+        self, connection: sqlite3.Connection, memory_ids: Sequence[str]
+    ) -> dict[str, sqlite3.Row]:
+        """Full memory rows for these ids, read in the caller's transaction."""
+        rows = {}
+        for start in range(0, len(memory_ids), self._ID_CHUNK):
+            chunk = list(memory_ids[start:start + self._ID_CHUNK])
+            rows.update(
+                (row["id"], row)
+                for row in connection.execute(
+                    "SELECT * FROM memories WHERE id IN ({})".format(
+                        ",".join("?" for _ in chunk)
+                    ),
+                    chunk,
+                )
+            )
+        return rows
 
     def _active_ids(
         self,
@@ -3328,23 +3375,27 @@ class MemoryStore:
         if current_time.tzinfo is None:
             current_time = current_time.replace(tzinfo=timezone.utc)
         now = current_time.astimezone(timezone.utc).isoformat(timespec="microseconds")
-        candidates = []
 
         with self._transaction(write=not dry_run) as connection:
             replaced = self._claim_view(connection, None).replaced
+            # Scoring reads only these columns; full memories (and their
+            # decrypted text) are built for the candidates alone.
             rows = connection.execute(
-                "SELECT * FROM memories WHERE archived_at IS NULL"
+                """
+                SELECT id, kind, importance, confidence, created_at,
+                    last_accessed_at, access_count
+                FROM memories WHERE archived_at IS NULL
+                """
             ).fetchall()
-            for row in rows:
-                if row["id"] in replaced:
+            scored = []
+            for (memory_id, kind, importance, confidence, created_at,
+                    last_accessed_at, access_count) in rows:
+                if memory_id in replaced:
                     # Already history, as a write-time replacement would have archived it.
                     continue
-                memory = self._memory_from_row(row)
-                if protect_importance is not None and memory.importance >= protect_importance:
+                if protect_importance is not None and importance >= protect_importance:
                     continue
-                activity_time = datetime.fromisoformat(
-                    memory.last_accessed_at or memory.created_at
-                )
+                activity_time = datetime.fromisoformat(last_accessed_at or created_at)
                 age_days = max(
                     0.0,
                     (current_time - activity_time).total_seconds() / 86400.0,
@@ -3352,14 +3403,19 @@ class MemoryStore:
                 if age_days < min_age_days:
                     continue
                 score = retention_score(
-                    memory.importance,
-                    memory.confidence,
+                    importance,
+                    confidence,
                     age_days,
-                    memory.access_count,
-                    kind_decay_days.get(memory.kind.value, decay_days),
+                    access_count,
+                    kind_decay_days.get(MemoryType(kind).value, decay_days),
                 )
                 if score < threshold:
-                    candidates.append(PruneCandidate(memory=memory, score=score))
+                    scored.append((memory_id, score))
+            candidate_rows = self._rows_by_id(connection, [i for i, _ in scored])
+            candidates = [
+                PruneCandidate(memory=self._memory_from_row(candidate_rows[i]), score=score)
+                for i, score in scored
+            ]
 
             candidates.sort(key=lambda candidate: (candidate.score, candidate.memory.id))
             if not dry_run:

@@ -122,8 +122,8 @@ are narrower:
 - **SocialMemBench probes** (2605.17789) [F]
   - **Subject-Mem** tags each extracted fact with the person it is about, which
     raised attribution accuracy from 0.25–0.46 to 0.78.
-  - **SMG** is a graph with dissent and knows-about edges, which raised
-    group-decision accuracy to 0.69.
+  - **SMG** records dissent and who knows about a fact. It scored 0.70 on
+    group decisions. [SocialMemBench v2, Table 4](https://arxiv.org/html/2605.17789v2#S5.T4)
   - **Caveat:** both probes were built by the benchmark's single author.
 
 **Common lesson.** All three keep who said what as structure, not as text, and
@@ -180,9 +180,9 @@ gating and LLM sanitisation do not count as a boundary. For derived memories:
 
 | Benchmark | Data | Size | What it tests | Headline result | Main limits |
 | --- | --- | --- | --- | --- | --- |
-| GroupMemBench (2605.14498) [F] | GPT-5-generated Teams-style channels and threads, 4 domains | 120K messages; 185 non-abstention questions per domain | Multi-hop, knowledge update, term ambiguity, user-implicit, temporal, abstention; answers depend on who asks | Hindsight 46.0, BM25 43.2, HippoRAG 39.7, A-Mem 35.1, Mem0 25.7; best knowledge-update 27.1. Retrieval failures cause 41–79% of errors. About 25% of replies are injected disagreements. | Synthetic; generator and judge share a family; questions filtered against a baseline solver; no access control or deletion |
+| GroupMemBench (2605.14498v2) [F] | GPT-5-generated Teams-style channels and threads, 4 domains | 120K messages and 715 questions. Excluding abstentions gives 185 each for Finance and Technology, 111 for Healthcare and 125 for Manufacturing. [Released question counts](https://github.com/UCSB-NLP-Chang/GroupMemBench#question-sets) | Multi-hop, knowledge update, term ambiguity, user-implicit, temporal, abstention; answers depend on who asks | Hindsight 46.0, BM25 43.2, HippoRAG 39.7, A-Mem 35.1, Mem0 25.7. Best knowledge-update score 27.1. Across baselines, retrieval failed on 41–79% of non-abstention questions; the paper describes its analysis set only as "185 non-abstention questions per domain" (that only Finance and Technology have 185 in the release is an inference). About 25% of replies are injected disagreements. [GroupMemBench v2, §4.4 and Figure 5](https://arxiv.org/html/2605.14498v2#S4.SS4) | Synthetic; generator and judge share a family; questions filtered against a baseline solver; no access control or deletion |
 | EverMemBench (2602.01313) [F] | Gemini-generated, 5 projects × 3 groups, 170 employees, one simulated year | 51,023 turns, about 4.2M tokens, 2,400 questions | Recall, temporal, constraints, proactivity, update, style, skill, role | Full-context Gemini 72.6 vs best memory system 59.3 (MemOS); accuracy fell from 54.5% (one group) to 19.7% (three groups) | Synthetic; no access control or deletion; some abstract claims do not match its tables |
-| SocialMemBench (2605.17789) [F] | LLM-generated social groups of 4–30 members, human-reviewed | 7,355 turns, 1,031 questions | Attribution, group decision, theory of mind, norm vs individual, temporal shift, departed member | Mem0, LangMem, Graphiti and Cognee score 0.12–0.18; raw-turn retrieval 0.345; full context 0.369 | About 7k tokens per network, so it fits in context; single author and judge; "departed member" rewards retention, the opposite of revocation |
+| SocialMemBench (2605.17789v2) [F] | LLM-generated social groups of 4–30 members, human-reviewed | 7,355 turns, 1,031 questions | Attribution, group decision, theory of mind, norm vs individual, temporal shift, departed member | With GPT-4o-mini answering, the four memory frameworks score 0.12–0.18. The question-weighted means are 0.346 for raw-turn retrieval and 0.370 for full context. [SocialMemBench v2, Table 4](https://arxiv.org/html/2605.17789v2#S5.T4) | About 7k tokens per network, so it fits in context; single author and judge; "departed member" rewards retention, the opposite of revocation |
 | GateMem (2606.18829) [F] | LLM-generated multi-party episodes in medical, office, education and household settings (all synthetic) | 91 episodes, 2,218 checkpoints, 13.4 principals and 223 turns per episode | Utility, access control, forgetting after a deletion request; score = U × (1 − A) × (1 − F) | GPT-5.4 long-context 54–80 across domains; Mem0 21–29; "no method simultaneously achieves" all three | Episodes fit in context; forgetting checked at the answer only; no attribution or cross-person conflict |
 | PiSAs (2607.05318) [F] | Synthetic multi-user tasks, 9 families | 265 scenarios | Contextual integrity: task appropriateness and per-user visibility across outputs, agent messages and memory | Shared plus private memory cut message appropriateness violations from 9.9% to 6.4% but raised visibility violations from 14.9–28.0% to 35.6–50.0%, which the authors call a relocation | Single task per instance; unintentional leakage only |
 | MemLeak (2610.04195) [A] | Pooled multi-tenant vector store | n/a | Incidental cross-user retrieval | 70–100% leakage under same-team pooling; only a hard ownership check restored the clean baseline, at about 1.4 ms per query | Abstract only |
@@ -1348,13 +1348,32 @@ Stages, cheapest first:
   - **Reuses** `dynmemory.longmemeval`.
   - **Positive control:** K = 1 must reproduce the current results.
   - **Note:** the existing labels still await review.
-- **Stage C: multi-party benchmarks, retrieval only.**
-  - **Data:** GroupMemBench, SocialMemBench and EverMemBench all provide gold
-    evidence messages, so evidence recall can be scored without an LLM judge.
-  - **Tests:** H3 and H4.
-  - **Check licences first.** SocialMemBench's dataset page says CC-BY-4.0
-    [A]; the others were not checked. All three are synthetic, with no real
-    people's data.
+- **Stage C. Multi-party retrieval on synthetic conversations.**
+  - **EverMemBench-Dynamic** supports long-history evidence recall without an
+    LLM judge. Projects average 845,111 tokens. Each question's `R` entries
+    identify supporting passages by date, group and message indices. Use this
+    release for the speaker and thread comparison in H3. Testing H4 also
+    requires labels for which statements should supersede earlier ones.
+    [EverMemBench v3, Table 3](https://arxiv.org/html/2602.01313v3#S3.T3) ·
+    [Evidence format](https://huggingface.co/datasets/EverMind-AI/EverMemBench-Dynamic#locating-reference-evidence) ·
+    [ScopeSpool loader and retrieval check](evermembench.md)
+  - **SocialMemBench** links questions to turn IDs and verbatim excerpts.
+    Its networks average about 6,800 tokens, giving a shorter-history
+    comparison. [SocialMemBench v2, §3.4](https://arxiv.org/html/2605.17789v2#S3.SS4) ·
+    [Evidence anchors](https://huggingface.co/datasets/qunlexie/SocialMemBench)
+  - **GroupMemBench** publishes the question, answer, asker ID and question ID
+    for each item. The authors use a GPT-5 judge to score answers. Reproducing
+    message-level evidence recall would require the supporting message IDs
+    used in their analysis. [Released question schema](https://github.com/UCSB-NLP-Chang/GroupMemBench#question-sets) ·
+    [GroupMemBench v2, Appendix I](https://arxiv.org/html/2605.14498v2#A9)
+  - **Release licences, checked 2026-11-26.** GroupMemBench conversations and
+    questions and SocialMemBench data are CC BY 4.0. Both projects release
+    their code under MIT. EverMemBench-Dynamic data are Apache-2.0. Its
+    separate code repository has no top-level licence file.
+    [GroupMemBench licences](https://github.com/UCSB-NLP-Chang/GroupMemBench#license) ·
+    [SocialMemBench licences](https://github.com/Qunlexie/SocialMemBench#license) ·
+    [EverMemBench-Dynamic data](https://huggingface.co/datasets/EverMind-AI/EverMemBench-Dynamic) ·
+    [EverMemBench code](https://github.com/EverMind-AI/EverMemBench)
 - **Stage D: needs LLM consolidation.** H5 on real derivations, and H6.
 
 Reporting:

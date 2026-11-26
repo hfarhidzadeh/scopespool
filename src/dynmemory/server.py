@@ -150,6 +150,10 @@ class ScopeSpoolServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServe
     """A threaded Unix-socket server for one store."""
 
     daemon_threads = True
+    # The client opens a connection per call; while request threads hold the
+    # GIL the accept loop lags, and socketserver's default queue of 5 refused
+    # calls from 8 concurrent members (experiments/private_retention_socket.py).
+    request_queue_size = socket.SOMAXCONN
 
     def __init__(
         self,

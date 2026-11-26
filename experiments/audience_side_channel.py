@@ -132,14 +132,12 @@ def _with_target(rng: random.Random, texts: list, count: int) -> list:
     return changed
 
 
-def _store(visible: list, hidden: list) -> MemoryStore:
-    store = MemoryStore(":memory:")
+def _populate(store: MemoryStore, visible: list, hidden: list) -> None:
     store.join_channel(VISIBLE_CHANNEL, VIEWER)
     store.join_channel(HIDDEN_CHANNEL, "insider")
     for channel, texts in ((VISIBLE_CHANNEL, visible), (HIDDEN_CHANNEL, hidden)):
         for text in texts:
             store.add_memory(text, MemoryType.FACT, channel=channel)
-    return store
 
 
 def _probe(search, anchor: str) -> dict:
@@ -174,7 +172,8 @@ def run_trial(seed: int) -> dict:
     outcome = {}
     for name, (visible_texts, hidden_texts) in worlds.items():
         total = len(visible_texts) + len(hidden_texts)
-        with _store(visible_texts, hidden_texts) as full:
+        with MemoryStore(":memory:") as full:
+            _populate(full, visible_texts, hidden_texts)
             after_probe = _probe(
                 lambda query: [
                     result
@@ -189,7 +188,8 @@ def run_trial(seed: int) -> dict:
                 ),
                 anchor,
             )
-        with _store(visible_texts, []) as alone:
+        with MemoryStore(":memory:") as alone:
+            _populate(alone, visible_texts, [])
             before_probe = _probe(
                 lambda query: alone.search(query, limit=total, record_access=False),
                 anchor,

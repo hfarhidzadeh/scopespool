@@ -45,7 +45,7 @@ python -I experiments/private_retention_verification.py --trials 500 \
   --output "$results_dir/private_retention_verification"
 ```
 
-Compare the paired outcomes with the [recorded private retention report](../experiments/results/private_retention_verification.md).
+Compare the paired outcomes with the [post-split 500-trial run](../experiments/results/private_retention_verification_post_split.md). The [original report](../experiments/results/private_retention_verification.md) covers the store before the transaction splits.
 Compare performance only under a matching workload and comparable runtime.
 
 Run the scale benchmark and its acceptance gate (about five minutes; the
@@ -67,6 +67,28 @@ python -m unittest tests.test_private_retention_races tests.test_private_retenti
 The gate verdict is at the top of the report. Compare it with the
 [recorded scale report](../experiments/results/private_retention_scale.md);
 the exit code is non-zero if the gate or a behavior check fails.
+
+For the authenticated server path, run the following command on a system
+that supports local Unix sockets. It starts the CLI server in a separate
+process and removes its temporary databases and signing key on exit.
+
+```bash
+results_dir="$(mktemp -d)"
+python -I experiments/private_retention_socket.py \
+  --output "$results_dir/private_retention_socket"
+python -I experiments/private_retention_socket.py --fault wrong-member \
+  --size 256 --repetitions 2 --output "$results_dir/private_retention_socket_fault"
+python -m unittest tests.test_private_retention_socket
+```
+
+The gate (fixed in the script's docstring on 2026-11-26) is at the top of the
+[socket report](../experiments/results/private_retention_socket.md). It uses
+the scale benchmark's three sizes, and the wrong-member fault must fail its
+attribution criteria. The recorded runs used Python 3.9.6. Use `--smoke` for
+one 256-memory pair.
+
+The EverMemBench canary control needs the pinned data files; see
+[EverMemBench](evermembench.md) for the download, hashes and commands.
 
 ## LongMemEval v3 and detector baselines
 
