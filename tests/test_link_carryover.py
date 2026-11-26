@@ -183,6 +183,7 @@ class LinkCarryoverTests(unittest.TestCase):
         for order in ((0, 2), (2, 0)):
             with self.subTest(order=order):
                 store = MemoryStore(":memory:")
+                self.addCleanup(store.close)
                 messages, first, second = self.two_linked_derivations(store)
                 for index in order:
                     store.retract_message(messages[index].id, actor_id="alice")
@@ -195,6 +196,7 @@ class LinkCarryoverTests(unittest.TestCase):
 
     def test_a_link_to_a_memory_with_no_live_rebuild_is_not_carried(self):
         store = MemoryStore(":memory:")
+        self.addCleanup(store.close)
         messages, first, second = self.two_linked_derivations(store)
         # The second memory loses both of its sources, so it cannot be rebuilt.
         store.retract_message(messages[0].id, actor_id="alice")
@@ -208,6 +210,7 @@ class LinkCarryoverTests(unittest.TestCase):
 
     def test_a_link_to_an_archived_memory_is_not_carried(self):
         store = MemoryStore(":memory:")
+        self.addCleanup(store.close)
         messages, first, second = self.two_linked_derivations(store)
         with store._transaction() as connection:  # as pruning would
             connection.execute(
@@ -221,6 +224,7 @@ class LinkCarryoverTests(unittest.TestCase):
         from unittest import mock
 
         store = MemoryStore(":memory:")
+        self.addCleanup(store.close)
         messages, first, _ = self.two_linked_derivations(store)
         store.retract_message(messages[0].id, actor_id="alice")
         before = len(store.list_memories(limit=100))
@@ -233,7 +237,8 @@ class LinkCarryoverTests(unittest.TestCase):
     def test_unknown_policy_is_rejected(self):
         with self.assertRaises(ValueError):
             MemoryStore(":memory:", link_carryover="move")
-        self.assertIs(MemoryStore(":memory:").link_carryover, LinkCarryover.KEEP)
+        with MemoryStore(":memory:") as store:
+            self.assertIs(store.link_carryover, LinkCarryover.KEEP)
 
     def test_cli_flag_selects_the_policy(self):
         db = str(Path(self.temp_dir.name) / "cli.sqlite3")

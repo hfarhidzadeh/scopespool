@@ -3,11 +3,15 @@
 import os
 import shutil
 import socket
+import sqlite3
 import stat
 import tempfile
 import threading
 import unittest
+from contextlib import closing
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest import mock
 
 from dynmemory import MemoryStore, MemoryType
 from dynmemory.auth import AuthenticationError, TokenAuthority, open_session, reader_for_tokens
@@ -160,6 +164,73 @@ class ServerTests(unittest.TestCase):
             alice.call("add_memory", content="x", kind="fact", channel="design", speaker="bob")
         with self.assertRaisesRegex(RemoteError, "authentication failed"):
             alice.call("search", query="launch", audience=["forged"])
+
+    def private_rows(self):
+        with closing(sqlite3.connect(self.store.db_path)) as connection:
+            return connection.execute(
+                "SELECT member_id, memory_id, access_count FROM viewer_access ORDER BY member_id"
+            ).fetchall()
+
+    def test_a_member_tracks_privately_and_lists_only_their_own_retained_memories(self):
+        now = datetime(2026, 11, 25, tzinfo=timezone.utc)
+        clock = mock.patch.object(
+            self.store, "_now", return_value=now.isoformat(timespec="microseconds")
+        )
+        clock.start()
+        self.addCleanup(clock.stop)
+        alice, bob = self.client("alice"), self.client("bob")
+        memory = alice.add_memory("launch checklist", "fact", channel="design")
+        self.store._set_activity(
+            memory["id"], created_at=(now - timedelta(days=180)).isoformat(timespec="microseconds")
+        )
+        found = alice.search("launch", record_private_access=True)
+        self.assertEqual([r["memory"]["id"] for r in found], [memory["id"]])
+        self.assertEqual(self.private_rows(), [("alice", memory["id"], 1)])
+        self.assertEqual(bob.call("get_memory", memory_id=memory["id"])["access_count"], 0)
+        archived = self.store.prune(as_of=now, dry_run=False)
+        self.assertEqual([candidate.memory.id for candidate in archived], [memory["id"]])
+        retained = alice.list_retained_memories()
+        self.assertEqual(
+            [(item["memory"]["id"], item["access_count"]) for item in retained], [(memory["id"], 1)]
+        )
+        # bob can see the pruned memory but never tracked it: his list stays empty.
+        self.assertEqual(bob.list_retained_memories(), [])
+
+    def test_private_retention_refuses_a_named_member_an_audience_and_forged_tokens(self):
+        alice, bob = self.client("alice"), self.client("bob")
+        alice.add_memory("launch checklist", "fact", channel="design")
+        token = self.authority.issue("alice")
+        for operation, base in (("list_retained_memories", {}), ("search", {"query": "launch"})):
+            for argument in ("member_id", "viewers", "audience"):
+                with self.subTest(operation=operation, argument=argument):
+                    response = handle_request(self.store, self.authority, {
+                        "token": token, "op": operation, "args": dict(base, **{argument: "bob"}),
+                    })
+                    self.assertEqual(
+                        response, {"ok": False, "error": "unexpected argument: " + argument}
+                    )
+        for call in (
+            lambda: alice.call("list_retained_memories", audience=[bob.token]),
+            lambda: alice.search("launch", record_private_access=True, audience=[bob.token]),
+            lambda: alice.search("launch", record_private_access=True, audience=[alice.token]),
+            lambda: alice.search("launch", record_private_access=True, audience=["forged"]),
+        ):
+            with self.assertRaisesRegex(RemoteError, "takes no audience"):
+                call()
+        with self.assertRaisesRegex(RemoteError, "record_private_access must be true or false"):
+            alice.search("launch", record_private_access="false")
+        with self.assertRaisesRegex(RemoteError, "unexpected argument: record_access"):
+            alice.search("launch", record_access=True)
+        forged = ScopeSpoolClient(self.socket_path, "forged")
+        for call in (
+            forged.list_retained_memories,
+            lambda: forged.search("launch", record_private_access=True),
+        ):
+            with self.assertRaisesRegex(RemoteError, "authentication failed"):
+                call()
+        self.assertEqual(self.private_rows(), [])
+        self.assertEqual(len(bob.search("launch", audience=[alice.token])), 1)
+        self.assertEqual(self.private_rows(), [])
 
     def test_a_member_cannot_retract_someone_elses_message(self):
         message = self.client("bob").add_message("board plan", channel="design")

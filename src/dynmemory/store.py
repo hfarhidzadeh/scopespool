@@ -2318,9 +2318,11 @@ class MemoryStore:
         ``record_access=True`` opts a viewer read in, and leaves that trace.
         ``record_private_access=True`` instead tracks the returned memories
         for one named viewer's personal retention list. Omit ``record_access``
-        when opting into private tracking. Ranking then runs in a read
-        transaction; the tracking is recorded afterwards in a separate short
-        write transaction, and only for memories the viewer can still see.
+        when opting into private tracking. Ranking always runs in a read
+        transaction; a counted or tracked read is recorded afterwards in a
+        separate short write transaction, and only for memories the viewers
+        can still see. A memory archived in between, by pruning or otherwise,
+        gains no shared count.
 
         Each result's ``links`` lists its relationships to the other results,
         the links behind its graph score, and every ``contradicts`` link to an
@@ -2364,7 +2366,7 @@ class MemoryStore:
         if not query_tokens and query_vector is None:
             return []
 
-        with self._transaction(write=record_access) as connection:
+        with self._transaction(write=False) as connection:
             view = self._claim_view(connection, viewer_ids)
             sql = "SELECT * FROM memories WHERE archived_at IS NULL" + visible
             parameters = list(visible_parameters)
@@ -2431,16 +2433,6 @@ class MemoryStore:
 
             ranked_ids = self._ranked(result_scores, active_memories)[:limit]
             now = self._now()
-            if record_access:
-                for memory_id in ranked_ids:
-                    connection.execute(
-                        """
-                        UPDATE memories
-                        SET access_count = access_count + 1, last_accessed_at = ?
-                        WHERE id = ?
-                        """,
-                        (now, memory_id),
-                    )
 
             links_by_memory = {memory_id: set() for memory_id in ranked_ids}
             result_links = self._search_links(connection, ranked_ids, viewer_ids, view)
@@ -2495,15 +2487,7 @@ class MemoryStore:
                 )
                 results.append(
                     SearchResult(
-                        memory=(
-                            replace(
-                                memory,
-                                access_count=memory.access_count + 1,
-                                last_accessed_at=now,
-                            )
-                            if record_access
-                            else memory
-                        ),
+                        memory=memory,
                         score=result_scores[memory_id],
                         matched_by=matched_by,
                         links=tuple(
@@ -2522,9 +2506,67 @@ class MemoryStore:
                         claim_status=view.statuses.get(memory_id, "current"),
                     )
                 )
+        if record_access and ranked_ids:
+            recorded = set(self._record_shared_access(ranked_ids, viewer_ids, now))
+            # Shown counters add this read to what the ranking read saw; a read
+            # recorded by someone else in between is not reflected.
+            results = [
+                replace(
+                    result,
+                    memory=replace(
+                        result.memory,
+                        access_count=result.memory.access_count + 1,
+                        last_accessed_at=now,
+                    ),
+                )
+                if result.memory.id in recorded
+                else result
+                for result in results
+            ]
         if record_private_access and ranked_ids:
             self._record_private_access(viewer_ids[0], ranked_ids, now)
         return results
+
+    def _record_shared_access(
+        self,
+        memory_ids: Sequence[str],
+        viewer_ids: Optional[tuple[str, ...]],
+        now: str,
+    ) -> list[str]:
+        """Count a read of ranked memories that are still active and visible.
+
+        Runs after ranking in its own short write transaction, so ranking
+        never holds the write lock. Each memory is checked again: one archived
+        since the read (pruned included) or no longer visible to the viewers
+        is not counted. A later access time already stored is kept, so reads
+        recorded out of order never move it back.
+        """
+        if not memory_ids:
+            return []
+        visible, visible_parameters = self._visible(viewer_ids)
+        with self._transaction() as connection:
+            placeholders = ",".join("?" for _ in memory_ids)
+            eligible = {
+                row["id"]
+                for row in connection.execute(
+                    "SELECT memories.id FROM memories WHERE memories.id IN ({})"
+                    " AND memories.archived_at IS NULL{}".format(placeholders, visible),
+                    [*memory_ids, *visible_parameters],
+                )
+            }
+            recorded = [memory_id for memory_id in memory_ids if memory_id in eligible]
+            connection.executemany(
+                """
+                UPDATE memories
+                SET access_count = access_count + 1,
+                    last_accessed_at = CASE
+                        WHEN last_accessed_at IS NULL OR last_accessed_at < ? THEN ?
+                        ELSE last_accessed_at END
+                WHERE id = ?
+                """,
+                [(now, now, memory_id) for memory_id in recorded],
+            )
+        return recorded
 
     def _record_private_access(
         self, viewer_id: str, memory_ids: Sequence[str], now: str

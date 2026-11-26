@@ -50,7 +50,12 @@ Compare performance only under a matching workload and comparable runtime.
 
 Run the scale benchmark and its acceptance gate (about five minutes; the
 recorded run used Python 3.9.6 and SQLite 3.39.5). `--smoke` runs a single
-256-memory pair to check the runner.
+256-memory pair to check the runner. `--size`, `--repetitions`, `--embedder ngram`
+(hybrid ranking; embedding writes all happen before the timed phases) and
+`--src DIR` (run against another source tree, such as an exported older commit)
+change the run without changing the default workload. Against the store before
+the transaction split (commit 5500011), one 4,096-memory pair failed gate
+criterion (a) with 5 lock errors in 72 private concurrent searches.
 
 ```bash
 results_dir="$(mktemp -d)"

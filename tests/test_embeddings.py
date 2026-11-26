@@ -120,6 +120,7 @@ class VectorSearchTests(unittest.TestCase):
         strict = MemoryStore(self.path, embedder=ConceptEmbedder(min_similarity=0.9))
         strict.add_memory(content, MemoryType.FACT)
         loose = MemoryStore(":memory:", embedder=ConceptEmbedder(min_similarity=0.5))
+        self.addCleanup(loose.close)
         loose.add_memory(content, MemoryType.FACT)
 
         # cosine(query, memory) = 2 / sqrt(5), about 0.894
@@ -128,6 +129,7 @@ class VectorSearchTests(unittest.TestCase):
 
     def test_results_report_each_matching_signal_separately(self):
         store = MemoryStore(":memory:", embedder=ConceptEmbedder(min_similarity=0.5))
+        self.addCleanup(store.close)
         paraphrase = store.add_memory("storage backend", MemoryType.FACT)
         both = store.add_memory("sqlite storage", MemoryType.FACT)
 
@@ -148,6 +150,7 @@ class VectorSearchTests(unittest.TestCase):
 
     def test_vector_score_is_zero_below_min_similarity(self):
         store = MemoryStore(":memory:", embedder=ConceptEmbedder(min_similarity=0.95))
+        self.addCleanup(store.close)
         store.add_memory("sqlite database storage brief", MemoryType.FACT)
 
         # cosine(query, memory) = 3 / sqrt(10), about 0.949: under the 0.95 cutoff.
@@ -186,6 +189,7 @@ class NGramHashEmbedderTests(unittest.TestCase):
         lexical = MemoryStore(":memory:")
         hybrid = MemoryStore(":memory:", embedder=NGramHashEmbedder())
         for store in (lexical, hybrid):
+            self.addCleanup(store.close)
             store.add_memory("Use the v2 billing endpoint for invoices.", MemoryType.FACT)
             store.add_memory("Lunch order was pasta.", MemoryType.EPISODE)
 

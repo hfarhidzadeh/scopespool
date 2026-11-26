@@ -1,6 +1,9 @@
+import contextlib
 import copy
 import importlib.util
+import io
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -111,6 +114,55 @@ class WorkloadTests(unittest.TestCase):
     def test_the_gate_is_written_in_the_docstring(self):
         for name in ("(a)", "(b)", "(c)", "personal_results_by_reader", "unpaired_attempts"):
             self.assertIn(name, scale.__doc__)
+
+    def test_the_default_run_is_the_recorded_workload_without_an_embedder(self):
+        args = scale.parse_args([])
+        self.assertEqual((args.sizes, args.repetitions, args.embedder, args.src),
+                         (scale.SIZES, scale.REPETITIONS, None, None))
+        self.assertEqual(scale.build_config(args.sizes, args.repetitions, args.embedder), {
+            "sizes": [{"memories": 256, "readers": 2}, {"memories": 1024, "readers": 4},
+                      {"memories": 4096, "readers": 8}],
+            "repetitions": 4, "topics": 32, "search_limit": 5, "warmup": 4, "serial": 24,
+            "mixed_before": 6, "mixed_after": 3, "previews_per_phase": 2,
+            "retained_list_samples": 12, "retained_list_limit": 185, "journal_mode": "wal",
+            "provisional_budgets": scale.BUDGETS, "embedder": None,
+        })
+
+    def test_partial_runs_choose_from_the_fixed_sizes(self):
+        smoke = scale.parse_args(["--smoke", "--embedder", "ngram"])
+        self.assertEqual((smoke.sizes, smoke.repetitions, smoke.embedder),
+                         (((256, 2),), 1, "ngram"))
+        one = scale.parse_args(["--size", "4096", "--repetitions", "1"])
+        self.assertEqual((one.sizes, one.repetitions), (((4096, 8),), 1))
+        both = scale.parse_args(["--size", "4096", "--size", "256"])
+        self.assertEqual((both.sizes, both.repetitions), (((256, 2), (4096, 8)), 4))
+        for bad in (["--size", "2048"], ["--repetitions", "0"], ["--smoke", "--size", "256"],
+                    ["--smoke", "--repetitions", "2"], ["--embedder", "minilm"]):
+            with self.subTest(bad=bad), self.assertRaises(SystemExit), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                scale.parse_args(bad)
+
+    def test_the_ngram_option_gives_the_store_an_embedder(self):
+        self.assertIsNone(scale.make_embedder(None))
+        self.assertEqual(type(scale.make_embedder("ngram")).__name__, "NGramHashEmbedder")
+        with self.assertRaises(ValueError):
+            scale.make_embedder("minilm")
+
+    def test_an_alternate_source_must_be_the_one_imported(self):
+        loaded = scale.store_source()
+        self.assertEqual(loaded.name, "store.py")
+        self.assertEqual(scale.store_source(loaded.parents[1]), loaded)
+        with tempfile.TemporaryDirectory() as directory, self.assertRaises(ValueError):
+            scale.store_source(Path(directory))
+
+    def test_the_report_names_the_run_not_the_pilot(self):
+        self.assertNotIn("pilot", scale.TITLE.lower())
+        config = scale.build_config(((4096, 8),), 1, "ngram")
+        line = scale.describe_run(config, "/elsewhere/src")
+        self.assertIn("Embedder: ngram (NGramHashEmbedder", line)
+        self.assertIn("4,096 memories / 8 readers; 1 paired repetition each.", line)
+        self.assertIn("alternate source tree", line)
+        self.assertIn("Embedder: none", scale.describe_run(scale.build_config(scale.SIZES, 4)))
 
 
 if __name__ == "__main__":

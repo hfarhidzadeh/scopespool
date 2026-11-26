@@ -65,6 +65,9 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="scopespool",
         description="A local-first typed memory store for agent prototypes.",
+        epilog="The CLI is a trusted local caller: whoever runs it can name any member "
+        "with --viewers or --as, so it is not an authentication boundary. Serve "
+        "untrusted users with 'scopespool serve', which checks member tokens.",
     )
     parser.add_argument(
         "--db",
@@ -159,6 +162,26 @@ def _parser() -> argparse.ArgumentParser:
         help="count this search as an access even with --viewers; other members "
         "can then see it in the access counters",
     )
+    mode.add_argument(
+        "--private",
+        action="store_true",
+        help="track the results on the personal retention list of the one member "
+        "named in --viewers; shared counters and other members see no change "
+        "(the CLI does not authenticate that member; see 'retained --help')",
+    )
+
+    retained = commands.add_parser(
+        "retained",
+        help="list pruned memories one viewer tracked with 'search --private'",
+        description="List the memories that shared pruning archived and that the one "
+        "member named in --viewers tracked with 'search --private' within {} days "
+        "of their last tracked read. Each entry holds the memory, printed as 'list' "
+        "prints it, and that member's private access_count and last_accessed_at. "
+        "The CLI is a trusted local caller: whoever runs it can name any viewer, so "
+        "it is not an authentication boundary; the token-checking server "
+        "('scopespool serve') is.".format(MemoryStore._PRIVATE_RETENTION_DAYS),
+    )
+    retained.add_argument("--limit", type=int, default=100)
 
     get = commands.add_parser("get", help="show one memory")
     get.add_argument("memory_id")
@@ -292,6 +315,11 @@ def _embedder(args: argparse.Namespace) -> Optional[Embedder]:
     return None
 
 
+def _single_viewer(viewers: Optional[list[str]], command: str) -> None:
+    if viewers is None or len(set(viewers)) != 1:
+        raise ValueError("{} needs exactly one member in --viewers".format(command))
+
+
 def _read_secret(path: str) -> bytes:
     return bytes.fromhex(Path(path).read_text().strip())
 
@@ -377,12 +405,17 @@ def _run(args: argparse.Namespace) -> int:
         else:
             print("Linked {} -> {} ({})".format(args.source_id, args.target_id, args.relation))
     elif args.command == "search":
+        if args.private:
+            _single_viewer(viewers, "search --private")
+            access = {"record_private_access": True}
+        else:
+            access = {"record_access": True if args.record else (False if args.peek else None)}
         results = store.search(
             args.query,
             kind=args.type,
             limit=args.limit,
-            record_access=True if args.record else (False if args.peek else None),
             viewers=viewers,
+            **access,
         )
         _print_json(
             [
@@ -396,6 +429,9 @@ def _run(args: argparse.Namespace) -> int:
                 for result in results
             ]
         )
+    elif args.command == "retained":
+        _single_viewer(viewers, "retained")
+        _print_json(store.for_viewers(viewers).list_retained_memories(limit=args.limit))
     elif args.command == "get":
         memory = store.get_memory(args.memory_id, viewers=viewers)
         if memory is None:

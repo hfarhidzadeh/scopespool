@@ -31,6 +31,15 @@ rerun is ``experiments/results/private_retention_scale.{md,json}``; the pilot is
 kept in ``experiments/results/private_retention_scale_run1_superseded/``. Write
 new runs to a new path, for example
 ``python3 -I experiments/private_retention_scale.py --output "$(mktemp -d)/private_retention_scale"``.
+
+Options that leave the default workload unchanged. ``--embedder ngram`` runs the
+same workload on a hybrid store (``NGramHashEmbedder``). The fixture is seeded
+without vectors, so each arm's first observer read, before any timed call,
+embeds it through ``_embed_missing``; the timed phases add no memories and run
+only its read check. ``--size`` (one of the fixed sizes, repeatable) and
+``--repetitions`` run part of the workload. ``--src DIR`` runs against another
+source tree, for example the pre-fix store as a negative control for the gate;
+it must be given on the command line so it is imported before the store.
 """
 
 from __future__ import annotations
@@ -54,11 +63,31 @@ from threading import Barrier
 from time import perf_counter
 from unittest import mock
 
+def _requested_src(argv):
+    for index, argument in enumerate(argv):
+        if argument == "--src":
+            return argv[index + 1] if index + 1 < len(argv) else None
+        if argument.startswith("--src="):
+            return argument.split("=", 1)[1]
+    return None
+
+
+# ``--src`` must be imported before the runner below puts this checkout's src first.
+if __name__ == "__main__" and _requested_src(sys.argv[1:]):
+    sys.path.insert(0, str(Path(_requested_src(sys.argv[1:])).resolve()))
+    import dynmemory  # noqa: E402,F401
+
 # Make the adjacent runner importable even with Python's isolated mode.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from private_retention_verification import (  # noqa: E402
     NOW, ROOT, SCHEMA_VERSION, MemoryStore, latency, storage, timed, timestamp,
 )
+
+TITLE = "Private retention scale benchmark"
+EMBEDDERS = {
+    "ngram": "NGramHashEmbedder, hybrid search; each arm embeds the fixture at its first "
+             "observer read, before any timed call",
+}
 
 
 SIZES = ((256, 2), (1024, 4), (4096, 8))
@@ -82,6 +111,25 @@ BUDGETS = {
     "checkpointed_bytes_per_row_max": 1024.0,
     "cleanup_ms_max": 50.0,
 }
+
+
+def make_embedder(name):
+    if name is None:
+        return None
+    if name != "ngram":
+        raise ValueError("unknown embedder: {}".format(name))
+    from dynmemory import NGramHashEmbedder  # the same package as MemoryStore
+    return NGramHashEmbedder()
+
+
+def store_source(src=None) -> Path:
+    """The store file actually imported; with ``src`` it must come from that tree."""
+    loaded = Path(sys.modules[MemoryStore.__module__].__file__).resolve()
+    if src is not None and not loaded.is_relative_to(Path(src).resolve()):
+        raise ValueError(
+            "the store was imported from {}, not from --src {}; give --src on the "
+            "command line so it is imported first".format(loaded, src))
+    return loaded
 
 
 def seed_database(path: Path, memories: int, readers: int) -> None:
@@ -176,8 +224,10 @@ def checkpoint(connection):
         raise RuntimeError("Benchmark checkpoint could not complete")
 
 
-def arm(path: Path, workers: int, private: bool, repeat: int):
-    with MemoryStore(path) as store, closing(sqlite3.connect(path)) as keeper, mock.patch.object(
+def arm(path: Path, workers: int, private: bool, repeat: int, embedder=None):
+    with MemoryStore(path, embedder=make_embedder(embedder)) as store, closing(
+        sqlite3.connect(path)
+    ) as keeper, mock.patch.object(
         store, "_now", return_value=timestamp(NOW)
     ) as clock:
         if keeper.execute("PRAGMA journal_mode = WAL").fetchone()[0] != "wal":
@@ -391,7 +441,7 @@ def acceptance_gate(pairs):
     }
 
 
-def run(directory, sizes, repetitions):
+def run(directory, sizes, repetitions, embedder=None):
     pairs = []
     for memories, workers in sizes:
         template = directory / "template.db"
@@ -403,7 +453,7 @@ def run(directory, sizes, repetitions):
                 path = directory / f"{mode}.db"
                 copy_database(template, path)
                 measures[mode], checks[mode], comparables[mode] = arm(
-                    path, workers, mode == "private", repeat
+                    path, workers, mode == "private", repeat, embedder
                 )
                 path.unlink()
             metrics, budgets = compare(measures["silent"], measures["private"])
@@ -423,6 +473,19 @@ def run(directory, sizes, repetitions):
     return pairs
 
 
+def describe_run(config, store_src=None):
+    name = config.get("embedder")
+    embedder = f"{name} ({EMBEDDERS[name]})" if name else "none (lexical search only)"
+    sizes = ", ".join(f"{size['memories']:,} memories / {size['readers']} readers"
+                      for size in config["sizes"])
+    repetitions = config["repetitions"]
+    line = (f"Embedder: {embedder}. Sizes: {sizes}; {repetitions} paired "
+            f"repetition{'' if repetitions == 1 else 's'} each.")
+    if store_src:
+        line += " Store: an alternate source tree given with `--src` (hash below)."
+    return line
+
+
 def render(report):
     pairs = report["pairs"]
 
@@ -431,7 +494,9 @@ def render(report):
 
     gate = report["acceptance_gate"]
     lines = [
-        "# Private retention scale pilot",
+        f"# {TITLE}",
+        "",
+        describe_run(report["config"], report.get("store_src")),
         "",
         f"**Acceptance gate: {gate['verdict']}.** Pre-registered in the script's docstring; "
         "each criterion must hold in every pair.",
@@ -567,20 +632,55 @@ def render(report):
     return "\n".join(lines)
 
 
-def main(argv=None):
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--output", type=Path,
                         default=ROOT / "experiments/results/private_retention_scale")
     parser.add_argument("--smoke", action="store_true",
                         help="Use a single 256-memory pair to check the runner")
+    parser.add_argument("--embedder", choices=sorted(EMBEDDERS),
+                        help="Run the same workload on a hybrid store (default: lexical)")
+    parser.add_argument("--size", type=int, action="append",
+                        choices=[memories for memories, _ in SIZES],
+                        help="Run only this fixed size (repeatable)")
+    parser.add_argument("--repetitions", type=int,
+                        help="Paired repetitions per size (default {})".format(REPETITIONS))
+    parser.add_argument("--src", type=Path,
+                        help="Source tree to import the store from instead of this checkout")
     args = parser.parse_args(argv)
-    sizes = SIZES[:1] if args.smoke else SIZES
-    repetitions = 1 if args.smoke else REPETITIONS
-    source = ROOT / "src/dynmemory/store.py"
+    if args.smoke and (args.size or args.repetitions is not None):
+        parser.error("--smoke cannot be combined with --size or --repetitions")
+    if args.repetitions is not None and args.repetitions < 1:
+        parser.error("--repetitions must be at least 1")
+    if args.smoke:
+        args.sizes, args.repetitions = SIZES[:1], 1
+    else:
+        args.sizes = tuple(size for size in SIZES if not args.size or size[0] in args.size)
+        args.repetitions = REPETITIONS if args.repetitions is None else args.repetitions
+    return args
+
+
+def build_config(sizes, repetitions, embedder=None):
+    return {
+        "sizes": [{"memories": memories, "readers": readers} for memories, readers in sizes],
+        "repetitions": repetitions, "topics": TOPICS, "search_limit": LIMIT,
+        "warmup": WARMUP, "serial": SERIAL, "mixed_before": MIXED_BEFORE,
+        "mixed_after": MIXED_AFTER, "previews_per_phase": PREVIEWS,
+        "retained_list_samples": LIST_SAMPLES, "retained_list_limit": PERSONAL_LIMIT,
+        "journal_mode": "wal",
+        "provisional_budgets": BUDGETS,
+        "embedder": embedder,
+    }
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    sizes, repetitions = args.sizes, args.repetitions
+    source = store_source(args.src)
     store_hash = hashlib.sha256(source.read_bytes()).hexdigest()
     start = perf_counter()
     with tempfile.TemporaryDirectory(prefix="scopespool-retention-scale-") as directory:
-        pairs = run(Path(directory), sizes, repetitions)
+        pairs = run(Path(directory), sizes, repetitions, args.embedder)
     if hashlib.sha256(source.read_bytes()).hexdigest() != store_hash:
         raise RuntimeError("Store source changed during the benchmark")
     correct_pairs = sum(
@@ -595,15 +695,8 @@ def main(argv=None):
         "elapsed_seconds": perf_counter() - start,
         "correctness_passed": correct_pairs == len(pairs), "correct_pairs": correct_pairs,
         "availability_passed": available_pairs == len(pairs), "available_pairs": available_pairs,
-        "config": {
-            "sizes": [{"memories": memories, "readers": readers} for memories, readers in sizes],
-            "repetitions": repetitions, "topics": TOPICS, "search_limit": LIMIT,
-            "warmup": WARMUP, "serial": SERIAL, "mixed_before": MIXED_BEFORE,
-            "mixed_after": MIXED_AFTER, "previews_per_phase": PREVIEWS,
-            "retained_list_samples": LIST_SAMPLES, "retained_list_limit": PERSONAL_LIMIT,
-            "journal_mode": "wal",
-            "provisional_budgets": BUDGETS,
-        },
+        "store_src": str(args.src) if args.src else None,
+        "config": build_config(sizes, repetitions, args.embedder),
         "acceptance_gate": acceptance_gate(pairs),
         "pairs": pairs,
     }

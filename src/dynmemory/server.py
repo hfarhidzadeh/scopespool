@@ -7,6 +7,10 @@ member token (``dynmemory.auth``); the server verifies it and runs the request
 as that member, through a reader bound to the verified audience or a writer
 bound to the verified member. Administrative calls (admins, memberships,
 delegation, pruning, rebuilding, reads without an audience) are not exposed.
+A member may opt their own search into private retention
+(``record_private_access``) and list their own retained memories
+(``list_retained_memories``). Both act for the token's member alone and refuse
+an audience, so a client never chooses whose activity is recorded or listed.
 
 The socket file is created with owner-only permissions (0600), so the
 operating system also limits who can connect. Run the server as its own user
@@ -36,7 +40,8 @@ from .store import MemoryStore
 
 #: Reads run as the verified audience; each lists the arguments a client may pass.
 READS = {
-    "search": ("query", "kind", "limit"),  # reads from members never count as accesses
+    # Never a shared access; private tracking records only for the token's member.
+    "search": ("query", "kind", "limit", "record_private_access"),
     "get_memory": ("memory_id",),
     "history": ("memory_id",),
     "list_memories": ("include_archived", "limit"),
@@ -44,7 +49,10 @@ READS = {
     "sources_of": ("memory_id",),
     "disputes": ("channel", "memory_key"),
     "who_knows": ("memory_id",),
+    "list_retained_memories": ("limit",),
 }
+#: Reads of the token's member's own private state; they take no audience.
+OWN_READS = frozenset({"list_retained_memories"})
 #: Writes run as the verified member.
 WRITES = {
     "add_message": ("content", "channel"),
@@ -93,6 +101,13 @@ def handle_request(store: MemoryStore, authority: TokenAuthority, request: objec
             audience = request.get("audience", [])
             if not isinstance(audience, list):
                 raise ValueError("audience must be a list of tokens")
+            private = arguments.get("record_private_access", False)
+            if not isinstance(private, bool):
+                raise ValueError("record_private_access must be true or false")
+            if audience and (private or operation in OWN_READS):
+                raise ValueError(
+                    "private retention is for the token's member only and takes no audience"
+                )
             viewers = [member] + [authority.verify(token) for token in audience]
             target = store.for_viewers(viewers)
         else:
@@ -194,6 +209,9 @@ class ScopeSpoolClient:
 
     def search(self, query: str, **arguments):
         return self.call("search", query=query, **arguments)
+
+    def list_retained_memories(self, *, limit: int = 100):
+        return self.call("list_retained_memories", limit=limit)
 
     def add_message(self, content: str, *, channel: str):
         return self.call("add_message", content=content, channel=channel)

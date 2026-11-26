@@ -145,6 +145,61 @@ class CliTests(unittest.TestCase):
         code, _, err = self.run_cli("--viewers", "carol", "get", thursday)
         self.assertEqual(code, 1)
 
+    def test_a_private_search_keeps_a_pruned_memory_on_that_viewers_list_only(self):
+        for member in ("alice", "bob"):
+            self.run_cli("channel", "join", "design", member)
+        memory = self.add("launch checklist", "fact", "--channel", "design",
+                          "--speaker", "alice", "--confidence", "0.1")
+        stamp = (datetime.now(timezone.utc) - timedelta(days=400)).isoformat()
+        MemoryStore(self.db)._set_activity(memory, created_at=stamp)
+
+        code, out, err = self.run_cli("--viewers", "alice", "search", "launch", "--private")
+        self.assertEqual(code, 0, err)
+        self.assertEqual([result["memory"]["id"] for result in json.loads(out)], [memory])
+        _, out, _ = self.run_cli("get", memory)
+        self.assertEqual(json.loads(out)["access_count"], 0)  # shared counters untouched
+        _, out, _ = self.run_cli("prune", "--apply")
+        self.assertEqual([entry["memory"]["id"] for entry in json.loads(out)["memories"]], [memory])
+
+        code, out, err = self.run_cli("--viewers", "alice", "retained")
+        self.assertEqual(code, 0, err)
+        (entry,) = json.loads(out)
+        self.assertEqual(set(entry), {"memory", "access_count", "last_accessed_at"})
+        self.assertEqual(entry["access_count"], 1)
+        _, out, _ = self.run_cli("list", "--include-archived")
+        self.assertEqual([listed for listed in json.loads(out) if listed["id"] == memory],
+                         [entry["memory"]])  # the memory prints as `list` prints it
+
+        code, out, err = self.run_cli("--viewers", "bob", "retained")
+        self.assertEqual((code, json.loads(out)), (0, []), err)
+
+    def test_private_needs_one_viewer_and_excludes_peek_and_record(self):
+        self.run_cli("channel", "join", "design", "alice")
+        for args in (("--viewers", "alice,bob", "search", "launch", "--private"),
+                     ("search", "launch", "--private"),
+                     ("--viewers", "alice,bob", "retained"),
+                     ("retained",)):
+            code, out, err = self.run_cli(*args)
+            self.assertEqual((code, out), (1, ""), args)
+            self.assertIn("needs exactly one member in --viewers", err)
+        for other in ("--record", "--peek"):
+            err = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+                with self.assertRaises(SystemExit) as raised:
+                    main(["--db", self.db, "--viewers", "alice", "search", "launch",
+                          "--private", other])
+            self.assertEqual(raised.exception.code, 2)
+            self.assertIn("not allowed with argument", err.getvalue())
+
+    def test_help_says_the_cli_is_not_an_authentication_boundary(self):
+        for args in (["--help"], ["retained", "--help"]):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    main(args)
+            self.assertEqual(raised.exception.code, 0)
+            self.assertIn("not an authentication boundary", " ".join(out.getvalue().split()))
+
     def test_writing_as_a_member_checks_membership(self):
         self.run_cli("channel", "join", "design", "alice")
         code, _, err = self.run_cli("--as", "mallory", "add", "x", "--type", "fact", "--channel", "design")

@@ -633,6 +633,7 @@ class MemoryStoreTests(unittest.TestCase):
 
     def test_in_memory_database_stays_available_between_operations(self):
         store = MemoryStore(":memory:")
+        self.addCleanup(store.close)
         memory = store.add_memory("Keep this for this process.", MemoryType.FACT)
 
         self.assertEqual(store.get_memory(memory.id), memory)

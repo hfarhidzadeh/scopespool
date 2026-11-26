@@ -188,7 +188,13 @@ or evaluation queries that should not affect pruning. A search for named viewers
 counters belong to the memory and every member who can see it would see them change;
 `--record` (or `record_access=True`) opts into shared tracking.
 
-A trusted Python caller can also track access privately for one named reader.
+Searches rank without holding SQLite's write lock; a counted read is recorded
+afterwards in a short write transaction, only for memories still active and
+visible. If an applied prune lands between the two, the memory is archived and
+that read is not counted (the prune wins the race; before, the read could have
+saved it).
+
+A caller can also track access privately for one named reader.
 Ordinary pruning follows the shared policy. Recently used memories that it
 archives appear in the reader's personal list while still visible to that
 reader.
@@ -198,6 +204,16 @@ reader = store.for_viewers("alice")
 reader.search("SQLite", record_private_access=True)
 retained = reader.list_retained_memories()
 ```
+
+```bash
+scopespool --viewers alice search "SQLite" --private
+scopespool --viewers alice retained --limit 20
+```
+
+The CLI is a trusted local caller: whoever runs it can name any viewer. Over the
+server, `search` accepts `record_private_access` and `list_retained_memories`
+returns the caller's own list; both work only for the token's member and refuse
+any audience or member argument.
 
 Private tracking is opt-in. See the [private retention contract](docs/per_viewer_retention.md)
 for the schema upgrade, the 90-day activity window, and membership and
