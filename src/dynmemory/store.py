@@ -2318,7 +2318,9 @@ class MemoryStore:
         ``record_access=True`` opts a viewer read in, and leaves that trace.
         ``record_private_access=True`` instead tracks the returned memories
         for one named viewer's personal retention list. Omit ``record_access``
-        when opting into private tracking.
+        when opting into private tracking. Ranking then runs in a read
+        transaction; the tracking is recorded afterwards in a separate short
+        write transaction, and only for memories the viewer can still see.
 
         Each result's ``links`` lists its relationships to the other results,
         the links behind its graph score, and every ``contradicts`` link to an
@@ -2362,7 +2364,7 @@ class MemoryStore:
         if not query_tokens and query_vector is None:
             return []
 
-        with self._transaction(write=record_access or record_private_access) as connection:
+        with self._transaction(write=record_access) as connection:
             view = self._claim_view(connection, viewer_ids)
             sql = "SELECT * FROM memories WHERE archived_at IS NULL" + visible
             parameters = list(visible_parameters)
@@ -2439,19 +2441,6 @@ class MemoryStore:
                         """,
                         (now, memory_id),
                     )
-            elif record_private_access:
-                cutoff = self._private_access_cutoff(now)
-                connection.executemany(
-                    """
-                    INSERT INTO viewer_access (member_id, memory_id, access_count, last_accessed_at)
-                    VALUES (?, ?, 1, ?)
-                    ON CONFLICT(member_id, memory_id) DO UPDATE SET
-                        access_count = CASE WHEN viewer_access.last_accessed_at > ?
-                            THEN viewer_access.access_count + 1 ELSE 1 END,
-                        last_accessed_at = max(viewer_access.last_accessed_at, excluded.last_accessed_at)
-                    """,
-                    [(viewer_ids[0], memory_id, now, cutoff) for memory_id in ranked_ids],
-                )
 
             links_by_memory = {memory_id: set() for memory_id in ranked_ids}
             result_links = self._search_links(connection, ranked_ids, viewer_ids, view)
@@ -2533,7 +2522,51 @@ class MemoryStore:
                         claim_status=view.statuses.get(memory_id, "current"),
                     )
                 )
-            return results
+        if record_private_access and ranked_ids:
+            self._record_private_access(viewer_ids[0], ranked_ids, now)
+        return results
+
+    def _record_private_access(
+        self, viewer_id: str, memory_ids: Sequence[str], now: str
+    ) -> list[str]:
+        """Add ranked memories to one viewer's private list, if still visible.
+
+        Runs after ranking in its own short write transaction, so ranking
+        never holds the write lock. Membership, sources, staleness and
+        archiving may have changed since the read, so each memory is checked
+        again; only those the viewer can still see are recorded. A memory
+        that pruning archived in between still counts, as it would have had
+        the read finished first; one archived any other way does not.
+        """
+        if not memory_ids:
+            return []
+        visible, visible_parameters = self._visible((viewer_id,))
+        with self._transaction() as connection:
+            placeholders = ",".join("?" for _ in memory_ids)
+            eligible = {
+                row["id"]
+                for row in connection.execute(
+                    "SELECT memories.id FROM memories WHERE memories.id IN ({})"
+                    " AND (memories.archived_at IS NULL"
+                    " OR memories.archived_at = memories.pruned_at){}".format(
+                        placeholders, visible),
+                    [*memory_ids, *visible_parameters],
+                )
+            }
+            recorded = [memory_id for memory_id in memory_ids if memory_id in eligible]
+            cutoff = self._private_access_cutoff(now)
+            connection.executemany(
+                """
+                INSERT INTO viewer_access (member_id, memory_id, access_count, last_accessed_at)
+                VALUES (?, ?, 1, ?)
+                ON CONFLICT(member_id, memory_id) DO UPDATE SET
+                    access_count = CASE WHEN viewer_access.last_accessed_at > ?
+                        THEN viewer_access.access_count + 1 ELSE 1 END,
+                    last_accessed_at = max(viewer_access.last_accessed_at, excluded.last_accessed_at)
+                """,
+                [(viewer_id, memory_id, now, cutoff) for memory_id in recorded],
+            )
+        return recorded
 
     _CLAIM_COLUMNS = (
         "id, channel, memory_key, speaker, content, asserted_as_admin, "

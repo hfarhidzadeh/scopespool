@@ -19,7 +19,7 @@ for item in reader.list_retained_memories():
 
 ## Lifecycle and migration
 
-- A private counter is keyed by member and memory ID, with one row per pair. Successful tracked searches increment only the returned rows atomically with current visibility checks. A 90-day window from the last private access bounds how long a counter can qualify a memory for the personal list. Listing the collection does not renew it.
+- A private counter is keyed by member and memory ID, with one row per pair. A tracked search ranks in a read transaction, so it never holds SQLite's write lock while ranking. It then increments the returned rows in a separate short write transaction, which first checks each row again: the reader must still be a current member of its channel, its sources must still be visible and not retracted, and it must not be stale or archived other than by pruning. A row pruned between the two transactions is still counted, the same outcome as if the read had finished first. A row superseded in between is counted too; the claim view hides it from the personal list. A 90-day window from the last private access bounds how long a counter can qualify a memory for the personal list. Listing the collection does not renew it.
 - Ordinary administrative pruning marks an archive as a prune. Its decision still uses the existing shared activity and policy. A private list includes a pruned row only while its counter is fresh and the row is currently visible and has not been superseded in this viewer's claim view. It does not restore or re-rank that row in shared search.
 - A member leaving a channel clears their counters for memories in that channel and memories sourced from it. Rejoining starts a new interval of private use. Retraction deletes counters for invalidated derivations in the same transaction as clearing their text. A rebuild has its own ID and starts without inherited activity. Administrative restore clears the prune mark so the row leaves the personal list while active. Physical memory deletion would cascade to the counter row.
 - A schema upgrade from version 7 creates an empty counter table and a nullable prune marker. Historic shared counters remain attributed to the shared memory, and pre-upgrade archives lack the new prune marker. The upgrade leaves existing text, vectors, keys, and links in place.
@@ -35,5 +35,26 @@ The [recorded private retention experiment](../experiments/results/private_reten
 compares no read, the named default, explicit silence, and private tracking.
 All five checks and the personal retention benefit held across 500 paired
 trials. It also records SQLite timings and storage growth on a 256-memory
-fixture. Server integration needs its own verification, and larger workloads
-are needed to establish performance budgets for a release.
+fixture. That report was recorded before ranking and recording were split
+into two transactions; the regression tests above, including the 500-seed
+paired comparison, pass on the split version.
+
+`tests/test_private_retention_races.py` runs events between ranking and
+recording: the reader leaving the memory's channel or its source channel, a
+source retracted, a prune, an archive that is not a prune, and a supersession.
+It also checks that another connection can take the write lock while ranking
+runs; before the split that check failed with "database is locked".
+
+The [scale benchmark](../experiments/results/private_retention_scale.md)
+(256, 1,024 and 4,096 memories with 2, 4 and 8 readers, four paired
+repetitions each) has an acceptance gate fixed in the script before the rerun:
+no lock timeouts or lock errors, matching shared and observer results between
+silent and private arms, and a retained result for every eligible reader. The
+gate passed in 12 of 12 pairs. The pilot, run before the split, had two lock
+timeouts in 288 private mixed searches at 4,096 memories and eight readers
+([pilot report](../experiments/results/private_retention_scale_run1_superseded/private_retention_scale.md)).
+After the split, private and silent mixed p95 latencies were within 6% of each
+other at 4,096 memories, but both arms took about 5.6 s at p95 under eight
+concurrent readers, and one of 12 repetitions missed a provisional performance
+flag. Server integration needs its own verification, and the provisional flags
+are not yet release budgets.

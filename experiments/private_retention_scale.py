@@ -1,4 +1,37 @@
-"""Measure private retention over matched, repeated local SQLite workloads."""
+"""Measure private retention over matched, repeated local SQLite workloads.
+
+Acceptance gate, fixed on 2026-11-26 before the rerun that follows the change
+that ranks private searches in a read transaction and records private access in
+a separate short write transaction. The workload (sizes, readers, query
+schedule, phases, repetitions) is unchanged from the pilot, so the runs compare.
+Each criterion must hold in every pair (both arms where an arm is named):
+
+  (a) No lock timeouts or lock errors: every warmup, serial and mixed search and
+      every prune preview in both arms completed (``all_calls_completed``), and
+      the paired comparison has no unpaired search or preview attempt
+      (``paired_comparison.unpaired_attempts == 0``).
+  (b) Shared and observer results match: the silent and private arms returned
+      identical search results, prune previews, applied prune and observer
+      rankings for the overlapping peer, the joint audience and the disjoint
+      viewer (``paired_comparison.all_successful_pairs_equal``), and the reads
+      left each arm's observer rankings unchanged
+      (``checks.<arm>.observer_rankings_unchanged_by_reads``).
+  (c) A retained result for every eligible reader: in the private arm the
+      retained entries equal the expected ones exactly and every reader has at
+      least one eligible entry (``checks.private.retention_matches_reader_accesses``),
+      and every reader's personal list before expiry holds at least one entry
+      (``measurements.private.personal_results_by_reader``).
+
+Verdict: "pass" if (a), (b) and (c) hold in every pair; otherwise "fail", naming
+the failing criteria and the first failing size and pair. The provisional
+performance flags (``BUDGETS``) are reported and are not part of the gate.
+
+Smoke check of the runner: ``--smoke`` (one 256-memory pair). The recorded
+rerun is ``experiments/results/private_retention_scale.{md,json}``; the pilot is
+kept in ``experiments/results/private_retention_scale_run1_superseded/``. Write
+new runs to a new path, for example
+``python3 -I experiments/private_retention_scale.py --output "$(mktemp -d)/private_retention_scale"``.
+"""
 
 from __future__ import annotations
 
@@ -211,6 +244,8 @@ def arm(path: Path, workers: int, private: bool, repeat: int):
             "archived": len(archived),
             "eligible_personal_results": sum(len(items) for items in expected_retained),
             "personal_results": sum(len(items) for items in personal),
+            "eligible_personal_results_by_reader": [len(items) for items in expected_retained],
+            "personal_results_by_reader": [len(items) for items in personal],
             "personal_results_after_expiry": visible_after_expiry,
             "storage": {
                 "initial": initial,
@@ -295,6 +330,67 @@ def compare_outputs(silent, private):
     }
 
 
+GATE_CRITERIA = {
+    "a_no_lock_errors": "no lock timeouts or lock errors, no unpaired attempts",
+    "b_results_match": "shared and observer results match between arms",
+    "c_retained_for_every_reader": "a retained result for every eligible reader",
+}
+
+
+def gate_criteria(pair):
+    """Which acceptance criteria hold for one pair; see the module docstring."""
+    comparison = pair["paired_comparison"]
+    private = pair["measurements"]["private"]
+    by_reader = private.get("personal_results_by_reader")
+    return {
+        "a_no_lock_errors": bool(pair["all_calls_completed"])
+        and comparison["unpaired_attempts"] == 0,
+        "b_results_match": bool(comparison["all_successful_pairs_equal"]) and all(
+            checks["observer_rankings_unchanged_by_reads"] for checks in pair["checks"].values()
+        ),
+        "c_retained_for_every_reader": bool(
+            pair["checks"]["private"]["retention_matches_reader_accesses"]
+        ) and by_reader is not None and len(by_reader) == pair["readers"]
+        and all(count > 0 for count in by_reader),
+    }
+
+
+def acceptance_gate(pairs):
+    held = {name: [] for name in GATE_CRITERIA}
+    failing = {name: [] for name in GATE_CRITERIA}
+    for pair in pairs:
+        label = {"memories": pair["memories"], "readers": pair["readers"], "pair": pair["repeat"]}
+        for name, ok in gate_criteria(pair).items():
+            (held if ok else failing)[name].append(label)
+    failed = [name for name in GATE_CRITERIA if failing[name]]
+    first = None
+    if failed:
+        first = next(
+            {"memories": pair["memories"], "readers": pair["readers"], "pair": pair["repeat"],
+             "criteria": [name for name, ok in gate_criteria(pair).items() if not ok]}
+            for pair in pairs if not all(gate_criteria(pair).values())
+        )
+    passed = bool(pairs) and not failed
+    if passed:
+        verdict = "pass"
+    elif not pairs:
+        verdict = "fail (no pairs ran)"
+    else:
+        verdict = "fail ({} failed; first failing: {:,} memories, pair {})".format(
+            ", ".join(name.split("_", 1)[0] for name in failed), first["memories"], first["pair"])
+    return {
+        "verdict": verdict,
+        "passed": passed,
+        "pairs": len(pairs),
+        "criteria": {
+            name: {"description": GATE_CRITERIA[name], "held": len(held[name]),
+                   "failing": failing[name]}
+            for name in GATE_CRITERIA
+        },
+        "first_failure": first,
+    }
+
+
 def run(directory, sizes, repetitions):
     pairs = []
     for memories, workers in sizes:
@@ -333,8 +429,17 @@ def render(report):
     def number(value, places=2):
         return f"{value:.{places}f}" if value is not None else "n/a"
 
+    gate = report["acceptance_gate"]
     lines = [
         "# Private retention scale pilot",
+        "",
+        f"**Acceptance gate: {gate['verdict']}.** Pre-registered in the script's docstring; "
+        "each criterion must hold in every pair.",
+        "",
+        "| Criterion | Pairs held |",
+        "| --- | ---: |",
+        *[f"| ({name[0]}) {item['description']} | {item['held']}/{gate['pairs']} |"
+          for name, item in gate["criteria"].items()],
         "",
         f"**Behavior checks {'passed' if report['correctness_passed'] else 'failed'} in "
         f"{report['correct_pairs']}/{len(pairs)} paired repetitions.** "
@@ -345,10 +450,7 @@ def render(report):
         "matched calls that completed in both modes.",
         "",
         f"**All calls completed in {report['available_pairs']}/{len(pairs)} pairs.** "
-        "The initial full run aborted on a SQLite lock error during a private search "
-        "in the 4,096-memory, eight-reader fixture. The eight smaller pairs finished "
-        "before the abort, but the earlier runner emitted results only after the full "
-        "run. This rerun records lock errors and failed wait times without retries.",
+        "Lock errors and failed wait times are recorded without retries.",
         "",
         "## Fixed workload",
         "",
@@ -465,13 +567,13 @@ def render(report):
     return "\n".join(lines)
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--output", type=Path,
                         default=ROOT / "experiments/results/private_retention_scale")
     parser.add_argument("--smoke", action="store_true",
                         help="Use a single 256-memory pair to check the runner")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     sizes = SIZES[:1] if args.smoke else SIZES
     repetitions = 1 if args.smoke else REPETITIONS
     source = ROOT / "src/dynmemory/store.py"
@@ -493,11 +595,6 @@ def main():
         "elapsed_seconds": perf_counter() - start,
         "correctness_passed": correct_pairs == len(pairs), "correct_pairs": correct_pairs,
         "availability_passed": available_pairs == len(pairs), "available_pairs": available_pairs,
-        "initial_run": {
-            "completed_pairs_before_abort": 8, "error": "database is locked",
-            "during": "first mixed private search phase at 4096 memories and 8 readers",
-            "smaller_pair_measurements_emitted": False,
-        },
         "config": {
             "sizes": [{"memories": memories, "readers": readers} for memories, readers in sizes],
             "repetitions": repetitions, "topics": TOPICS, "search_limit": LIMIT,
@@ -507,6 +604,7 @@ def main():
             "journal_mode": "wal",
             "provisional_budgets": BUDGETS,
         },
+        "acceptance_gate": acceptance_gate(pairs),
         "pairs": pairs,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -514,7 +612,8 @@ def main():
     args.output.with_suffix(".json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     args.output.with_suffix(".md").write_text(markdown, encoding="utf-8")
     print(markdown)
-    return 0 if report["correctness_passed"] and report["availability_passed"] else 1
+    return 0 if (report["correctness_passed"] and report["availability_passed"]
+                 and report["acceptance_gate"]["passed"]) else 1
 
 
 if __name__ == "__main__":

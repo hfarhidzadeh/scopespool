@@ -48,6 +48,21 @@ python -I experiments/private_retention_verification.py --trials 500 \
 Compare the paired outcomes with the [recorded private retention report](../experiments/results/private_retention_verification.md).
 Compare performance only under a matching workload and comparable runtime.
 
+Run the scale benchmark and its acceptance gate (about five minutes; the
+recorded run used Python 3.9.6 and SQLite 3.39.5). `--smoke` runs a single
+256-memory pair to check the runner.
+
+```bash
+results_dir="$(mktemp -d)"
+python -I experiments/private_retention_scale.py \
+  --output "$results_dir/private_retention_scale"
+python -m unittest tests.test_private_retention_races tests.test_private_retention_scale
+```
+
+The gate verdict is at the top of the report. Compare it with the
+[recorded scale report](../experiments/results/private_retention_scale.md);
+the exit code is non-zero if the gate or a behavior check fails.
+
 ## LongMemEval v3 and detector baselines
 
 Place the cleaned LongMemEval S file at
