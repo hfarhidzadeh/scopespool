@@ -83,11 +83,31 @@ entry. It no longer measures whether the question text ranks the evidence; run
 `experiments/evermembench_control.py` keeps the original rule and records the
 change.
 
-[Run 2](../experiments/results/evermembench_control.md) passed: 2,212 of 2,212
-eligible questions across the five projects (444, 433, 439, 434 and 462), with
-no hits for the unplanted token; 188 questions with more than ten entries were
-counted separately. The [fault check](../experiments/results/evermembench_control_fault.md)
-plants each witness one message index higher (a 0-/1-based mix-up), which is
-never inside its entry; on project 01 it failed every question (0 of 444), so
-the rule can fail. Both runs used the store before the lean-scan change (its
-SHA-256 is in the reports).
+[Run 2](../experiments/results/evermembench_control_run2_superseded/evermembench_control.md)
+passed: 2,212 of 2,212 eligible questions across the five projects (444, 433,
+439, 434 and 462), with no hits for the unplanted token; 188 questions with
+more than ten entries were counted separately. Its fault check plants each
+witness one message index higher (a 0-/1-based mix-up), which is never inside
+its entry; on project 01 it failed every question (0 of 444), so the rule can
+fail. Run 2 used the store from before the lean-scan change.
+
+[Run 3](../experiments/results/evermembench_control.md) repeats run 2 on the
+committed store (revision 9a2b964, store SHA-256 `f88e788c…`, recorded in the
+report) with the same pinned inputs. Its totals and every per-topic result are
+identical to run 2: 2,212 of 2,212, no unplanted-token hits. The
+[fault check](../experiments/results/evermembench_control_fault.md) again
+failed every project 01 question (0 of 444).
+
+## Retrieval experiment (draft, not run)
+
+`experiments/evermembench_retrieval.py` holds a draft pre-registration, dated
+2026-11-26 and awaiting the researcher's approval. It would compare lexical
+and hybrid search, each with and without links, on all-required@10, group
+coverage@10 and first-hit reciprocal rank, by the number of evidence groups a
+question needs (1, 2–3, 4–10; questions with more than ten are reported
+separately because they cannot reach all-required@10). Before any reading, the
+canary control must pass, an oracle ranking must score 1.0, and questions
+searched in another topic's store must score near zero. Comparisons use paired
+bootstrap intervals and sign-flip tests with a Holm adjustment. The script
+exits before reading data unless `--approved` is passed; `--smoke` writes only
+outside `experiments/results/`. A full run is estimated at one to two hours.

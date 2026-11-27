@@ -9,6 +9,22 @@ description = "A local-first prototype for typed, self-curating agent memory."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = []
+authors = [{ name = "hfarhidzadeh" }]
+keywords = ["agent memory", "sqlite", "retrieval", "access control", "multi-user"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Database",
+]
+
+[project.urls]
+Homepage = "https://github.com/hfarhidzadeh/scopespool"
+Source = "https://github.com/hfarhidzadeh/scopespool"
+Issues = "https://github.com/hfarhidzadeh/scopespool/issues"
 
 [project.optional-dependencies]
 embeddings = ["sentence-transformers>=2.2"]
