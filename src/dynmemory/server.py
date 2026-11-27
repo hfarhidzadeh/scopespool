@@ -125,9 +125,17 @@ def handle_request(store: MemoryStore, authority: TokenAuthority, request: objec
 
 
 class _Handler(socketserver.StreamRequestHandler):
+    def setup(self) -> None:
+        # Bounds each socket wait; store work between reads is not timed.
+        self.timeout = self.server.idle_timeout
+        super().setup()
+
     def handle(self) -> None:
         while True:
-            line = self.rfile.readline(MAX_REQUEST_BYTES + 1)
+            try:
+                line = self.rfile.readline(MAX_REQUEST_BYTES + 1)
+            except socket.timeout:
+                return
             if not line:
                 return
             if len(line) > MAX_REQUEST_BYTES:
@@ -154,13 +162,22 @@ class ScopeSpoolServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServe
     # GIL the accept loop lags, and socketserver's default queue of 5 refused
     # calls from 8 concurrent members (experiments/private_retention_socket.py).
     request_queue_size = socket.SOMAXCONN
+    # Seconds a connection may wait between requests before it is closed, so
+    # an idle client cannot hold a thread forever.
+    idle_timeout: Optional[float] = 300.0
 
     def __init__(
         self,
         socket_path: Union[str, Path],
         store: MemoryStore,
         authority: TokenAuthority,
+        *,
+        idle_timeout: Optional[float] = None,
     ) -> None:
+        if idle_timeout is not None:
+            if idle_timeout <= 0:
+                raise ValueError("idle_timeout must be positive")
+            self.idle_timeout = idle_timeout
         path = str(Path(socket_path))
         if len(path.encode("utf-8")) > MAX_SOCKET_PATH:
             raise ValueError("socket path is too long for a Unix socket")

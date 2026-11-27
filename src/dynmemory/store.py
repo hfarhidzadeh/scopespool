@@ -141,6 +141,17 @@ class PruneCandidate:
 
 
 @dataclass(frozen=True)
+class PruneSummary:
+    """A prune candidate without its content, from ``prune(details=False)``."""
+
+    memory_id: str
+    score: float
+    kind: "MemoryType"
+    importance: float
+    last_activity: str
+
+
+@dataclass(frozen=True)
 class RetainedMemory:
     """A pruned memory and the activity recorded for this reader alone."""
 
@@ -545,6 +556,28 @@ class MemoryStore:
         ).fetchone()
         return row[0] if row is not None else None
 
+    def _pads(self, connection: sqlite3.Connection, key_ids: Sequence[str]) -> dict:
+        """Pads for these key ids, read in batches; absent pads are left out."""
+        pads = {}
+        if self.key_path is None:
+            return pads
+        for start in range(0, len(key_ids), self._ID_CHUNK):
+            chunk = list(key_ids[start:start + self._ID_CHUNK])
+            pads.update(connection.execute(
+                "SELECT id, pad FROM keys.pads WHERE id IN ({})".format(
+                    ",".join("?" for _ in chunk)
+                ),
+                chunk,
+            ))
+        return pads
+
+    @staticmethod
+    def _xor(sealed: bytes, pad: bytes) -> bytes:
+        """Byte-wise XOR of two equal-length byte strings."""
+        return (
+            int.from_bytes(sealed, "little") ^ int.from_bytes(pad, "little")
+        ).to_bytes(len(sealed), "little")
+
     #: What sealed text reads as when its pad is gone.
     UNREADABLE_CONTENT = "[unreadable]"
 
@@ -552,11 +585,13 @@ class MemoryStore:
         """Stored text as plain text; sealed text whose pad is gone is unreadable."""
         if stored is None or not stored.startswith(self._SEALED):
             return stored
-        pad = self._pad(key_id)
+        return self._open_sealed(stored, self._pad(key_id))
+
+    def _open_sealed(self, stored: str, pad: Optional[bytes]) -> str:
         sealed = base64.b64decode(stored[len(self._SEALED):])
         if pad is None or len(pad) != len(sealed):
             return self.UNREADABLE_CONTENT
-        return bytes(left ^ right for left, right in zip(sealed, pad)).decode("utf-8")
+        return self._xor(sealed, pad).decode("utf-8")
 
     def _seal_bytes(self, connection: sqlite3.Connection, key_id: str, data: bytes) -> bytes:
         if self.key_path is None or not data:
@@ -574,7 +609,7 @@ class MemoryStore:
         pad = self._pad(key_id)
         if pad is None or len(pad) != len(sealed):
             return b""
-        return bytes(left ^ right for left, right in zip(sealed, pad))
+        return self._xor(sealed, pad)
 
     def _plain_claim(self, row: sqlite3.Row) -> dict:
         """A claim row with its text readable, for replay and labels."""
@@ -2399,12 +2434,23 @@ class MemoryStore:
                 parameters.append(kind_value)
             # Ranking reads only these fields, so full memories (the costly
             # part of a scan) are built later for the returned ids alone.
+            rank_rows = [
+                row for row in connection.execute(sql, parameters).fetchall()
+                if row[0] not in view.replaced
+            ]
+            pads = self._pads(connection, [
+                "m:" + row[0] for row in rank_rows
+                if row[1] is not None and row[1].startswith(self._SEALED)
+            ])
             active_memories = {
                 row[0]: _RankRow(
-                    row[0], self._open("m:" + row[0], row[1]), row[2], row[3], row[4]
+                    row[0],
+                    self._open_sealed(row[1], pads.get("m:" + row[0]))
+                    if row[1] is not None and row[1].startswith(self._SEALED)
+                    else row[1],
+                    row[2], row[3], row[4],
                 )
-                for row in connection.execute(sql, parameters).fetchall()
-                if row[0] not in view.replaced
+                for row in rank_rows
             }
             if not active_memories:
                 return []
@@ -2927,29 +2973,42 @@ class MemoryStore:
     ) -> dict[str, float]:
         """Cosine similarities that reach the embedder's ``min_similarity``."""
         visible, visible_parameters = self._visible(viewers)
-        scores = {}
-        for row in connection.execute(
-            """
-            SELECT embeddings.memory_id, embeddings.vector FROM embeddings
-            JOIN memories ON memories.id = embeddings.memory_id
-            WHERE embeddings.model = ? AND memories.archived_at IS NULL{}
-            """.format(visible),
-            [self.embedder.name] + visible_parameters,
-        ):
-            if row["memory_id"] not in memories or not row["vector"]:
-                continue
-            data = self._open_bytes(
-                "v:{}:{}".format(row["memory_id"], self.embedder.name), row["vector"]
+        rows = [
+            (memory_id, stored)
+            for memory_id, stored in connection.execute(
+                """
+                SELECT embeddings.memory_id, embeddings.vector FROM embeddings
+                JOIN memories ON memories.id = embeddings.memory_id
+                WHERE embeddings.model = ? AND memories.archived_at IS NULL{}
+                """.format(visible),
+                [self.embedder.name] + visible_parameters,
             )
-            if not data:
-                continue
+            if memory_id in memories and stored
+        ]
+        key = "v:{{}}:{}".format(self.embedder.name).format
+        pads = self._pads(connection, [
+            key(memory_id) for memory_id, stored in rows
+            if stored.startswith(self._SEALED_BYTES)
+        ])
+        # Terms where the query is zero add an exact 0.0, which changes no sum
+        # (plain or compensated), so skipping them keeps scores bit-identical.
+        nonzero = [(index, value) for index, value in enumerate(query_vector) if value != 0.0]
+        scores = {}
+        for memory_id, stored in rows:
+            data = stored
+            if stored.startswith(self._SEALED_BYTES):
+                sealed = stored[len(self._SEALED_BYTES):]
+                pad = pads.get(key(memory_id))
+                if pad is None or len(pad) != len(sealed):
+                    continue
+                data = self._xor(sealed, pad)
             vector = array("f")
             vector.frombytes(data)
             if len(vector) != len(query_vector):
                 continue
-            similarity = sum(left * right for left, right in zip(query_vector, vector))
+            similarity = sum((value * vector[index] for index, value in nonzero), 0.0)
             if similarity >= self.embedder.min_similarity:
-                scores[row["memory_id"]] = similarity
+                scores[memory_id] = similarity
         return scores
 
     @staticmethod
@@ -3345,12 +3404,15 @@ class MemoryStore:
         protect_importance: Optional[float] = 0.9,
         dry_run: bool = True,
         as_of: Optional[datetime] = None,
-    ) -> list[PruneCandidate]:
+        details: bool = True,
+    ) -> Union[list[PruneCandidate], list[PruneSummary]]:
         """Find (and unless ``dry_run``, archive) stale low-value memories.
 
         ``decay_days_by_kind`` overrides ``decay_days`` for specific memory
         types. Memories at or above ``protect_importance`` are never pruned;
-        pass ``None`` to protect nothing.
+        pass ``None`` to protect nothing. ``details=False`` returns
+        ``PruneSummary`` items in the same order and skips reading content;
+        an applied prune writes the same changes either way.
         """
         self._validate_unit_interval(threshold, "threshold")
         if min_age_days < 0 or not math.isfinite(min_age_days):
@@ -3410,21 +3472,28 @@ class MemoryStore:
                     kind_decay_days.get(MemoryType(kind).value, decay_days),
                 )
                 if score < threshold:
-                    scored.append((memory_id, score))
-            candidate_rows = self._rows_by_id(connection, [i for i, _ in scored])
-            candidates = [
-                PruneCandidate(memory=self._memory_from_row(candidate_rows[i]), score=score)
-                for i, score in scored
-            ]
+                    scored.append((
+                        memory_id, score, kind, importance, last_accessed_at or created_at,
+                    ))
+            scored.sort(key=lambda item: (item[1], item[0]))
+            if details:
+                candidate_rows = self._rows_by_id(connection, [item[0] for item in scored])
+                candidates = [
+                    PruneCandidate(
+                        memory=self._memory_from_row(candidate_rows[item[0]]), score=item[1]
+                    )
+                    for item in scored
+                ]
+            else:
+                candidates = [
+                    PruneSummary(memory_id, score, MemoryType(kind), importance, activity)
+                    for memory_id, score, kind, importance, activity in scored
+                ]
 
-            candidates.sort(key=lambda candidate: (candidate.score, candidate.memory.id))
             if not dry_run:
                 connection.executemany(
                     "UPDATE memories SET archived_at = ?, pruned_at = ?, updated_at = ? WHERE id = ?",
-                    [
-                        (now, now, now, candidate.memory.id)
-                        for candidate in candidates
-                    ],
+                    [(now, now, now, item[0]) for item in scored],
                 )
                 # Use wall time for housekeeping, even when the caller
                 # chooses a different evaluation time for shared pruning.
@@ -3432,14 +3501,15 @@ class MemoryStore:
                     "DELETE FROM viewer_access WHERE last_accessed_at <= ?",
                     (self._private_access_cutoff(self._now()),),
                 )
-                candidates = [
-                    replace(
-                        candidate,
-                        memory=replace(
-                            candidate.memory, archived_at=now, updated_at=now
-                        ),
-                    )
-                    for candidate in candidates
-                ]
+                if details:
+                    candidates = [
+                        replace(
+                            candidate,
+                            memory=replace(
+                                candidate.memory, archived_at=now, updated_at=now
+                            ),
+                        )
+                        for candidate in candidates
+                    ]
 
         return candidates

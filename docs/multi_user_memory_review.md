@@ -1357,6 +1357,11 @@ Stages, cheapest first:
     [EverMemBench v3, Table 3](https://arxiv.org/html/2602.01313v3#S3.T3) ·
     [Evidence format](https://huggingface.co/datasets/EverMind-AI/EverMemBench-Dynamic#locating-reference-evidence) ·
     [ScopeSpool loader and retrieval check](evermembench.md)
+  - **Audience test (run 2026-11-26):** groups as channels, posters as
+    members, a staged asker for each of the 791 cross-group questions. Group
+    boundaries held in all 791 (identical rankings to a store of the asker's
+    groups only, no hidden-group message in the top 10); a planted leak was
+    caught in every question. See [EverMemBench](evermembench.md#audience-test).
   - **SocialMemBench** links questions to turn IDs and verbatim excerpts.
     Its networks average about 6,800 tokens, giving a shorter-history
     comparison. [SocialMemBench v2, §3.4](https://arxiv.org/html/2605.17789v2#S3.SS4) ·

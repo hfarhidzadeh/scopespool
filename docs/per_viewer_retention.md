@@ -90,6 +90,33 @@ loaded, so only the ratios are meaningful. Prune preview alone was unchanged
 (256 against 253 ms with 3,385 candidates); most of its cost is building the
 candidates themselves.
 
+Three further speedups keep results identical. Vector scoring sums only the
+query's non-zero dimensions (an exact 0.0 term changes no sum, plain or
+compensated, so scores stay bit-identical), keyed stores read their pads in
+batches instead of one query per memory, and `prune(details=False)` returns
+`PruneSummary` items (id, score, kind, importance, last activity) without
+reading content; an applied prune writes the same changes either way, and the
+default is unchanged. `tests/test_store_speedups.py` compares searches, prune
+previews, summaries and the database after an applied prune with commit
+47e4489 in eight configurations (no embedder, n-gram, n-gram with
+`min_similarity` -1, a 64-dimension dense embedder, each keyed and not), with
+channels, viewers, retractions and missing or truncated pads; two planted
+faults (a dropped query dimension and a misaligned pad) are caught.
+
+The scale benchmark was rerun on that store (SHA-256 `40258276…`) with Python
+3.9 / SQLite 3.39, the machine kept awake and nothing else heavy running:
+[lexical](../experiments/results/private_retention_scale_speedups_py39.md) and
+[n-gram](../experiments/results/private_retention_scale_speedups_ngram_py39.md).
+Both passed the gate in 12 of 12 pairs. Against the bad83c8 runs above, which
+predate lean scan as well, the silent arm at 4,096 memories and eight readers
+went from 86.8 to 30.0 ms serial p50 and 4.85 to 9.08 concurrent searches/s
+(lexical), and from 302.9 to 80.4 ms and 1.76 to 4.84 searches/s (n-gram); the
+n-gram run took 217 against 549 s. These gains combine lean scan and the
+speedups above. The prune previews run alongside eight readers did not get
+faster (p95 about 3.6–5.7 s, varying between runs); the benchmark asks for full
+details. Provisional flags were missed in 5 of 12 lexical pairs, on both sides
+of a ratio of 1; with faster searches, noise is a larger share of each ratio.
+
 The [authenticated socket benchmark](../experiments/results/private_retention_socket.md)
 runs the scale benchmark's three sizes through a separate CLI server process
 with signed tokens, with two prune previews alongside the concurrent calls.

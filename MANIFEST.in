@@ -1,0 +1,9 @@
+# The sdist carries the installable package only. The tests load experiment
+# scripts, eval sets and result files that are not part of the package, so
+# they run from a repository checkout, not from the sdist.
+prune tests
+prune experiments
+prune eval
+prune data
+prune docs
+global-exclude *.py[cod] __pycache__ .DS_Store

@@ -124,6 +124,69 @@ class ListenQueueTests(unittest.TestCase):
 
 
 @unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix domain sockets are not available")
+class IdleTimeoutTests(unittest.TestCase):
+    TIMEOUT = 0.5
+
+    def setUp(self):
+        self.directory = short_directory()
+        self.addCleanup(shutil.rmtree, self.directory, True)
+        store = MemoryStore(self.directory / "s.sqlite3")
+        store.join_channel("design", "alice")
+        self.authority = TokenAuthority(TokenAuthority.generate_secret())
+        self.socket_path = self.directory / "s.sock"
+        self.server = ScopeSpoolServer(
+            self.socket_path, store, self.authority, idle_timeout=self.TIMEOUT
+        )
+        self.finished = threading.Event()
+        finished = self.finished
+
+        class Recording(self.server.RequestHandlerClass):
+            def finish(self):
+                super().finish()
+                finished.set()
+
+        self.server.RequestHandlerClass = Recording
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)
+
+    def connect(self):
+        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.addCleanup(connection.close)
+        connection.settimeout(5)
+        connection.connect(str(self.socket_path))
+        return connection
+
+    def test_an_idle_connection_is_closed_and_its_thread_exits(self):
+        connection = self.connect()
+        self.assertEqual(connection.recv(1), b"")  # the server closed it
+        self.assertTrue(self.finished.wait(5))
+
+    def test_a_connection_that_keeps_sending_stays_open(self):
+        connection = self.connect()
+        reader = connection.makefile("rb")
+        self.addCleanup(reader.close)
+        token = self.authority.issue("alice")
+        for _ in range(4):
+            threading.Event().wait(self.TIMEOUT * 0.6)
+            connection.sendall(
+                b'{"token": "%s", "op": "search", "args": {"query": "x"}}\n' % token.encode()
+            )
+            self.assertIn(b'"ok": true', reader.readline())
+        self.assertFalse(self.finished.is_set())
+
+    def test_client_calls_are_unaffected(self):
+        client = ScopeSpoolClient(self.socket_path, self.authority.issue("alice"))
+        client.add_memory("launch friday", "fact", channel="design")
+        self.assertEqual(len(client.search("launch")), 1)
+
+    def test_a_nonpositive_timeout_is_refused(self):
+        with self.assertRaises(ValueError):
+            ScopeSpoolServer(self.directory / "t.sock", MemoryStore(":memory:"),
+                             self.authority, idle_timeout=0)
+
+
+@unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix domain sockets are not available")
 class ServerTests(unittest.TestCase):
     def setUp(self):
         self.directory = short_directory()

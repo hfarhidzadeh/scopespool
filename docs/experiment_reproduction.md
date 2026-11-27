@@ -65,8 +65,13 @@ python -m unittest tests.test_private_retention_races tests.test_private_retenti
 ```
 
 The gate verdict is at the top of the report. Compare it with the
-[recorded scale report](../experiments/results/private_retention_scale.md);
-the exit code is non-zero if the gate or a behavior check fails.
+[recorded scale report](../experiments/results/private_retention_scale.md)
+or, for the current store, the
+[lexical](../experiments/results/private_retention_scale_speedups_py39.md) and
+[n-gram](../experiments/results/private_retention_scale_speedups_ngram_py39.md)
+runs on Python 3.9 (add `--embedder ngram` for the second). The exit code is
+non-zero if the gate or a behavior check fails. Timings depend on the machine;
+keep it awake (for example with `caffeinate -dims` on macOS) and idle.
 
 For the authenticated server path, run the following command on a system
 that supports local Unix sockets. It starts the CLI server in a separate
@@ -87,7 +92,7 @@ the scale benchmark's three sizes, and the wrong-member fault must fail its
 attribution criteria. The recorded runs used Python 3.9.6. Use `--smoke` for
 one 256-memory pair.
 
-The EverMemBench canary control needs the pinned data files; see
+The EverMemBench canary control and audience test need the pinned data files; see
 [EverMemBench](evermembench.md) for the download, hashes and commands.
 
 ## LongMemEval v3 and detector baselines

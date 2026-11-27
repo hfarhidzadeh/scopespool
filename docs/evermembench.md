@@ -111,3 +111,49 @@ searched in another topic's store must score near zero. Comparisons use paired
 bootstrap intervals and sign-flip tests with a Holm adjustment. The script
 exits before reading data unless `--approved` is passed; `--smoke` writes only
 outside `experiments/results/`. A full run is estimated at one to two hours.
+
+## Audience test
+
+`experiments/evermembench_audience.py` asks whether group boundaries hold on
+real multi-group histories. Each project's groups become channels; each
+speaker joins every group they posted in, and each message is written as its
+speaker. For every cross-group question, a fixed seed picks an asker who posted
+in some but not all of the cited groups. Three searches are compared: FULL (the
+whole project store, searched as the asker), VISIBLE (a store holding only the
+asker's groups, searched as the asker) and POWER (the full store, searched by a
+synthetic member of every group). Its rules were fixed in the script's
+docstring on 2026-11-26:
+
+1. Determinism: project 01 processed twice gives identical results.
+2. Power: POWER ranks cited evidence from a group hidden from the asker in its
+   top 10 in at least 25% of questions; otherwise rules 3 and 4 could pass
+   without testing anything.
+3. Noninterference: FULL and VISIBLE return the same keys in the same order,
+   with scores within 1e-9, so hidden groups cannot shift scores either.
+4. No message from a hidden group appears in FULL's top 10.
+
+A leak fault (FULL searched without viewers) must fail rules 3 and 4 each in at
+least 25% of questions.
+
+The [recorded run](../experiments/results/evermembench_audience.md) covered all
+791 cross-group questions in projects 01–05 (none skipped, 125 distinct
+askers) on the store with SHA-256 `40258276…`. Verdict: no leak across
+groups. Rule 1 held; rule 2 held in 354 of 791 questions (44.8%); rules 3 and 4
+held in all 791. All-required@10 over the cited groups the asker can see was
+0.059. The [fault run](../experiments/results/evermembench_audience_fault.md)
+failed rule 3 in 791 of 791 questions and rule 4 in 729 of 791, so the test
+detects the leak it is for.
+
+Limits: the asker is staged, since the dataset names none; membership is
+inferred from who posted, so members who never posted are missing; membership
+is not dated, so a member reads a group's whole history; there is no roster;
+group names only mean something within one project; lexical search only.
+
+```bash
+python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \
+  --output "$results_dir/evermembench_audience"
+python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \
+  --fault leak --output "$results_dir/evermembench_audience_fault"
+```
+
+Each run took about 25 minutes on Python 3.9.

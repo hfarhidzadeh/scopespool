@@ -37,7 +37,7 @@ does not call an LLM or extract entities automatically, and links are written
 explicitly. Pruning archives records rather than permanently deleting them.
 
 For how the code is organised, what the database holds and what each read and
-write does, see [docs/architecture.md](docs/architecture.md).
+write does, see [docs/architecture.md](https://github.com/hfarhidzadeh/scopespool/blob/main/docs/architecture.md).
 
 ## Requirements
 
@@ -215,7 +215,7 @@ server, `search` accepts `record_private_access` and `list_retained_memories`
 returns the caller's own list; both work only for the token's member and refuse
 any audience or member argument.
 
-Private tracking is opt-in. See the [private retention contract](docs/per_viewer_retention.md)
+Private tracking is opt-in. See the [private retention contract](https://github.com/hfarhidzadeh/scopespool/blob/main/docs/per_viewer_retention.md)
 for the schema upgrade, the 90-day activity window, and membership and
 retraction behavior.
 
@@ -329,7 +329,7 @@ Limits:
 - Disagreements are shown as tables by `disputes()`, worked out at read time
   rather than stored. Stale derivations are rebuilt by `rebuild_stale()` with a
   consolidator you supply; the store calls no model itself. The broader design
-  is in [docs/multi_user_memory_review.md](docs/multi_user_memory_review.md).
+  is in [docs/multi_user_memory_review.md](https://github.com/hfarhidzadeh/scopespool/blob/main/docs/multi_user_memory_review.md).
 
 ### Source messages and retraction
 
@@ -499,6 +499,8 @@ never chooses an identity.
 owner-only permissions. Every request carries a token; reads run as the
 verified audience and writes as the verified member, and administrative calls
 are not exposed. `ScopeSpoolClient(socket_path, token)` is the matching client.
+A connection that sends nothing for `idle_timeout` seconds (default 300) is
+closed, so an idle client cannot hold a server thread.
 
 ```bash
 scopespool new-secret ./secret                         # 32 random bytes, mode 0600
@@ -597,6 +599,9 @@ scopespool --db ./agent-memory.sqlite3 restore <memory-id>
   other types use `--decay-days` (default 90).
 - `--protect-importance` (default 0.9) exempts memories at or above that
   importance; `--protect-importance none` exempts nothing.
+- In Python, `store.prune(..., details=False)` returns `PruneSummary` items
+  (id, score, kind, importance, last activity) without reading content; an
+  applied prune makes the same changes either way.
 - `restore` reactivates a pruned memory and resets its last-access time, so it
   gets a fresh `--min-age-days` window. A memory that was superseded cannot be
   restored, because its replacement is the current version.
@@ -612,7 +617,7 @@ scopespool --embedder sentence-transformers eval eval/synthetic_set.json --json
 An evaluation set is a JSON file with `memories` (key → content and kind),
 `links`, `queries` (each with its `relevant` memory keys and free-form
 `tags`), and optional `prune` cases with expected `keep`/`prune` outcomes. See
-[eval/synthetic_set.json](eval/synthetic_set.json). Tags are free-form
+[eval/synthetic_set.json](https://github.com/hfarhidzadeh/scopespool/blob/main/eval/synthetic_set.json). Tags are free-form
 except `all`, which names the overall score. The file is validated before
 use, and errors name the offending field.
 
@@ -690,7 +695,7 @@ answered. Review the labels before trusting any number.
 ## LongMemEval: knowledge updates
 
 **Provisional results, not settled findings.** The November 19, 2026
-[review of all 70 labels](docs/longmemeval_label_review.md) found category,
+[review of all 70 labels](https://github.com/hfarhidzadeh/scopespool/blob/main/docs/longmemeval_label_review.md) found category,
 evidence, and update-semantics issues. The numbers below describe the original
 labels and conversion; they need a corrected conversion and new runs before
 being used as research conclusions.
@@ -722,14 +727,14 @@ The newest evidence is not always the answer: some questions ask for the
 previous value or need both. The labels file gives each update question a
 category, and the converter follows it. The labels were written by an AI model.
 A second AI review is recorded for every label in
-[the review ledger](eval/longmemeval_knowledge_update_label_review.json).
+[the review ledger](https://github.com/hfarhidzadeh/scopespool/blob/main/eval/longmemeval_knowledge_update_label_review.json).
 The original categories are preserved to reproduce the existing results;
 recommended changes and unresolved conversion issues are recorded separately.
 
-[experiments/longmemeval_knowledge_update.py](experiments/longmemeval_knowledge_update.py)
+[experiments/longmemeval_knowledge_update.py](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/longmemeval_knowledge_update.py)
 compares the three link options with negative and positive controls and a
 decision rule fixed before it ran. The full write-up is in
-[experiments/results/longmemeval_knowledge_update.md](experiments/results/longmemeval_knowledge_update.md).
+[experiments/results/longmemeval_knowledge_update.md](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/longmemeval_knowledge_update.md).
 In the historical runs on the 50 questions originally labelled “current”:
 
 - **Recognising updates matters most.** With the oracle updates, the current
@@ -747,7 +752,7 @@ In the historical runs on the 50 questions originally labelled “current”:
 
 ## LongMemEval: required evidence and supersession (version 3, provisional)
 
-The [label review](docs/longmemeval_label_review.md) found that the converter
+The [label review](https://github.com/hfarhidzadeh/scopespool/blob/main/docs/longmemeval_label_review.md) found that the converter
 used the order of the evidence turns to decide which facts replace older ones, and
 scored a question by its first relevant hit. Both are wrong for some questions: a
 coin count that is *added to* is not replaced, two trips are not versions of one
@@ -759,10 +764,10 @@ say which evidence the answer needs (all groups, and any one turn of a group).
 adds to it (`adds_to`) or is a separate event (`independent`); only `supersedes`
 becomes an update. The evaluator reports `all required@10`, the share of
 questions with every required group in the top 10. The project owner accepted
-nine disputed categories in the [approved snapshot](eval/longmemeval_knowledge_update_annotations_v3_category_approved_2026-11-25.json).
+nine disputed categories in the [approved snapshot](https://github.com/hfarhidzadeh/scopespool/blob/main/eval/longmemeval_knowledge_update_annotations_v3_category_approved_2026-11-25.json).
 Required evidence and supersession relations remain provisional.
 
-All three controls passed in the [64-question v3 run](experiments/results/longmemeval_v3_category_approved_2026-11-25.md).
+All three controls passed in the [64-question v3 run](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/longmemeval_v3_category_approved_2026-11-25.md).
 Applying the annotated updates improved reciprocal rank by 0.156 for lexical
 and 0.140 for MiniLM over 44 current-value questions. All required@10 was
 unchanged for those questions. It fell on seven of seven questions that need
@@ -770,14 +775,14 @@ superseded evidence with lexical retrieval and six of seven with MiniLM. For the
 six questions requiring two pieces, lexical first hit@10 stayed at 1.000 while
 all required@10 fell from 1.000 to 0.167.
 
-The [v3 runner](experiments/longmemeval_v3.py) uses oracle updates to measure the
+The [v3 runner](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/longmemeval_v3.py) uses oracle updates to measure the
 effects of archiving. The versions 1 and 2 experiments used different cohorts,
-edges, and metrics. The [earlier v3 report](experiments/results/longmemeval_v3.md)
+edges, and metrics. The [earlier v3 report](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/longmemeval_v3.md)
 records the separate 68-question run.
 
 ## LongMemEval: update-detector baselines
 
-The [approved-cohort detector run](experiments/results/longmemeval_detector_baselines_category_approved_2026-11-25.md)
+The [approved-cohort detector run](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/longmemeval_detector_baselines_category_approved_2026-11-25.md)
 evaluated three shipped baselines on 51 annotated update cases and 13
 no-update cases. Both controls passed. Candidate search found a true earlier
 turn in its top five for 49/51 update cases. **None of the detectors met the
@@ -789,8 +794,8 @@ preset usability rule.**
 | N-gram hash | 11 | 5 | 155 |
 | MiniLM | 9 | 7 | 236 |
 
-The [detector runner](experiments/longmemeval_detector_baselines.py) tests
-positive cases at the annotated confirmation turn. The [earlier baseline](experiments/results/longmemeval_detector_baselines.md)
+The [detector runner](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/longmemeval_detector_baselines.py) tests
+positive cases at the annotated confirmation turn. The [earlier baseline](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/longmemeval_detector_baselines.md)
 used the previous cohort and probed a different turn for two cases.
 
 ## LongMemEval: silence
@@ -799,7 +804,7 @@ Search always returns its best matches, so a question whose answer was never
 stored gets something back anyway. Each result carries the raw signals behind
 its rank (see [Retrieval](#retrieval)), so a caller can stay silent when even
 the best match is weak.
-[experiments/longmemeval_silence.py](experiments/longmemeval_silence.py)
+[experiments/longmemeval_silence.py](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/longmemeval_silence.py)
 asks how well that works, using the benchmark's 30 abstention questions. Each
 asks about a detail the user never gave ("the name of my hamster" when they only
 mentioned a cat). For 29 of them the benchmark also holds the answerable
@@ -808,7 +813,7 @@ something unrelated to the store (silence should be easy) and random words
 (no separation expected). The decision rule was fixed before the run; one
 control turned out to be flawed and was replaced afterwards, with no threshold
 changed (details in the write-up). The full write-up is in
-[experiments/results/longmemeval_silence.md](experiments/results/longmemeval_silence.md).
+[experiments/results/longmemeval_silence.md](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/longmemeval_silence.md).
 
 - **The signals carry information.** For three signals (BM25 score, coverage of
   the question's rare words, MiniLM similarity), the answerable question scored
@@ -830,7 +835,7 @@ changed (details in the write-up). The full write-up is in
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-See the [experiment reproduction guide](docs/experiment_reproduction.md) for
+See the [experiment reproduction guide](https://github.com/hfarhidzadeh/scopespool/blob/main/docs/experiment_reproduction.md) for
 the current annotation snapshot, runtime versions, and commands that save
 fresh results to a scratch directory.
 
@@ -838,13 +843,13 @@ fresh results to a scratch directory.
 
 1. Independently review answer evidence and supersession, starting with the
    seven cases that need older evidence. Freeze reviewed labels and a grouped
-   holdout before model tuning. [Evidence review packet](docs/longmemeval_evidence_review_packet.md)
+   holdout before model tuning. [Evidence review packet](https://github.com/hfarhidzadeh/scopespool/blob/main/docs/longmemeval_evidence_review_packet.md)
 2. Rerun the ranking comparison on reviewed evidence. The lexical pilot uses
    supplied intent and update edges to compare demotion with whole-turn
-   archival. [History retrieval pilot](experiments/results/longmemeval_history_retrieval_pilot.md)
+   archival. [History retrieval pilot](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/longmemeval_history_retrieval_pilot.md)
 3. Compare a selective update detector with the shipped baselines on held-out
    cases. Measure wrong targets, false fires, and historical evidence loss.
-   [Earlier Qwen diagnostic](experiments/results/failed_update_detection_qwen2.5-coder-1.5b/README.md)
+   [Earlier Qwen diagnostic](https://github.com/hfarhidzadeh/scopespool/blob/main/experiments/results/failed_update_detection_qwen2.5-coder-1.5b/README.md)
 4. Build a reviewed set of paraphrase and near-match pairs for disputes, then
    measure equivalence errors and confirm audience and authority behavior.
 5. Measure retention benefit, latency, storage growth, and audience isolation
