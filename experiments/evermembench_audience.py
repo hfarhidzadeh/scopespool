@@ -60,6 +60,30 @@ who never posted are missing; membership is not dated, so a member reads the
 whole history of a group; there is no roster; group names such as "Group 3"
 only mean something within one project; lexical search only.
 
+N-gram variant, added 2026-11-27 before any n-gram run on real data.
+``--embedder ngram`` runs the same workload (same projects, questions, askers,
+seed, stores, links, creation times, limit 10, no access recorded) with every
+store built with ``dynmemory.NGramHashEmbedder()`` at its defaults (character
+3-grams hashed into 512 dimensions, ``min_similarity`` 0.25). Each message is
+embedded when written. Search is then hybrid: the lexical ranking and the
+cosine ranking are fused by reciprocal rank fusion, the fused scores are
+divided by the top one, and results are expanded by one link hop. Without the
+option nothing changes: lexical search, no embedder constructed.
+Rules for the variant: the same four rules, verdict and fault criterion as
+above, with the same 1e-9 score tolerance. No rule needs to differ. With
+``viewers``, the store drops hidden memories before ranking on both paths; a
+cosine similarity depends only on the query vector and that memory's own
+stored vector (float32, made from the same text in FULL and VISIBLE); and the
+fusion ranks, the division by the top score and the link hop are all computed
+over the visible memories. FULL and VISIBLE should therefore produce identical
+numbers in the same order, so any score difference above rounding means that
+hidden memories moved a visible score, which is the leak rule 3 is for; a
+wider tolerance would hide exactly that. Rule 2 (power) is re-measured with
+hybrid search and keeps its 25% threshold; if hybrid POWER falls below it, the
+variant is inconclusive, not passed. Reports record the embedder. Limit of the
+variant: the n-gram embedder is a spelling baseline, not a semantic model, so
+this tests the vector path's isolation, not a semantic embedder's.
+
 Run from the repository root, with the pinned dataset checkout:
 
     python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic
@@ -67,6 +91,8 @@ Run from the repository root, with the pinned dataset checkout:
         --fault leak --output experiments/results/evermembench_audience_fault
     python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \\
         --smoke --output /tmp/evermembench_audience_smoke
+    python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \\
+        --embedder ngram --output /tmp/evermembench_audience_ngram
 """
 
 from __future__ import annotations
@@ -98,6 +124,9 @@ POWER_VIEWER = "__every_group__"
 CLOCK_BASE = datetime(2020, 1, 1, tzinfo=timezone.utc)
 CHECKS = ("determinism", "power", "noninterference", "no_hidden")
 RESULTS = ROOT / "experiments" / "results"
+EMBEDDERS = {
+    "ngram": "NGramHashEmbedder, character 3-grams, 512 dimensions, min_similarity 0.25",
+}
 SOURCES = {
     "script": Path(__file__).resolve(),
     "store": ROOT / "src" / "dynmemory" / "store.py",
@@ -127,13 +156,23 @@ def choose_asker(query: dict, members: dict, seed: int):
     return random.Random("{}-{}".format(seed, query["id"])).choice(candidates)
 
 
-def build_store(suite: dict, channels=None, power_viewer: bool = False):
+def make_embedder(name):
+    """None (lexical search) or a fresh embedder for this name."""
+    if name is None:
+        return None
+    if name != "ngram":
+        raise ValueError("unknown embedder: {}".format(name))
+    from dynmemory import NGramHashEmbedder  # the same package as MemoryStore
+    return NGramHashEmbedder()
+
+
+def build_store(suite: dict, channels=None, power_viewer: bool = False, embedder=None):
     """A store of the suite's messages in ``channels`` (all if None), written as their speakers."""
     keys = list(suite["memories"])
     ordinal = {key: number for number, key in enumerate(keys, start=1)}
     included = [key for key in keys
                 if channels is None or suite["memories"][key]["channel"] in channels]
-    store = MemoryStore(":memory:")
+    store = MemoryStore(":memory:", embedder=make_embedder(embedder))
     store._now = lambda: CLOCK_BASE.isoformat(timespec="microseconds")
     members = sorted({(suite["memories"][key]["channel"], suite["memories"][key]["speaker"])
                       for key in included})
@@ -171,12 +210,12 @@ def same_ranking(left_keys, left_scores, right_keys, right_scores) -> bool:
         abs(a - b) <= TOLERANCE for a, b in zip(left_scores, right_scores))
 
 
-def run_suite(suite: dict, *, seed: int = SEED, fault=None, limit=None) -> dict:
+def run_suite(suite: dict, *, seed: int = SEED, fault=None, limit=None, embedder=None) -> dict:
     members = memberships(suite)
     queries = [query for query in suite["queries"] if "cross_group" in query.get("tags", ())]
     if limit is not None:
         queries = queries[:limit]
-    full, full_ids = build_store(suite, power_viewer=True)
+    full, full_ids = build_store(suite, power_viewer=True, embedder=embedder)
     visible_stores, rows, skipped = {}, [], []
     try:
         for query in queries:
@@ -186,7 +225,7 @@ def run_suite(suite: dict, *, seed: int = SEED, fault=None, limit=None) -> dict:
                 continue
             groups = frozenset(members[asker])
             if groups not in visible_stores:
-                visible_stores[groups] = build_store(suite, channels=groups)
+                visible_stores[groups] = build_store(suite, channels=groups, embedder=embedder)
             visible, visible_ids = visible_stores[groups]
             full_keys, full_scores = ranked(
                 full, full_ids, query["query"], None if fault == "leak" else [asker])
@@ -267,15 +306,22 @@ def validate_fault(summary: dict) -> dict:
             and rule4 >= FAULT_SHARE * total}
 
 
-def check_determinism(suite: dict, limit, fault) -> bool:
+def check_determinism(suite: dict, limit, fault, embedder=None) -> bool:
     count = DETERMINISM_QUESTIONS if limit is None else min(limit, DETERMINISM_QUESTIONS)
-    first = run_suite(suite, fault=fault, limit=count)
-    second = run_suite(suite, fault=fault, limit=count)
+    first = run_suite(suite, fault=fault, limit=count, embedder=embedder)
+    second = run_suite(suite, fault=fault, limit=count, embedder=embedder)
     return first == second
 
 
 def _share(count, total) -> str:
     return "{} of {} ({:.1f}%)".format(count, total, 100.0 * count / total) if total else "-"
+
+
+def search_mode(report: dict) -> str:
+    name = report.get("embedder")
+    if name is None:
+        return "lexical search"
+    return "hybrid search (lexical + {} `{}`)".format(EMBEDDERS[name], report["embedder_model"])
 
 
 def render(report: dict) -> str:
@@ -285,9 +331,10 @@ def render(report: dict) -> str:
         "# EverMemBench audience noninterference",
         "",
         "{}Projects {}; {} cross-group questions ({} skipped, no eligible asker); seed {}; "
-        "lexical search, limit 10{}.".format(
+        "{}, limit 10{}.".format(
             "SMOKE RUN, not a recorded result. " if report["smoke"] else "",
             ", ".join(report["topics"]), total, summary["skipped"], report["seed"],
+            search_mode(report),
             "; injected fault: {}".format(report["fault"]) if report["fault"] else ""),
         "See the docstring of `experiments/evermembench_audience.py` for the design and rules.",
         "",
@@ -345,6 +392,8 @@ def main(argv=None, loader=None) -> int:
                         help="project 01, first 40 cross-group questions; never writes results/")
     parser.add_argument("--fault", choices=["leak"])
     parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--embedder", choices=sorted(EMBEDDERS),
+                        help="hybrid search with this embedder (default: lexical search only)")
     parser.add_argument("--output", type=Path, default=RESULTS / "evermembench_audience")
     arguments = parser.parse_args(argv)
     output = arguments.output.resolve()
@@ -358,15 +407,19 @@ def main(argv=None, loader=None) -> int:
     limit = SMOKE_QUESTIONS if arguments.smoke else None
     hashes = {name: sha256(path) for name, path in SOURCES.items()}
     suites = {topic: loader(topic) for topic in topics}
-    results = [run_suite(suites[topic], seed=arguments.seed, fault=arguments.fault, limit=limit)
+    results = [run_suite(suites[topic], seed=arguments.seed, fault=arguments.fault, limit=limit,
+                         embedder=arguments.embedder)
                for topic in topics]
-    determinism = check_determinism(suites[topics[0]], limit, arguments.fault)
+    determinism = check_determinism(suites[topics[0]], limit, arguments.fault, arguments.embedder)
     if {name: sha256(path) for name, path in SOURCES.items()} != hashes:
         raise RuntimeError("a source file changed during the run")
     summary = summarise(results, determinism)
     report = {
         "topics": topics, "seed": arguments.seed, "fault": arguments.fault,
-        "smoke": arguments.smoke, "summary": summary, "decision": decide(summary),
+        "smoke": arguments.smoke, "embedder": arguments.embedder,
+        "embedder_model": (make_embedder(arguments.embedder).name
+                           if arguments.embedder else None),
+        "summary": summary, "decision": decide(summary),
         "dataset_revision": evermembench.REVISION, "python": platform.python_version(),
         "source_sha256": hashes,
         "questions": [{key: row[key] for key in ("id", "asker", "asker_groups", "noninterference",

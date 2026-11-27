@@ -220,6 +220,12 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="archive matching memories (default is a preview)",
     )
+    prune.add_argument(
+        "--summary",
+        action="store_true",
+        help="list each candidate's memory_id, score, kind, importance and "
+        "last_activity instead of the full memory; content is not read",
+    )
 
     channel = commands.add_parser("channel", help="manage channel membership")
     channel_actions = channel.add_subparsers(dest="action", required=True)
@@ -461,13 +467,15 @@ def _run_store_command(args: argparse.Namespace, store: MemoryStore) -> int:
             decay_days_by_kind=dict(args.decay),
             protect_importance=args.protect_importance,
             dry_run=not args.apply,
+            details=not args.summary,
         )
         _print_json(
             {
                 "mode": "preview" if not args.apply else "archived",
                 "count": len(candidates),
                 "memories": [
-                    {
+                    # PruneSummary fields: memory_id, score, kind, importance, last_activity.
+                    asdict(candidate) if args.summary else {
                         "score": candidate.score,
                         "memory": _memory_json(candidate.memory),
                     }
@@ -542,8 +550,9 @@ def _run_store_command(args: argparse.Namespace, store: MemoryStore) -> int:
         from .server import ScopeSpoolServer
 
         server = ScopeSpoolServer(args.socket, store, TokenAuthority(_read_secret(args.secret_file)))
-        print("Serving {} on {} (Ctrl-C to stop)".format(args.db, args.socket), flush=True)
         try:
+            # Inside the try: a Ctrl-C right after the announcement still closes the socket.
+            print("Serving {} on {} (Ctrl-C to stop)".format(args.db, args.socket), flush=True)
             server.serve_forever()
         except KeyboardInterrupt:
             pass

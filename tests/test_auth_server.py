@@ -181,9 +181,8 @@ class IdleTimeoutTests(unittest.TestCase):
         self.assertEqual(len(client.search("launch")), 1)
 
     def test_a_nonpositive_timeout_is_refused(self):
-        with self.assertRaises(ValueError):
-            ScopeSpoolServer(self.directory / "t.sock", MemoryStore(":memory:"),
-                             self.authority, idle_timeout=0)
+        with MemoryStore(":memory:") as store, self.assertRaises(ValueError):
+            ScopeSpoolServer(self.directory / "t.sock", store, self.authority, idle_timeout=0)
 
 
 @unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix domain sockets are not available")

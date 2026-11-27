@@ -144,16 +144,42 @@ held in all 791. All-required@10 over the cited groups the asker can see was
 failed rule 3 in 791 of 791 questions and rule 4 in 729 of 791, so the test
 detects the leak it is for.
 
+**Hybrid search.** `--embedder ngram` runs the same workload with every store
+built with `NGramHashEmbedder` (character 3-grams, 512 dimensions,
+`min_similarity` 0.25), so search fuses the lexical and vector rankings. Its
+rules were written in the script's docstring on 2026-11-27, before any n-gram
+run: the same four rules, the same 1e-9 score tolerance and the same fault
+criterion. Hidden memories are dropped before both rankings, a cosine score
+depends only on the memory's own vector, and the fusion and normalisation use
+visible memories only, so any score difference would be a leak. A unit test
+plants a fault that only takes the top cosine matches over the whole store
+before dropping hidden ones; rule 3 catches it through the scores alone. The
+[n-gram run](../experiments/results/evermembench_audience_ngram.md) covered the
+same 791 questions on the store with SHA-256 `40258276…`. Verdict: no leak
+across groups. Rule 1 held; rule 2 held in 307 of 791 questions (38.8%); rules
+3 and 4 held in all 791. All-required@10 was 0.038. The
+[n-gram fault run](../experiments/results/evermembench_audience_ngram_fault.md)
+failed rule 3 in 791 of 791 and rule 4 in 749 of 791. The store has changed
+since only in how prune reads its candidates, which search does not use. The
+n-gram embedder matches spelling, not meaning, so this tests the vector path's
+isolation, not a semantic model's.
+
 Limits: the asker is staged, since the dataset names none; membership is
 inferred from who posted, so members who never posted are missing; membership
 is not dated, so a member reads a group's whole history; there is no roster;
-group names only mean something within one project; lexical search only.
+group names only mean something within one project; the default run is
+lexical, and the hybrid run uses only the n-gram baseline embedder.
 
 ```bash
 python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \
   --output "$results_dir/evermembench_audience"
 python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \
   --fault leak --output "$results_dir/evermembench_audience_fault"
+python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \
+  --embedder ngram --output "$results_dir/evermembench_audience_ngram"
+python3 -I experiments/evermembench_audience.py --data /path/to/EverMemBench-Dynamic \
+  --embedder ngram --fault leak --output "$results_dir/evermembench_audience_ngram_fault"
 ```
 
-Each run took about 25 minutes on Python 3.9.
+Each lexical run took about 25 minutes on Python 3.9; the n-gram runs took 44
+minutes (normal) and 61 minutes (fault) on a shared, loaded machine.

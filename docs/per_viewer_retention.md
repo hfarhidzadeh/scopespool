@@ -117,6 +117,43 @@ faster (p95 about 3.6–5.7 s, varying between runs); the benchmark asks for ful
 details. Provisional flags were missed in 5 of 12 lexical pairs, on both sides
 of a ratio of 1; with faster searches, noise is a larger share of each ratio.
 
+Those previews were slow because of the GIL, not SQL. Python's sqlite3 module
+releases and retakes the GIL on every row step; a profile of one preview
+alongside eight readers showed 2.5 s wall for 366 ms of CPU. Prune now reads
+its scoring columns as one JSON array per (importance, confidence) group and
+its candidates and their pads as one JSON value each, so a preview takes a
+handful of steps instead of one per row. Floating-point columns stay native
+values, since SQLite 3.39's JSON text can round them; stores without the JSON
+functions use the row-by-row path. `tests/test_prune_details.py` compares
+previews, summaries and applied prunes with commit f74a30c in several store
+configurations, checks that the JSON path builds the same memories as the
+row reader field by field, and catches four planted faults. `prune --summary`
+exposes `details=False` in the CLI.
+
+[Alternating f74a30c and the new store in one sitting](../experiments/results/private_retention_prune_ab/)
+(Python 3.9, two runs each, all passing the gate) at 4,096 memories and eight
+readers, silent / private arm:
+
+| | f74a30c | new |
+| --- | --- | --- |
+| Prune preview p95 alongside readers (ms) | 2,266–3,358 / 2,707–2,881 | 117–123 / 122 |
+| Applied prune (ms) | 214 / 204–240 | 104–110 / 110–134 |
+| Mixed searches/s | 12.1–14.5 / 12.4–13.7 | 13.7–14.6 / 14.3–15.2 |
+| Serial search p50 (ms) | 36–39 / 41–42 | 39–44 / 42–43 |
+
+Previews are about 20–28 times faster alongside readers and applied prunes
+about twice as fast; search changes little, and its ranges overlap. Full
+reruns on the new store (SHA-256 `7f427634…`) passed the gate in 12 of 12
+pairs on [Python 3.9](../experiments/results/private_retention_scale_prune_json_py39.md),
+[Python 3.14](../experiments/results/private_retention_scale_prune_json_py314.md)
+and [with `--prune-summaries`](../experiments/results/private_retention_scale_prune_summaries_py39.md)
+(preview p95 91–96 ms with full details, 46 ms with summaries). Their
+searches per second are higher than the earlier recorded runs mostly because
+of the sitting: f74a30c itself measured 12–14.5 searches/s in the alternating
+runs, against 9.1 in its recorded run. Provisional flags were missed in 4, 4
+and 5 of 12 pairs, on both sides of a ratio of 1. The machine's load average
+was about 5 to 12 with an editor and a browser open.
+
 The [authenticated socket benchmark](../experiments/results/private_retention_socket.md)
 runs the scale benchmark's three sizes through a separate CLI server process
 with signed tokens, with two prune previews alongside the concurrent calls.
@@ -137,5 +174,22 @@ same store with only that change, passed all four criteria in 12 of 12 pairs
 throughput was 7.4–10.3 calls/s and p95 1.4–1.7 s in both arms. A fault that
 records private access for the wrong member failed the attribution criteria in
 2 of 2 pairs ([fault report](../experiments/results/private_retention_socket_fault.md)).
+
+The server now answers malformed requests instead of failing inside the store
+or dropping the thread: a text argument that is not a string, or holds a NUL
+character, gets an error naming the argument; deeply nested JSON is refused as
+invalid JSON instead of raising `RecursionError`; and a client that hangs up or
+resets mid-request is let go quietly. `tests/test_server_faults.py` sends such
+requests over a real socket; before the fix 4 of its 13 tests failed. The
+benchmark's server boot now restores Python's SIGINT handler, because a shell
+starts background jobs with SIGINT ignored and the benchmark's server then
+never stopped (this happened before these changes too), and `serve` prints
+its ready line inside the block that catches Ctrl-C. A
+[rerun on the new store](../experiments/results/private_retention_socket_server_checks.md)
+passed all four criteria in 12 of 12 pairs (1,512 of 1,512 requests); at 4,096
+memories and eight readers throughput was 7.3–8.8 calls/s and p95 1.4–1.6 s,
+close to run 3. `--persistent-client` keeps one connection per member; in an
+informal comparison it saved about 0.4 ms per call but search p95 was worse on
+a loaded machine, so the client still opens a connection per call.
 An earlier socket run at two sizes without a fixed gate is kept in
 `experiments/results/private_retention_socket_run1_superseded/`.

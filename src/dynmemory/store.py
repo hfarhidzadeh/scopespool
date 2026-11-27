@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import math
 import os
 import re
@@ -3394,6 +3395,141 @@ class MemoryStore:
                 (created_at, created_at, last_accessed_at, access_count, memory_id),
             )
 
+    #: Whether this SQLite has its JSON functions; checked at the first prune.
+    _json_functions: Optional[bool] = None
+
+    def _has_json_functions(self, connection: sqlite3.Connection) -> bool:
+        if self._json_functions is None:
+            try:
+                connection.execute("SELECT json_group_array(json_array(1))").fetchone()
+            except sqlite3.OperationalError:
+                self._json_functions = False
+            else:
+                self._json_functions = True
+        return self._json_functions
+
+    def _prune_scan(
+        self, connection: sqlite3.Connection
+    ) -> Iterator[tuple[float, float, list]]:
+        """Scoring columns of the active memories, by (importance, confidence).
+
+        Yields ``(importance, confidence, entries)``, each entry ``(id, kind,
+        created_at, last_accessed_at, access_count)``. Every ``sqlite3`` row
+        step releases and retakes the GIL, which is where a scan beside busy
+        threads waits, so with SQLite's JSON functions each distinct pair is
+        one row. The REAL columns stay native, as JSON text may round them;
+        the text and integer columns survive JSON exactly. Without the JSON
+        functions each memory is its own group.
+        """
+        if not self._has_json_functions(connection):
+            for row in connection.execute(
+                """
+                SELECT importance, confidence, id, kind, created_at,
+                    last_accessed_at, access_count
+                FROM memories WHERE archived_at IS NULL
+                """
+            ).fetchall():
+                yield row[0], row[1], [(row[2], row[3], row[4], row[5], row[6])]
+            return
+        for importance, confidence, entries in connection.execute(
+            """
+            SELECT importance, confidence, json_group_array(json_array(
+                id, kind, created_at, last_accessed_at, access_count))
+            FROM memories WHERE archived_at IS NULL
+            GROUP BY importance, confidence
+            """
+        ).fetchall():
+            yield importance, confidence, json.loads(entries)
+
+    def _prune_memories(
+        self,
+        connection: sqlite3.Connection,
+        scored: Sequence[tuple],
+        *,
+        archived_at: Optional[str] = None,
+    ) -> list[Memory]:
+        """The scored candidates as ``_memory_from_row`` builds them, in order.
+
+        ``scored`` items start with the id and end with the confidence;
+        ``archived_at`` (an applied prune) sets ``archived_at`` and
+        ``updated_at``. With SQLite's JSON functions the rows and their pads
+        are each read as one value, the REAL columns coming from ``scored``.
+        """
+        if not scored:
+            return []
+        if not self._has_json_functions(connection):
+            rows = self._rows_by_id(connection, [item[0] for item in scored])
+            memories = [self._memory_from_row(rows[item[0]]) for item in scored]
+            if archived_at is not None:
+                memories = [
+                    replace(memory, archived_at=archived_at, updated_at=archived_at)
+                    for memory in memories
+                ]
+            return memories
+        (encoded,) = connection.execute(
+            """
+            SELECT json_group_array(json_array(
+                id, kind, content, memory_key, source, created_at, updated_at,
+                last_accessed_at, access_count, archived_at, superseded_by,
+                channel, speaker, asserted_as_admin, fact_subject,
+                asserted_as_delegate, stale_at))
+            FROM memories WHERE id IN (SELECT value FROM json_each(?))
+            """,
+            (json.dumps([item[0] for item in scored], ensure_ascii=False),),
+        ).fetchone()
+        rows = {row[0]: row for row in json.loads(encoded)}
+        pads: dict = {}
+        if self.key_path is not None:
+            sealed = [
+                "m:" + memory_id for memory_id, row in rows.items()
+                if row[2].startswith(self._SEALED)
+            ]
+            if sealed:
+                (encoded,) = connection.execute(
+                    """
+                    SELECT json_group_object(id, hex(pad)) FROM keys.pads
+                    WHERE id IN (SELECT value FROM json_each(?))
+                    """,
+                    (json.dumps(sealed, ensure_ascii=False),),
+                ).fetchone()
+                pads = {
+                    key_id: bytes.fromhex(pad) for key_id, pad in json.loads(encoded).items()
+                }
+        kinds: dict = {}
+        memories = []
+        for item in scored:
+            (memory_id, kind, content, memory_key, source, created_at, updated_at,
+             last_accessed_at, access_count, stored_archived_at, superseded_by,
+             channel, speaker, asserted_as_admin, fact_subject,
+             asserted_as_delegate, stale_at) = rows[item[0]]
+            if content.startswith(self._SEALED):
+                content = self._open_sealed(content, pads.get("m:" + memory_id))
+            memory_type = kinds.get(kind)
+            if memory_type is None:
+                memory_type = kinds[kind] = MemoryType(kind)
+            memories.append(Memory(
+                id=memory_id,
+                kind=memory_type,
+                content=content,
+                memory_key=memory_key,
+                source=source,
+                confidence=item[-1],
+                importance=item[3],
+                created_at=created_at,
+                updated_at=updated_at if archived_at is None else archived_at,
+                last_accessed_at=last_accessed_at,
+                access_count=access_count,
+                archived_at=stored_archived_at if archived_at is None else archived_at,
+                superseded_by=superseded_by,
+                channel=channel,
+                speaker=speaker,
+                asserted_as_admin=bool(asserted_as_admin),
+                fact_subject=fact_subject,
+                asserted_as_delegate=bool(asserted_as_delegate),
+                stale_at=stale_at,
+            ))
+        return memories
+
     def prune(
         self,
         *,
@@ -3442,52 +3578,48 @@ class MemoryStore:
             replaced = self._claim_view(connection, None).replaced
             # Scoring reads only these columns; full memories (and their
             # decrypted text) are built for the candidates alone.
-            rows = connection.execute(
-                """
-                SELECT id, kind, importance, confidence, created_at,
-                    last_accessed_at, access_count
-                FROM memories WHERE archived_at IS NULL
-                """
-            ).fetchall()
             scored = []
-            for (memory_id, kind, importance, confidence, created_at,
-                    last_accessed_at, access_count) in rows:
-                if memory_id in replaced:
-                    # Already history, as a write-time replacement would have archived it.
-                    continue
+            for importance, confidence, entries in self._prune_scan(connection):
                 if protect_importance is not None and importance >= protect_importance:
                     continue
-                activity_time = datetime.fromisoformat(last_accessed_at or created_at)
-                age_days = max(
-                    0.0,
-                    (current_time - activity_time).total_seconds() / 86400.0,
-                )
-                if age_days < min_age_days:
-                    continue
-                score = retention_score(
-                    importance,
-                    confidence,
-                    age_days,
-                    access_count,
-                    kind_decay_days.get(MemoryType(kind).value, decay_days),
-                )
-                if score < threshold:
-                    scored.append((
-                        memory_id, score, kind, importance, last_accessed_at or created_at,
-                    ))
+                for memory_id, kind, created_at, last_accessed_at, access_count in entries:
+                    if memory_id in replaced:
+                        # Already history, as a write-time replacement would have archived it.
+                        continue
+                    activity_time = datetime.fromisoformat(last_accessed_at or created_at)
+                    age_days = max(
+                        0.0,
+                        (current_time - activity_time).total_seconds() / 86400.0,
+                    )
+                    if age_days < min_age_days:
+                        continue
+                    score = retention_score(
+                        importance,
+                        confidence,
+                        age_days,
+                        access_count,
+                        kind_decay_days.get(MemoryType(kind).value, decay_days),
+                    )
+                    if score < threshold:
+                        scored.append((
+                            memory_id, score, kind, importance,
+                            last_accessed_at or created_at, confidence,
+                        ))
             scored.sort(key=lambda item: (item[1], item[0]))
             if details:
-                candidate_rows = self._rows_by_id(connection, [item[0] for item in scored])
+                # Built before the archive below; an applied prune returns them
+                # as archived now.
+                memories = self._prune_memories(
+                    connection, scored, archived_at=None if dry_run else now
+                )
                 candidates = [
-                    PruneCandidate(
-                        memory=self._memory_from_row(candidate_rows[item[0]]), score=item[1]
-                    )
-                    for item in scored
+                    PruneCandidate(memory=memory, score=item[1])
+                    for memory, item in zip(memories, scored)
                 ]
             else:
                 candidates = [
                     PruneSummary(memory_id, score, MemoryType(kind), importance, activity)
-                    for memory_id, score, kind, importance, activity in scored
+                    for memory_id, score, kind, importance, activity, _ in scored
                 ]
 
             if not dry_run:
@@ -3501,15 +3633,5 @@ class MemoryStore:
                     "DELETE FROM viewer_access WHERE last_accessed_at <= ?",
                     (self._private_access_cutoff(self._now()),),
                 )
-                if details:
-                    candidates = [
-                        replace(
-                            candidate,
-                            memory=replace(
-                                candidate.memory, archived_at=now, updated_at=now
-                            ),
-                        )
-                        for candidate in candidates
-                    ]
 
         return candidates

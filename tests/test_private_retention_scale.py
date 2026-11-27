@@ -165,5 +165,68 @@ class WorkloadTests(unittest.TestCase):
         self.assertIn("Embedder: none", scale.describe_run(scale.build_config(scale.SIZES, 4)))
 
 
+class PruneSummaryOptionTests(unittest.TestCase):
+    def test_the_option_is_off_by_default_and_the_default_config_keeps_its_shape(self):
+        self.assertFalse(scale.parse_args([]).prune_summaries)
+        self.assertFalse(scale.parse_args(["--smoke"]).prune_summaries)
+        self.assertTrue(scale.parse_args(["--smoke", "--prune-summaries"]).prune_summaries)
+        default = scale.build_config(scale.SIZES, 4)
+        self.assertEqual(scale.build_config(scale.SIZES, 4, None, False), default)
+        self.assertNotIn("prune_previews", default)
+        self.assertNotIn("prune", scale.describe_run(default).lower())
+        summaries = scale.build_config(scale.SIZES, 4, None, True)
+        self.assertEqual(summaries, dict(default, prune_previews="summaries (details=False)"))
+        self.assertIn("`--prune-summaries`", scale.describe_run(summaries))
+
+    def test_only_the_option_adds_details_false_to_the_concurrent_previews(self):
+        class Reader:
+            def search(self, query, **options):
+                return []
+
+        class Store:
+            def __init__(self):
+                self.calls = []
+
+            def prune(self, **options):
+                self.calls.append(options)
+                return []
+
+        for summaries, expected in ((False, {"as_of": scale.NOW}),
+                                    (True, {"as_of": scale.NOW, "details": False})):
+            store = Store()
+            arguments = (store, [Reader(), Reader()], [["topic1"], ["topic2"]], False)
+            if summaries:
+                scale.mixed_calls(*arguments, prune_summaries=True)
+            else:
+                scale.mixed_calls(*arguments)
+            self.assertEqual(store.calls, [expected] * scale.PREVIEWS, summaries)
+
+    def test_an_arm_previews_summaries_only_with_the_option(self):
+        from dynmemory.store import PruneCandidate, PruneSummary
+
+        with tempfile.TemporaryDirectory() as raw:
+            template = Path(raw) / "template.db"
+            scale.seed_database(template, 40, 2)
+            previews = {}
+            for summaries in (False, True):
+                path = Path(raw) / "arm{}.db".format(int(summaries))
+                scale.copy_database(template, path)
+                options = {"prune_summaries": True} if summaries else {}
+                _, checks, comparable = scale.arm(path, 2, True, 0, **options)
+                previews[summaries] = comparable[1]
+                self.assertTrue(checks["retention_matches_reader_accesses"])
+                applied = comparable[2]
+                self.assertTrue(applied)
+                self.assertTrue(all(isinstance(item, PruneCandidate) for item in applied))
+        for summaries, kind in ((False, PruneCandidate), (True, PruneSummary)):
+            items = [item for preview in previews[summaries] for item in preview]
+            self.assertTrue(items)
+            self.assertTrue(all(isinstance(item, kind) for item in items), summaries)
+        self.assertEqual(
+            [[c.memory.id for c in preview] for preview in previews[False]],
+            [[s.memory_id for s in preview] for preview in previews[True]],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

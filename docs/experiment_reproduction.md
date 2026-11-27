@@ -25,6 +25,21 @@ python -I experiments/audience_access_channel.py --trials 500 \
 Compare the reported schema version as well as all five checks against the
 [recorded after run](../experiments/results/audience_access_channel.md).
 
+The H1 utility test has a default workload, which sits at its ceiling, and a
+harder one below it (`--hard`, rules dated 2026-11-27). `--fault` plants a
+ranking fault in the built arm of the hard workload (`fault-drop-term` or
+`fault-swap-top`); both faults are also scored in every hard run. Each hard
+run took about 12 minutes on Python 3.9.
+
+```bash
+results_dir="$(mktemp -d)"
+python -I experiments/audience_utility.py --output "$results_dir/audience_utility"
+python -I experiments/audience_utility.py --hard --output "$results_dir/audience_utility_hard"
+```
+
+Compare with the [default report](../experiments/results/audience_utility.md)
+and the [hard report](../experiments/results/audience_utility_hard.md).
+
 The private retention regression tests include 500 paired trials that compare
 shared pruning and observer outputs while checking that the tracking reader
 gains a personal entry.
@@ -53,7 +68,9 @@ recorded run used Python 3.9.6 and SQLite 3.39.5). `--smoke` runs a single
 256-memory pair to check the runner. `--size`, `--repetitions`, `--embedder ngram`
 (hybrid ranking; embedding writes all happen before the timed phases) and
 `--src DIR` (run against another source tree, such as an exported older commit)
-change the run without changing the default workload. Against the store before
+and `--prune-summaries` (the concurrent prune previews ask for `PruneSummary`
+items instead of full details) change the run without changing the default
+workload. Against the store before
 the transaction split (commit 5500011), one 4,096-memory pair failed gate
 criterion (a) with 5 lock errors in 72 private concurrent searches.
 
@@ -69,9 +86,15 @@ The gate verdict is at the top of the report. Compare it with the
 or, for the current store, the
 [lexical](../experiments/results/private_retention_scale_speedups_py39.md) and
 [n-gram](../experiments/results/private_retention_scale_speedups_ngram_py39.md)
-runs on Python 3.9 (add `--embedder ngram` for the second). The exit code is
-non-zero if the gate or a behavior check fails. Timings depend on the machine;
-keep it awake (for example with `caffeinate -dims` on macOS) and idle.
+runs on Python 3.9 (add `--embedder ngram` for the second), and since the
+prune change the [Python 3.9](../experiments/results/private_retention_scale_prune_json_py39.md),
+[Python 3.14](../experiments/results/private_retention_scale_prune_json_py314.md)
+and [`--prune-summaries`](../experiments/results/private_retention_scale_prune_summaries_py39.md)
+runs. The exit code is non-zero if the gate or a behavior check fails. Timings
+depend on the machine; keep it awake (for example with `caffeinate -dims` on
+macOS) and idle. To compare two versions, export the older commit
+(`git archive <commit> | tar -x -C <dir>`) and alternate the runs in one sitting,
+as in [the prune comparison](../experiments/results/private_retention_prune_ab/).
 
 For the authenticated server path, run the following command on a system
 that supports local Unix sockets. It starts the CLI server in a separate
@@ -89,11 +112,17 @@ python -m unittest tests.test_private_retention_socket
 The gate (fixed in the script's docstring on 2026-11-26) is at the top of the
 [socket report](../experiments/results/private_retention_socket.md). It uses
 the scale benchmark's three sizes, and the wrong-member fault must fail its
-attribution criteria. The recorded runs used Python 3.9.6. Use `--smoke` for
-one 256-memory pair.
+attribution criteria. The recorded runs used Python 3.9.6; the
+[latest run](../experiments/results/private_retention_socket_server_checks.md)
+is on the store with the prune and server-check changes. Use `--smoke` for
+one 256-memory pair. `--persistent-client` keeps one connection per member
+open instead of one per call; it is a measurement aid and leaves the default
+run and its gate unchanged.
 
 The EverMemBench canary control and audience test need the pinned data files; see
-[EverMemBench](evermembench.md) for the download, hashes and commands.
+[EverMemBench](evermembench.md) for the download, hashes and commands. The
+SocialMemBench loader control likewise needs its pinned files; see
+[SocialMemBench](socialmembench.md).
 
 ## LongMemEval v3 and detector baselines
 

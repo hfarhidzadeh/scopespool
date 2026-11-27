@@ -91,6 +91,39 @@ can then also retrieve the other.
 Bad input (an unknown ID, a confidence above 1, a missing file) prints a
 one-line `scopespool: error: ...` message and exits with status 1.
 
+### From Python, with more than one user
+
+Each memory belongs to a channel, and a search runs as a set of viewers who
+see only the channels they all belong to:
+
+```python
+from dynmemory import MemoryStore
+
+with MemoryStore("team-memory.sqlite3") as store:
+    store.join_channel("design", "alice")
+    store.join_channel("design", "bob")
+    store.join_channel("alice-dm", "alice")
+
+    store.for_writer("bob").add_memory(
+        "Launch moved to Thursday.", "fact", channel="design", memory_key="launch.date")
+    store.for_writer("alice").add_memory(
+        "Alice prefers launch notes as bullet points.", "user_preference", channel="alice-dm")
+
+    for viewers in (["alice"], ["bob"], ["alice", "bob"]):
+        hits = store.for_viewers(viewers).search("launch")
+        print(viewers, [hit.memory.content for hit in hits])
+```
+
+```text
+['alice'] ['Launch moved to Thursday.', 'Alice prefers launch notes as bullet points.']
+['bob'] ['Launch moved to Thursday.']
+['alice', 'bob'] ['Launch moved to Thursday.']
+```
+
+Alice's direct-message memory is hidden from Bob and from the two of them
+together. See [Channels and viewers](#channels-and-viewers) for writers,
+admins, retraction and disputes.
+
 ## Links and versions
 
 A link reads **source, relation, target**: `link A B --relation depends_on`
@@ -500,7 +533,9 @@ owner-only permissions. Every request carries a token; reads run as the
 verified audience and writes as the verified member, and administrative calls
 are not exposed. `ScopeSpoolClient(socket_path, token)` is the matching client.
 A connection that sends nothing for `idle_timeout` seconds (default 300) is
-closed, so an idle client cannot hold a server thread.
+closed, so an idle client cannot hold a server thread. A malformed request
+gets an error reply: text arguments must be strings without NUL characters,
+and invalid or deeply nested JSON is refused.
 
 ```bash
 scopespool new-secret ./secret                         # 32 random bytes, mode 0600
@@ -601,7 +636,8 @@ scopespool --db ./agent-memory.sqlite3 restore <memory-id>
   importance; `--protect-importance none` exempts nothing.
 - In Python, `store.prune(..., details=False)` returns `PruneSummary` items
   (id, score, kind, importance, last activity) without reading content; an
-  applied prune makes the same changes either way.
+  applied prune makes the same changes either way. On the command line,
+  `prune --summary` prints those fields.
 - `restore` reactivates a pruned memory and resets its last-access time, so it
   gets a fresh `--min-age-days` window. A memory that was superseded cannot be
   restored, because its replacement is the current version.

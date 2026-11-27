@@ -63,6 +63,13 @@ WRITES = {
     "retract_message": ("message_id",),
     "acknowledge": ("message_id", "kind"),
 }
+#: Arguments that must be text (or null). The store would otherwise fail on a
+#: number or list deep inside, which a client would see as "internal error".
+STRING_ARGUMENTS = frozenset({
+    "query", "kind", "memory_id", "message_id", "channel", "memory_key",
+    "fact_subject", "content", "source",
+})
+#: The longest request line, newline included.
 MAX_REQUEST_BYTES = 1 << 20
 #: macOS allows 104 bytes for a socket path, Linux 108.
 MAX_SOCKET_PATH = 100
@@ -97,6 +104,12 @@ def handle_request(store: MemoryStore, authority: TokenAuthority, request: objec
         unexpected = sorted(set(arguments) - set(allowed))
         if unexpected:
             raise ValueError("unexpected argument: {}".format(unexpected[0]))
+        for name, value in arguments.items():
+            if name in STRING_ARGUMENTS and value is not None:
+                if not isinstance(value, str):
+                    raise ValueError("{} must be a string".format(name))
+                if "\x00" in value:
+                    raise ValueError("{} must not contain NUL characters".format(name))
         if operation in READS:
             audience = request.get("audience", [])
             if not isinstance(audience, list):
@@ -131,11 +144,16 @@ class _Handler(socketserver.StreamRequestHandler):
         super().setup()
 
     def handle(self) -> None:
+        try:
+            self._serve()
+        except OSError:
+            # The client stalled (socket.timeout is an OSError), hung up or
+            # reset the connection: nobody is left to answer.
+            return
+
+    def _serve(self) -> None:
         while True:
-            try:
-                line = self.rfile.readline(MAX_REQUEST_BYTES + 1)
-            except socket.timeout:
-                return
+            line = self.rfile.readline(MAX_REQUEST_BYTES + 1)
             if not line:
                 return
             if len(line) > MAX_REQUEST_BYTES:
@@ -143,7 +161,7 @@ class _Handler(socketserver.StreamRequestHandler):
                 return
             try:
                 request = json.loads(line.decode("utf-8"))
-            except ValueError:
+            except (ValueError, RecursionError):  # deep nesting exhausts the decoder
                 response = {"ok": False, "error": "invalid JSON"}
             else:
                 response = handle_request(self.server.store, self.server.authority, request)

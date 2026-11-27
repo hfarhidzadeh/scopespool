@@ -1,0 +1,2203 @@
+{
+  "dataset": "qunlexie/SocialMemBench",
+  "license": "CC-BY-4.0",
+  "revision": "efd0a5f526871437943d385a59ea93339ef61438",
+  "input_sha256": {
+    "conversations.parquet": "f9ed5d10501cd8a46ca09bb914866ae3069136c259d99ee24dd175e30c90c88d",
+    "qa.parquet": "98990f88a25df0d9a017488d39ca50e76f432b6554c67b2beafa5f9421ee3f5e"
+  },
+  "code_sha256": {
+    "src/dynmemory/store.py": "7f4276340281b9389ccc61e58afa0c0ca93d75a7e08f464597066543d507c926",
+    "src/dynmemory/socialmembench.py": "3b3074a1cf7aee8dc53371d73e461f1b5f016380c3dbee0abd112b20ed91fe45",
+    "experiments/socialmembench_control.py": "da5f9ac0b9b0d403cbd65bee864569e0ae8f90d3a9f1f93fa610570c3b90ff5d"
+  },
+  "python": "3.9.6",
+  "fault": "off-by-one",
+  "rule_date": "2026-11-27",
+  "criterion": "Every anchor: loader key equals the raw turn_id and names a turn containing the excerpt verbatim; speaker and session agree except the three known anchors. Every question: the token-only lexical search returns exactly the loader's evidence keys. An unplanted token returns zero results.",
+  "known_disagreements": [
+    {
+      "network": "grp_d3e4f5a6",
+      "qa_id": "Q8_8a371f10",
+      "turn_id": "grp_d3e4f5a6_s02_t009",
+      "note": "anchor speaker Quinn, turn speaker Pat"
+    },
+    {
+      "network": "grp_d3e4f5a6",
+      "qa_id": "Q8_0e6c7026",
+      "turn_id": "grp_d3e4f5a6_s10_t023",
+      "note": "anchor speaker Nico, turn speaker Pat"
+    },
+    {
+      "network": "grp_e3f4a5b6",
+      "qa_id": "Q8_5fd3bd95",
+      "turn_id": "grp_e3f4a5b6_s04_t003",
+      "note": "anchor session 1, turn in session 4"
+    }
+  ],
+  "passed": false,
+  "totals": {
+    "turns": 7355,
+    "sessions": 348,
+    "questions": 1031,
+    "anchors": 1979,
+    "key_roundtrip": 0,
+    "excerpt_verbatim": 4,
+    "attribution_checked": 1976,
+    "attribution_agree": 30,
+    "canary_passed": 0,
+    "unplanted_token_hits": 0,
+    "failed_questions": 1031,
+    "networks": 43
+  },
+  "known_disagreements_seen": [
+    {
+      "network": "grp_d3e4f5a6",
+      "qa_id": "Q8_8a371f10",
+      "turn_id": "grp_d3e4f5a6_s02_t009",
+      "agrees": true
+    },
+    {
+      "network": "grp_d3e4f5a6",
+      "qa_id": "Q8_0e6c7026",
+      "turn_id": "grp_d3e4f5a6_s10_t023",
+      "agrees": false
+    },
+    {
+      "network": "grp_e3f4a5b6",
+      "qa_id": "Q8_5fd3bd95",
+      "turn_id": "grp_e3f4a5b6_s04_t003",
+      "agrees": false
+    }
+  ],
+  "networks": [
+    {
+      "network": "grp_0d1e2f3a",
+      "turns": 50,
+      "sessions": 5,
+      "questions": 6,
+      "anchors": 12,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 12,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 6,
+      "first_failed_ids": [
+        "Q1_c0s3c1",
+        "Q3_c0s3c2",
+        "Q4_c0s2c2",
+        "Q5_c0s4c1",
+        "Q6_c0s5c1"
+      ],
+      "attribution_failures": [
+        [
+          "grp_0d1e2f3a",
+          "Q1_c0s3c1",
+          "grp_0d1e2f3a_s03_t002"
+        ],
+        [
+          "grp_0d1e2f3a",
+          "Q1_c0s3c1",
+          "grp_0d1e2f3a_s05_t001"
+        ],
+        [
+          "grp_0d1e2f3a",
+          "Q3_c0s3c2",
+          "grp_0d1e2f3a_s03_t001"
+        ],
+        [
+          "grp_0d1e2f3a",
+          "Q3_c0s3c2",
+          "grp_0d1e2f3a_s03_t002"
+        ],
+        [
+          "grp_0d1e2f3a",
+          "Q3_c0s3c2",
+          "grp_0d1e2f3a_s03_t003"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_1a2b3c4d",
+      "turns": 101,
+      "sessions": 5,
+      "questions": 12,
+      "anchors": 23,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 23,
+      "attribution_agree": 3,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 12,
+      "first_failed_ids": [
+        "Q1_a1b2c3d4",
+        "Q1_b2c3d4e5",
+        "Q1_c3d4e5f6",
+        "Q2_e1f2a3b4",
+        "Q4_d4e5f6a7"
+      ],
+      "attribution_failures": [
+        [
+          "grp_1a2b3c4d",
+          "Q1_a1b2c3d4",
+          "grp_1a2b3c4d_s01_t010"
+        ],
+        [
+          "grp_1a2b3c4d",
+          "Q1_b2c3d4e5",
+          "grp_1a2b3c4d_s02_t005"
+        ],
+        [
+          "grp_1a2b3c4d",
+          "Q1_b2c3d4e5",
+          "grp_1a2b3c4d_s02_t007"
+        ],
+        [
+          "grp_1a2b3c4d",
+          "Q1_c3d4e5f6",
+          "grp_1a2b3c4d_s04_t017"
+        ],
+        [
+          "grp_1a2b3c4d",
+          "Q2_e1f2a3b4",
+          "grp_1a2b3c4d_s03_t005"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_2b3c4d5e",
+      "turns": 67,
+      "sessions": 5,
+      "questions": 10,
+      "anchors": 16,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 16,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 10,
+      "first_failed_ids": [
+        "Q1_n2a1b2c3",
+        "Q1_n2b2c3d4",
+        "Q1_n2c3d4e5",
+        "Q2_n2d4e5f6",
+        "Q4_n2e5f6a7"
+      ],
+      "attribution_failures": [
+        [
+          "grp_2b3c4d5e",
+          "Q1_n2a1b2c3",
+          "grp_2b3c4d5e_s01_t005"
+        ],
+        [
+          "grp_2b3c4d5e",
+          "Q1_n2a1b2c3",
+          "grp_2b3c4d5e_s05_t004"
+        ],
+        [
+          "grp_2b3c4d5e",
+          "Q1_n2b2c3d4",
+          "grp_2b3c4d5e_s02_t003"
+        ],
+        [
+          "grp_2b3c4d5e",
+          "Q1_n2c3d4e5",
+          "grp_2b3c4d5e_s03_t008"
+        ],
+        [
+          "grp_2b3c4d5e",
+          "Q2_n2d4e5f6",
+          "grp_2b3c4d5e_s04_t003"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_3c4d5e6f",
+      "turns": 61,
+      "sessions": 5,
+      "questions": 8,
+      "anchors": 14,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 14,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 8,
+      "first_failed_ids": [
+        "Q1_r3a1b2c3",
+        "Q1_r3b2c3d4",
+        "Q2_r3c3d4e5",
+        "Q4_r3d4e5f6",
+        "Q5_r3e5f6a7"
+      ],
+      "attribution_failures": [
+        [
+          "grp_3c4d5e6f",
+          "Q1_r3a1b2c3",
+          "grp_3c4d5e6f_s01_t004"
+        ],
+        [
+          "grp_3c4d5e6f",
+          "Q1_r3b2c3d4",
+          "grp_3c4d5e6f_s02_t006"
+        ],
+        [
+          "grp_3c4d5e6f",
+          "Q1_r3b2c3d4",
+          "grp_3c4d5e6f_s03_t003"
+        ],
+        [
+          "grp_3c4d5e6f",
+          "Q2_r3c3d4e5",
+          "grp_3c4d5e6f_s04_t001"
+        ],
+        [
+          "grp_3c4d5e6f",
+          "Q4_r3d4e5f6",
+          "grp_3c4d5e6f_s01_t006"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_4d5e6f7a",
+      "turns": 53,
+      "sessions": 5,
+      "questions": 9,
+      "anchors": 23,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 23,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 9,
+      "first_failed_ids": [
+        "Q1_v4s1c1",
+        "Q1_v4s3c3",
+        "Q4_v4s1c2",
+        "Q8_v4s2c1",
+        "Q8_v4s3c1"
+      ],
+      "attribution_failures": [
+        [
+          "grp_4d5e6f7a",
+          "Q1_v4s1c1",
+          "grp_4d5e6f7a_s01_t007"
+        ],
+        [
+          "grp_4d5e6f7a",
+          "Q1_v4s1c1",
+          "grp_4d5e6f7a_s01_t009"
+        ],
+        [
+          "grp_4d5e6f7a",
+          "Q1_v4s1c1",
+          "grp_4d5e6f7a_s04_t008"
+        ],
+        [
+          "grp_4d5e6f7a",
+          "Q1_v4s3c3",
+          "grp_4d5e6f7a_s03_t010"
+        ],
+        [
+          "grp_4d5e6f7a",
+          "Q1_v4s3c3",
+          "grp_4d5e6f7a_s05_t007"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_5e6f7a8b",
+      "turns": 50,
+      "sessions": 5,
+      "questions": 8,
+      "anchors": 17,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 17,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 8,
+      "first_failed_ids": [
+        "Q1_a5s1c1",
+        "Q3_a5s2c1",
+        "Q4_a5s1c2",
+        "Q8_a5s3c1",
+        "Q6_a5s3c2"
+      ],
+      "attribution_failures": [
+        [
+          "grp_5e6f7a8b",
+          "Q1_a5s1c1",
+          "grp_5e6f7a8b_s01_t001"
+        ],
+        [
+          "grp_5e6f7a8b",
+          "Q1_a5s1c1",
+          "grp_5e6f7a8b_s03_t002"
+        ],
+        [
+          "grp_5e6f7a8b",
+          "Q3_a5s2c1",
+          "grp_5e6f7a8b_s02_t001"
+        ],
+        [
+          "grp_5e6f7a8b",
+          "Q3_a5s2c1",
+          "grp_5e6f7a8b_s02_t002"
+        ],
+        [
+          "grp_5e6f7a8b",
+          "Q3_a5s2c1",
+          "grp_5e6f7a8b_s02_t003"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_6f7a8b9c",
+      "turns": 50,
+      "sessions": 5,
+      "questions": 7,
+      "anchors": 12,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 12,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 7,
+      "first_failed_ids": [
+        "Q1_cf6s1c1",
+        "Q4_cf6s2c1",
+        "Q8_cf6s2c2",
+        "Q8_cf6s3c1",
+        "Q5_cf6s3c2"
+      ],
+      "attribution_failures": [
+        [
+          "grp_6f7a8b9c",
+          "Q1_cf6s1c1",
+          "grp_6f7a8b9c_s01_t002"
+        ],
+        [
+          "grp_6f7a8b9c",
+          "Q1_cf6s1c1",
+          "grp_6f7a8b9c_s04_t001"
+        ],
+        [
+          "grp_6f7a8b9c",
+          "Q4_cf6s2c1",
+          "grp_6f7a8b9c_s02_t000"
+        ],
+        [
+          "grp_6f7a8b9c",
+          "Q4_cf6s2c1",
+          "grp_6f7a8b9c_s01_t002"
+        ],
+        [
+          "grp_6f7a8b9c",
+          "Q8_cf6s2c2",
+          "grp_6f7a8b9c_s02_t004"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_7a8b9c0d",
+      "turns": 50,
+      "sessions": 5,
+      "questions": 5,
+      "anchors": 9,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 9,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 5,
+      "first_failed_ids": [
+        "Q1_fm7s1c1",
+        "Q3_fm7s2c1",
+        "Q5_fm7s3c1",
+        "Q6_fm7s4c1",
+        "Q7_fm7s5c1"
+      ],
+      "attribution_failures": [
+        [
+          "grp_7a8b9c0d",
+          "Q1_fm7s1c1",
+          "grp_7a8b9c0d_s01_t001"
+        ],
+        [
+          "grp_7a8b9c0d",
+          "Q1_fm7s1c1",
+          "grp_7a8b9c0d_s03_t001"
+        ],
+        [
+          "grp_7a8b9c0d",
+          "Q3_fm7s2c1",
+          "grp_7a8b9c0d_s02_t000"
+        ],
+        [
+          "grp_7a8b9c0d",
+          "Q3_fm7s2c1",
+          "grp_7a8b9c0d_s01_t003"
+        ],
+        [
+          "grp_7a8b9c0d",
+          "Q3_fm7s2c1",
+          "grp_7a8b9c0d_s02_t003"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_8b9c0d1e",
+      "turns": 50,
+      "sessions": 5,
+      "questions": 6,
+      "anchors": 10,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 10,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 6,
+      "first_failed_ids": [
+        "Q1_bk8s4c1",
+        "Q3_bk8s1c1",
+        "Q6_bk8s2c1",
+        "Q8_bk8s3c1",
+        "Q5_bk8s3c2"
+      ],
+      "attribution_failures": [
+        [
+          "grp_8b9c0d1e",
+          "Q1_bk8s4c1",
+          "grp_8b9c0d1e_s04_t000"
+        ],
+        [
+          "grp_8b9c0d1e",
+          "Q3_bk8s1c1",
+          "grp_8b9c0d1e_s01_t001"
+        ],
+        [
+          "grp_8b9c0d1e",
+          "Q3_bk8s1c1",
+          "grp_8b9c0d1e_s01_t005"
+        ],
+        [
+          "grp_8b9c0d1e",
+          "Q3_bk8s1c1",
+          "grp_8b9c0d1e_s03_t005"
+        ],
+        [
+          "grp_8b9c0d1e",
+          "Q6_bk8s2c1",
+          "grp_8b9c0d1e_s02_t001"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_9c0d1e2f",
+      "turns": 50,
+      "sessions": 5,
+      "questions": 6,
+      "anchors": 12,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 12,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 6,
+      "first_failed_ids": [
+        "Q3_ph9s1c1",
+        "Q4_ph9s1c2",
+        "Q5_ph9s2c1",
+        "Q8_ph9s3c1",
+        "Q8_ph9s4c1"
+      ],
+      "attribution_failures": [
+        [
+          "grp_9c0d1e2f",
+          "Q3_ph9s1c1",
+          "grp_9c0d1e2f_s01_t001"
+        ],
+        [
+          "grp_9c0d1e2f",
+          "Q3_ph9s1c1",
+          "grp_9c0d1e2f_s01_t002"
+        ],
+        [
+          "grp_9c0d1e2f",
+          "Q3_ph9s1c1",
+          "grp_9c0d1e2f_s01_t003"
+        ],
+        [
+          "grp_9c0d1e2f",
+          "Q4_ph9s1c2",
+          "grp_9c0d1e2f_s01_t001"
+        ],
+        [
+          "grp_9c0d1e2f",
+          "Q4_ph9s1c2",
+          "grp_9c0d1e2f_s03_t001"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_a0b1c2d3",
+      "turns": 160,
+      "sessions": 8,
+      "questions": 24,
+      "anchors": 41,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 41,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 24,
+      "first_failed_ids": [
+        "Q1_a0b1c2d301",
+        "Q1_a0b1c2d302",
+        "Q1_a0b1c2d303",
+        "Q2_a0b1c2d301",
+        "Q2_a0b1c2d302"
+      ],
+      "attribution_failures": [
+        [
+          "grp_a0b1c2d3",
+          "Q1_a0b1c2d301",
+          "grp_a0b1c2d3_s01_t004"
+        ],
+        [
+          "grp_a0b1c2d3",
+          "Q1_a0b1c2d301",
+          "grp_a0b1c2d3_s01_t008"
+        ],
+        [
+          "grp_a0b1c2d3",
+          "Q1_a0b1c2d302",
+          "grp_a0b1c2d3_s03_t011"
+        ],
+        [
+          "grp_a0b1c2d3",
+          "Q1_a0b1c2d302",
+          "grp_a0b1c2d3_s03_t012"
+        ],
+        [
+          "grp_a0b1c2d3",
+          "Q1_a0b1c2d303",
+          "grp_a0b1c2d3_s02_t011"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_a1b2c3d4",
+      "turns": 188,
+      "sessions": 8,
+      "questions": 28,
+      "anchors": 53,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 53,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 28,
+      "first_failed_ids": [
+        "Q1_a1b2c301",
+        "Q1_a1b2c302",
+        "Q1_a1b2c303",
+        "Q1_a1b2c304",
+        "Q1_a1b2c305"
+      ],
+      "attribution_failures": [
+        [
+          "grp_a1b2c3d4",
+          "Q1_a1b2c301",
+          "grp_a1b2c3d4_s01_t026"
+        ],
+        [
+          "grp_a1b2c3d4",
+          "Q1_a1b2c301",
+          "grp_a1b2c3d4_s07_t011"
+        ],
+        [
+          "grp_a1b2c3d4",
+          "Q1_a1b2c302",
+          "grp_a1b2c3d4_s02_t021"
+        ],
+        [
+          "grp_a1b2c3d4",
+          "Q1_a1b2c302",
+          "grp_a1b2c3d4_s03_t018"
+        ],
+        [
+          "grp_a1b2c3d4",
+          "Q1_a1b2c303",
+          "grp_a1b2c3d4_s03_t005"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_a3b4c5d6",
+      "turns": 122,
+      "sessions": 8,
+      "questions": 18,
+      "anchors": 27,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 27,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 18,
+      "first_failed_ids": [
+        "Q7_a3b4c601",
+        "Q4_a3b4c602",
+        "Q1_a3b4c603",
+        "Q1_a3b4c604",
+        "Q5_a3b4c605"
+      ],
+      "attribution_failures": [
+        [
+          "grp_a3b4c5d6",
+          "Q7_a3b4c601",
+          "grp_a3b4c5d6_s01_t010"
+        ],
+        [
+          "grp_a3b4c5d6",
+          "Q4_a3b4c602",
+          "grp_a3b4c5d6_s01_t014"
+        ],
+        [
+          "grp_a3b4c5d6",
+          "Q1_a3b4c603",
+          "grp_a3b4c5d6_s01_t012"
+        ],
+        [
+          "grp_a3b4c5d6",
+          "Q1_a3b4c604",
+          "grp_a3b4c5d6_s02_t001"
+        ],
+        [
+          "grp_a3b4c5d6",
+          "Q5_a3b4c605",
+          "grp_a3b4c5d6_s02_t006"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_a4b5c6d7",
+      "turns": 250,
+      "sessions": 10,
+      "questions": 41,
+      "anchors": 71,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 71,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 41,
+      "first_failed_ids": [
+        "Q1_a4b5c6d701",
+        "Q1_a4b5c6d702",
+        "Q1_a4b5c6d703",
+        "Q1_a4b5c6d704",
+        "Q1_a4b5c6d705"
+      ],
+      "attribution_failures": [
+        [
+          "grp_a4b5c6d7",
+          "Q1_a4b5c6d701",
+          "grp_a4b5c6d7_s01_t005"
+        ],
+        [
+          "grp_a4b5c6d7",
+          "Q1_a4b5c6d701",
+          "grp_a4b5c6d7_s07_t020"
+        ],
+        [
+          "grp_a4b5c6d7",
+          "Q1_a4b5c6d702",
+          "grp_a4b5c6d7_s01_t010"
+        ],
+        [
+          "grp_a4b5c6d7",
+          "Q1_a4b5c6d702",
+          "grp_a4b5c6d7_s03_t025"
+        ],
+        [
+          "grp_a4b5c6d7",
+          "Q1_a4b5c6d703",
+          "grp_a4b5c6d7_s01_t014"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_a5b6c7d8",
+      "turns": 255,
+      "sessions": 12,
+      "questions": 34,
+      "anchors": 63,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 63,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 34,
+      "first_failed_ids": [
+        "Q1_a5b6c7d8",
+        "Q1_b5c6d7e8",
+        "Q1_c5d6e7f8",
+        "Q1_d5e6f7a8",
+        "Q1_e5f6a7b8"
+      ],
+      "attribution_failures": [
+        [
+          "grp_a5b6c7d8",
+          "Q1_a5b6c7d8",
+          "grp_a5b6c7d8_s01_t005"
+        ],
+        [
+          "grp_a5b6c7d8",
+          "Q1_a5b6c7d8",
+          "grp_a5b6c7d8_s03_t008"
+        ],
+        [
+          "grp_a5b6c7d8",
+          "Q1_b5c6d7e8",
+          "grp_a5b6c7d8_s01_t019"
+        ],
+        [
+          "grp_a5b6c7d8",
+          "Q1_b5c6d7e8",
+          "grp_a5b6c7d8_s02_t008"
+        ],
+        [
+          "grp_a5b6c7d8",
+          "Q1_c5d6e7f8",
+          "grp_a5b6c7d8_s05_t020"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_a6b7c8d9",
+      "turns": 290,
+      "sessions": 10,
+      "questions": 64,
+      "anchors": 143,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 2,
+      "attribution_checked": 143,
+      "attribution_agree": 4,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 64,
+      "first_failed_ids": [
+        "Q1_f846be30",
+        "Q1_f868c2a2",
+        "Q1_69cef899",
+        "Q1_ef5abe3c",
+        "Q1_87c5ccbc"
+      ],
+      "attribution_failures": [
+        [
+          "grp_a6b7c8d9",
+          "Q1_f846be30",
+          "grp_a6b7c8d9_s01_t000"
+        ],
+        [
+          "grp_a6b7c8d9",
+          "Q1_f846be30",
+          "grp_a6b7c8d9_s03_t002"
+        ],
+        [
+          "grp_a6b7c8d9",
+          "Q1_f868c2a2",
+          "grp_a6b7c8d9_s01_t013"
+        ],
+        [
+          "grp_a6b7c8d9",
+          "Q1_f868c2a2",
+          "grp_a6b7c8d9_s06_t027"
+        ],
+        [
+          "grp_a6b7c8d9",
+          "Q1_69cef899",
+          "grp_a6b7c8d9_s01_t022"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_a9b0c1d2",
+      "turns": 186,
+      "sessions": 8,
+      "questions": 19,
+      "anchors": 44,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 44,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 19,
+      "first_failed_ids": [
+        "Q1_a9b0c1d201",
+        "Q1_a9b0c1d202",
+        "Q1_a9b0c1d203",
+        "Q2_a9b0c1d204",
+        "Q2_a9b0c1d205"
+      ],
+      "attribution_failures": [
+        [
+          "grp_a9b0c1d2",
+          "Q1_a9b0c1d201",
+          "grp_a9b0c1d2_s01_t019"
+        ],
+        [
+          "grp_a9b0c1d2",
+          "Q1_a9b0c1d201",
+          "grp_a9b0c1d2_s04_t007"
+        ],
+        [
+          "grp_a9b0c1d2",
+          "Q1_a9b0c1d201",
+          "grp_a9b0c1d2_s07_t019"
+        ],
+        [
+          "grp_a9b0c1d2",
+          "Q1_a9b0c1d202",
+          "grp_a9b0c1d2_s02_t018"
+        ],
+        [
+          "grp_a9b0c1d2",
+          "Q1_a9b0c1d202",
+          "grp_a9b0c1d2_s06_t019"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_b0c1d2e3",
+      "turns": 168,
+      "sessions": 8,
+      "questions": 28,
+      "anchors": 49,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 49,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 28,
+      "first_failed_ids": [
+        "Q1_b0c1d001",
+        "Q1_b0c1d007",
+        "Q8_b0c1d003",
+        "Q7_b0c1d002",
+        "Q4_b0c1d004"
+      ],
+      "attribution_failures": [
+        [
+          "grp_b0c1d2e3",
+          "Q1_b0c1d001",
+          "grp_b0c1d2e3_s01_t007"
+        ],
+        [
+          "grp_b0c1d2e3",
+          "Q1_b0c1d001",
+          "grp_b0c1d2e3_s03_t016"
+        ],
+        [
+          "grp_b0c1d2e3",
+          "Q1_b0c1d007",
+          "grp_b0c1d2e3_s01_t020"
+        ],
+        [
+          "grp_b0c1d2e3",
+          "Q1_b0c1d007",
+          "grp_b0c1d2e3_s02_t009"
+        ],
+        [
+          "grp_b0c1d2e3",
+          "Q8_b0c1d003",
+          "grp_b0c1d2e3_s01_t010"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_b1c2d3e4",
+      "turns": 300,
+      "sessions": 12,
+      "questions": 32,
+      "anchors": 60,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 60,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 32,
+      "first_failed_ids": [
+        "Q1_b1c2d3e401",
+        "Q1_b1c2d3e402",
+        "Q1_b1c2d3e403",
+        "Q1_b1c2d3e404",
+        "Q1_b1c2d3e405"
+      ],
+      "attribution_failures": [
+        [
+          "grp_b1c2d3e4",
+          "Q1_b1c2d3e401",
+          "grp_b1c2d3e4_s01_t001"
+        ],
+        [
+          "grp_b1c2d3e4",
+          "Q1_b1c2d3e401",
+          "grp_b1c2d3e4_s01_t009"
+        ],
+        [
+          "grp_b1c2d3e4",
+          "Q1_b1c2d3e402",
+          "grp_b1c2d3e4_s02_t001"
+        ],
+        [
+          "grp_b1c2d3e4",
+          "Q1_b1c2d3e402",
+          "grp_b1c2d3e4_s09_t004"
+        ],
+        [
+          "grp_b1c2d3e4",
+          "Q1_b1c2d3e403",
+          "grp_b1c2d3e4_s04_t005"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_b2c3d4e5",
+      "turns": 160,
+      "sessions": 8,
+      "questions": 13,
+      "anchors": 31,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 1,
+      "attribution_checked": 31,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 13,
+      "first_failed_ids": [
+        "Q1_b2c3d4e501",
+        "Q1_b2c3d4e502",
+        "Q1_b2c3d4e503",
+        "Q1_b2c3d4e504",
+        "Q2_b2c3d4e501"
+      ],
+      "attribution_failures": [
+        [
+          "grp_b2c3d4e5",
+          "Q1_b2c3d4e501",
+          "grp_b2c3d4e5_s02_t013"
+        ],
+        [
+          "grp_b2c3d4e5",
+          "Q1_b2c3d4e501",
+          "grp_b2c3d4e5_s05_t007"
+        ],
+        [
+          "grp_b2c3d4e5",
+          "Q1_b2c3d4e502",
+          "grp_b2c3d4e5_s01_t008"
+        ],
+        [
+          "grp_b2c3d4e5",
+          "Q1_b2c3d4e502",
+          "grp_b2c3d4e5_s04_t007"
+        ],
+        [
+          "grp_b2c3d4e5",
+          "Q1_b2c3d4e502",
+          "grp_b2c3d4e5_s08_t011"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_b6c7d8e9",
+      "turns": 290,
+      "sessions": 12,
+      "questions": 42,
+      "anchors": 62,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 62,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 42,
+      "first_failed_ids": [
+        "Q1_55017d4f",
+        "Q1_ed304b2a",
+        "Q1_e558700a",
+        "Q1_c2d91281",
+        "Q1_2b0f9399"
+      ],
+      "attribution_failures": [
+        [
+          "grp_b6c7d8e9",
+          "Q1_55017d4f",
+          "grp_b6c7d8e9_s01_t011"
+        ],
+        [
+          "grp_b6c7d8e9",
+          "Q1_55017d4f",
+          "grp_b6c7d8e9_s11_t004"
+        ],
+        [
+          "grp_b6c7d8e9",
+          "Q1_ed304b2a",
+          "grp_b6c7d8e9_s01_t031"
+        ],
+        [
+          "grp_b6c7d8e9",
+          "Q1_ed304b2a",
+          "grp_b6c7d8e9_s06_t021"
+        ],
+        [
+          "grp_b6c7d8e9",
+          "Q1_e558700a",
+          "grp_b6c7d8e9_s02_t020"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_b8c9dae0",
+      "turns": 268,
+      "sessions": 10,
+      "questions": 40,
+      "anchors": 81,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 81,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 40,
+      "first_failed_ids": [
+        "Q1_b8c9dae001",
+        "Q1_b8c9dae002",
+        "Q1_b8c9dae003",
+        "Q1_b8c9dae004",
+        "Q1_b8c9dae005"
+      ],
+      "attribution_failures": [
+        [
+          "grp_b8c9dae0",
+          "Q1_b8c9dae001",
+          "grp_b8c9dae0_s01_t004"
+        ],
+        [
+          "grp_b8c9dae0",
+          "Q1_b8c9dae001",
+          "grp_b8c9dae0_s06_t004"
+        ],
+        [
+          "grp_b8c9dae0",
+          "Q1_b8c9dae002",
+          "grp_b8c9dae0_s02_t007"
+        ],
+        [
+          "grp_b8c9dae0",
+          "Q1_b8c9dae003",
+          "grp_b8c9dae0_s03_t018"
+        ],
+        [
+          "grp_b8c9dae0",
+          "Q1_b8c9dae004",
+          "grp_b8c9dae0_s05_t006"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_c1d2e3f4",
+      "turns": 160,
+      "sessions": 8,
+      "questions": 25,
+      "anchors": 43,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 43,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 25,
+      "first_failed_ids": [
+        "Q1_98e809a0",
+        "Q1_fca07c65",
+        "Q1_4b2b7ad8",
+        "Q1_8cfe0300",
+        "Q2_eb97940c"
+      ],
+      "attribution_failures": [
+        [
+          "grp_c1d2e3f4",
+          "Q1_98e809a0",
+          "grp_c1d2e3f4_s01_t006"
+        ],
+        [
+          "grp_c1d2e3f4",
+          "Q1_98e809a0",
+          "grp_c1d2e3f4_s01_t005"
+        ],
+        [
+          "grp_c1d2e3f4",
+          "Q1_fca07c65",
+          "grp_c1d2e3f4_s02_t012"
+        ],
+        [
+          "grp_c1d2e3f4",
+          "Q1_fca07c65",
+          "grp_c1d2e3f4_s02_t014"
+        ],
+        [
+          "grp_c1d2e3f4",
+          "Q1_4b2b7ad8",
+          "grp_c1d2e3f4_s06_t006"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_c1d2e3f7",
+      "turns": 254,
+      "sessions": 10,
+      "questions": 48,
+      "anchors": 78,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 1,
+      "attribution_checked": 78,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 48,
+      "first_failed_ids": [
+        "Q1_c1d2e3f701",
+        "Q1_c1d2e3f702",
+        "Q1_c1d2e3f703",
+        "Q1_c1d2e3f704",
+        "Q1_c1d2e3f705"
+      ],
+      "attribution_failures": [
+        [
+          "grp_c1d2e3f7",
+          "Q1_c1d2e3f701",
+          "grp_c1d2e3f7_s01_t005"
+        ],
+        [
+          "grp_c1d2e3f7",
+          "Q1_c1d2e3f701",
+          "grp_c1d2e3f7_s06_t001"
+        ],
+        [
+          "grp_c1d2e3f7",
+          "Q1_c1d2e3f702",
+          "grp_c1d2e3f7_s01_t009"
+        ],
+        [
+          "grp_c1d2e3f7",
+          "Q1_c1d2e3f703",
+          "grp_c1d2e3f7_s01_t012"
+        ],
+        [
+          "grp_c1d2e3f7",
+          "Q1_c1d2e3f703",
+          "grp_c1d2e3f7_s02_t007"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_c2d3e4f5",
+      "turns": 190,
+      "sessions": 8,
+      "questions": 27,
+      "anchors": 65,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 65,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 27,
+      "first_failed_ids": [
+        "Q1_cf13s1c1",
+        "Q1_cf13s2c1",
+        "Q1_cf13s3c2",
+        "Q1_cf13s5c2",
+        "Q1_cf13s7c2"
+      ],
+      "attribution_failures": [
+        [
+          "grp_c2d3e4f5",
+          "Q1_cf13s1c1",
+          "grp_c2d3e4f5_s01_t001"
+        ],
+        [
+          "grp_c2d3e4f5",
+          "Q1_cf13s2c1",
+          "grp_c2d3e4f5_s02_t004"
+        ],
+        [
+          "grp_c2d3e4f5",
+          "Q1_cf13s2c1",
+          "grp_c2d3e4f5_s03_t013"
+        ],
+        [
+          "grp_c2d3e4f5",
+          "Q1_cf13s3c2",
+          "grp_c2d3e4f5_s03_t011"
+        ],
+        [
+          "grp_c2d3e4f5",
+          "Q1_cf13s3c2",
+          "grp_c2d3e4f5_s02_t005"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_c3d4e5f6",
+      "turns": 160,
+      "sessions": 8,
+      "questions": 13,
+      "anchors": 30,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 30,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 13,
+      "first_failed_ids": [
+        "Q1_c3d4e5f601",
+        "Q1_c3d4e5f602",
+        "Q1_c3d4e5f603",
+        "Q1_c3d4e5f604",
+        "Q2_c3d4e5f601"
+      ],
+      "attribution_failures": [
+        [
+          "grp_c3d4e5f6",
+          "Q1_c3d4e5f601",
+          "grp_c3d4e5f6_s01_t008"
+        ],
+        [
+          "grp_c3d4e5f6",
+          "Q1_c3d4e5f601",
+          "grp_c3d4e5f6_s01_t016"
+        ],
+        [
+          "grp_c3d4e5f6",
+          "Q1_c3d4e5f602",
+          "grp_c3d4e5f6_s05_t001"
+        ],
+        [
+          "grp_c3d4e5f6",
+          "Q1_c3d4e5f602",
+          "grp_c3d4e5f6_s05_t004"
+        ],
+        [
+          "grp_c3d4e5f6",
+          "Q1_c3d4e5f602",
+          "grp_c3d4e5f6_s05_t010"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_c6d7e8f9",
+      "turns": 189,
+      "sessions": 8,
+      "questions": 17,
+      "anchors": 33,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 33,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 17,
+      "first_failed_ids": [
+        "Q1_c6d7e8f901",
+        "Q1_c6d7e8f902",
+        "Q2_c6d7e8f901",
+        "Q4_c6d7e8f901",
+        "Q4_c6d7e8f902"
+      ],
+      "attribution_failures": [
+        [
+          "grp_c6d7e8f9",
+          "Q1_c6d7e8f901",
+          "grp_c6d7e8f9_s01_t010"
+        ],
+        [
+          "grp_c6d7e8f9",
+          "Q1_c6d7e8f902",
+          "grp_c6d7e8f9_s01_t008"
+        ],
+        [
+          "grp_c6d7e8f9",
+          "Q1_c6d7e8f902",
+          "grp_c6d7e8f9_s03_t010"
+        ],
+        [
+          "grp_c6d7e8f9",
+          "Q2_c6d7e8f901",
+          "grp_c6d7e8f9_s03_t024"
+        ],
+        [
+          "grp_c6d7e8f9",
+          "Q2_c6d7e8f901",
+          "grp_c6d7e8f9_s03_t025"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_d2e3f4a5",
+      "turns": 180,
+      "sessions": 8,
+      "questions": 24,
+      "anchors": 45,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 45,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 24,
+      "first_failed_ids": [
+        "Q1_a1f9b2e3",
+        "Q1_4a9c7e2f",
+        "Q1_4b7d9e3f",
+        "Q1_b1c2d3e4",
+        "Q1_c2d3e4f5"
+      ],
+      "attribution_failures": [
+        [
+          "grp_d2e3f4a5",
+          "Q1_a1f9b2e3",
+          "grp_d2e3f4a5_s01_t003"
+        ],
+        [
+          "grp_d2e3f4a5",
+          "Q1_4a9c7e2f",
+          "grp_d2e3f4a5_s02_t004"
+        ],
+        [
+          "grp_d2e3f4a5",
+          "Q1_4a9c7e2f",
+          "grp_d2e3f4a5_s02_t007"
+        ],
+        [
+          "grp_d2e3f4a5",
+          "Q1_4b7d9e3f",
+          "grp_d2e3f4a5_s02_t019"
+        ],
+        [
+          "grp_d2e3f4a5",
+          "Q1_4b7d9e3f",
+          "grp_d2e3f4a5_s04_t008"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_d3e4f5a6",
+      "turns": 257,
+      "sessions": 10,
+      "questions": 52,
+      "anchors": 84,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 82,
+      "attribution_agree": 5,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 52,
+      "first_failed_ids": [
+        "Q1_2d6b0e16",
+        "Q1_b61ea518",
+        "Q1_7cebcf97",
+        "Q1_2756d565",
+        "Q1_8ecdd68b"
+      ],
+      "attribution_failures": [
+        [
+          "grp_d3e4f5a6",
+          "Q1_2d6b0e16",
+          "grp_d3e4f5a6_s01_t010"
+        ],
+        [
+          "grp_d3e4f5a6",
+          "Q1_2d6b0e16",
+          "grp_d3e4f5a6_s03_t018"
+        ],
+        [
+          "grp_d3e4f5a6",
+          "Q1_b61ea518",
+          "grp_d3e4f5a6_s03_t015"
+        ],
+        [
+          "grp_d3e4f5a6",
+          "Q1_b61ea518",
+          "grp_d3e4f5a6_s03_t016"
+        ],
+        [
+          "grp_d3e4f5a6",
+          "Q1_2756d565",
+          "grp_d3e4f5a6_s01_t008"
+        ]
+      ],
+      "known_disagreements_seen": [
+        {
+          "network": "grp_d3e4f5a6",
+          "qa_id": "Q8_8a371f10",
+          "turn_id": "grp_d3e4f5a6_s02_t009",
+          "agrees": true
+        },
+        {
+          "network": "grp_d3e4f5a6",
+          "qa_id": "Q8_0e6c7026",
+          "turn_id": "grp_d3e4f5a6_s10_t023",
+          "agrees": false
+        }
+      ]
+    },
+    {
+      "network": "grp_d4e5f6a7",
+      "turns": 170,
+      "sessions": 8,
+      "questions": 18,
+      "anchors": 36,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 36,
+      "attribution_agree": 2,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 18,
+      "first_failed_ids": [
+        "Q1_d4e5f601",
+        "Q1_d4e5f602",
+        "Q1_d4e5f603",
+        "Q1_d4e5f604",
+        "Q1_d4e5f605"
+      ],
+      "attribution_failures": [
+        [
+          "grp_d4e5f6a7",
+          "Q1_d4e5f601",
+          "grp_d4e5f6a7_s01_t013"
+        ],
+        [
+          "grp_d4e5f6a7",
+          "Q1_d4e5f601",
+          "grp_d4e5f6a7_s05_t014"
+        ],
+        [
+          "grp_d4e5f6a7",
+          "Q1_d4e5f602",
+          "grp_d4e5f6a7_s02_t010"
+        ],
+        [
+          "grp_d4e5f6a7",
+          "Q1_d4e5f603",
+          "grp_d4e5f6a7_s03_t021"
+        ],
+        [
+          "grp_d4e5f6a7",
+          "Q1_d4e5f603",
+          "grp_d4e5f6a7_s04_t010"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_d7e8f9a0",
+      "turns": 194,
+      "sessions": 8,
+      "questions": 19,
+      "anchors": 37,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 37,
+      "attribution_agree": 2,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 19,
+      "first_failed_ids": [
+        "Q1_d7e8f9a001",
+        "Q1_d7e8f9a002",
+        "Q2_d7e8f9a001",
+        "Q2_d7e8f9a002",
+        "Q4_d7e8f9a001"
+      ],
+      "attribution_failures": [
+        [
+          "grp_d7e8f9a0",
+          "Q1_d7e8f9a001",
+          "grp_d7e8f9a0_s08_t006"
+        ],
+        [
+          "grp_d7e8f9a0",
+          "Q1_d7e8f9a001",
+          "grp_d7e8f9a0_s07_t018"
+        ],
+        [
+          "grp_d7e8f9a0",
+          "Q1_d7e8f9a002",
+          "grp_d7e8f9a0_s06_t006"
+        ],
+        [
+          "grp_d7e8f9a0",
+          "Q1_d7e8f9a002",
+          "grp_d7e8f9a0_s06_t009"
+        ],
+        [
+          "grp_d7e8f9a0",
+          "Q2_d7e8f9a001",
+          "grp_d7e8f9a0_s02_t023"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_dba9214c",
+      "turns": 160,
+      "sessions": 8,
+      "questions": 27,
+      "anchors": 48,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 48,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 27,
+      "first_failed_ids": [
+        "Q1_dba9214c01",
+        "Q1_dba9214c02",
+        "Q1_dba9214c03",
+        "Q2_dba9214c01",
+        "Q2_dba9214c02"
+      ],
+      "attribution_failures": [
+        [
+          "grp_dba9214c",
+          "Q1_dba9214c01",
+          "grp_dba9214c_s01_t011"
+        ],
+        [
+          "grp_dba9214c",
+          "Q1_dba9214c01",
+          "grp_dba9214c_s03_t001"
+        ],
+        [
+          "grp_dba9214c",
+          "Q1_dba9214c02",
+          "grp_dba9214c_s03_t010"
+        ],
+        [
+          "grp_dba9214c",
+          "Q1_dba9214c02",
+          "grp_dba9214c_s03_t019"
+        ],
+        [
+          "grp_dba9214c",
+          "Q1_dba9214c03",
+          "grp_dba9214c_s05_t007"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_e3f4a5b6",
+      "turns": 182,
+      "sessions": 8,
+      "questions": 30,
+      "anchors": 58,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 57,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 30,
+      "first_failed_ids": [
+        "Q1_9dd1f77c",
+        "Q1_491c9d3b",
+        "Q1_95d52657",
+        "Q1_ed752db0",
+        "Q1_fe87950a"
+      ],
+      "attribution_failures": [
+        [
+          "grp_e3f4a5b6",
+          "Q1_9dd1f77c",
+          "grp_e3f4a5b6_s01_t009"
+        ],
+        [
+          "grp_e3f4a5b6",
+          "Q1_9dd1f77c",
+          "grp_e3f4a5b6_s05_t022"
+        ],
+        [
+          "grp_e3f4a5b6",
+          "Q1_491c9d3b",
+          "grp_e3f4a5b6_s03_t003"
+        ],
+        [
+          "grp_e3f4a5b6",
+          "Q1_491c9d3b",
+          "grp_e3f4a5b6_s03_t004"
+        ],
+        [
+          "grp_e3f4a5b6",
+          "Q1_95d52657",
+          "grp_e3f4a5b6_s03_t022"
+        ]
+      ],
+      "known_disagreements_seen": [
+        {
+          "network": "grp_e3f4a5b6",
+          "qa_id": "Q8_5fd3bd95",
+          "turn_id": "grp_e3f4a5b6_s04_t003",
+          "agrees": false
+        }
+      ]
+    },
+    {
+      "network": "grp_e5f6a7b8",
+      "turns": 200,
+      "sessions": 10,
+      "questions": 17,
+      "anchors": 35,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 35,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 17,
+      "first_failed_ids": [
+        "Q1_e5f6a7b801",
+        "Q1_e5f6a7b802",
+        "Q1_e5f6a7b803",
+        "Q1_e5f6a7b804",
+        "Q1_e5f6a7b805"
+      ],
+      "attribution_failures": [
+        [
+          "grp_e5f6a7b8",
+          "Q1_e5f6a7b801",
+          "grp_e5f6a7b8_s05_t014"
+        ],
+        [
+          "grp_e5f6a7b8",
+          "Q1_e5f6a7b801",
+          "grp_e5f6a7b8_s08_t013"
+        ],
+        [
+          "grp_e5f6a7b8",
+          "Q1_e5f6a7b802",
+          "grp_e5f6a7b8_s05_t007"
+        ],
+        [
+          "grp_e5f6a7b8",
+          "Q1_e5f6a7b802",
+          "grp_e5f6a7b8_s05_t009"
+        ],
+        [
+          "grp_e5f6a7b8",
+          "Q1_e5f6a7b803",
+          "grp_e5f6a7b8_s01_t018"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_e6f7a8b9",
+      "turns": 169,
+      "sessions": 8,
+      "questions": 16,
+      "anchors": 29,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 29,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 16,
+      "first_failed_ids": [
+        "Q1_e6f7a8b1",
+        "Q1_e6f7a8b2",
+        "Q1_e6f7a8b3",
+        "Q2_e6f7a8b4",
+        "Q4_e6f7a8b5"
+      ],
+      "attribution_failures": [
+        [
+          "grp_e6f7a8b9",
+          "Q1_e6f7a8b1",
+          "grp_e6f7a8b9_s01_t013"
+        ],
+        [
+          "grp_e6f7a8b9",
+          "Q1_e6f7a8b1",
+          "grp_e6f7a8b9_s02_t013"
+        ],
+        [
+          "grp_e6f7a8b9",
+          "Q1_e6f7a8b2",
+          "grp_e6f7a8b9_s03_t015"
+        ],
+        [
+          "grp_e6f7a8b9",
+          "Q1_e6f7a8b2",
+          "grp_e6f7a8b9_s06_t020"
+        ],
+        [
+          "grp_e6f7a8b9",
+          "Q1_e6f7a8b2",
+          "grp_e6f7a8b9_s08_t017"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_e7f8a9b1",
+      "turns": 289,
+      "sessions": 10,
+      "questions": 57,
+      "anchors": 172,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 172,
+      "attribution_agree": 5,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 57,
+      "first_failed_ids": [
+        "Q1_e7f8a9b101",
+        "Q1_e7f8a9b102",
+        "Q1_e7f8a9b103",
+        "Q1_e7f8a9b104",
+        "Q1_e7f8a9b105"
+      ],
+      "attribution_failures": [
+        [
+          "grp_e7f8a9b1",
+          "Q1_e7f8a9b101",
+          "grp_e7f8a9b1_s01_t011"
+        ],
+        [
+          "grp_e7f8a9b1",
+          "Q1_e7f8a9b101",
+          "grp_e7f8a9b1_s03_t017"
+        ],
+        [
+          "grp_e7f8a9b1",
+          "Q1_e7f8a9b101",
+          "grp_e7f8a9b1_s02_t012"
+        ],
+        [
+          "grp_e7f8a9b1",
+          "Q1_e7f8a9b102",
+          "grp_e7f8a9b1_s02_t004"
+        ],
+        [
+          "grp_e7f8a9b1",
+          "Q1_e7f8a9b102",
+          "grp_e7f8a9b1_s02_t006"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_e8f9a0b1",
+      "turns": 200,
+      "sessions": 10,
+      "questions": 28,
+      "anchors": 48,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 48,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 28,
+      "first_failed_ids": [
+        "Q1_e8f9a0b101",
+        "Q4_e8f9a0b101",
+        "Q4_e8f9a0b102",
+        "Q5_e8f9a0b101",
+        "Q5_e8f9a0b102"
+      ],
+      "attribution_failures": [
+        [
+          "grp_e8f9a0b1",
+          "Q1_e8f9a0b101",
+          "grp_e8f9a0b1_s01_t006"
+        ],
+        [
+          "grp_e8f9a0b1",
+          "Q1_e8f9a0b101",
+          "grp_e8f9a0b1_s04_t019"
+        ],
+        [
+          "grp_e8f9a0b1",
+          "Q4_e8f9a0b101",
+          "grp_e8f9a0b1_s01_t009"
+        ],
+        [
+          "grp_e8f9a0b1",
+          "Q4_e8f9a0b102",
+          "grp_e8f9a0b1_s07_t008"
+        ],
+        [
+          "grp_e8f9a0b1",
+          "Q5_e8f9a0b101",
+          "grp_e8f9a0b1_s02_t013"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_f1a2b3c5",
+      "turns": 302,
+      "sessions": 10,
+      "questions": 54,
+      "anchors": 96,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 96,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 54,
+      "first_failed_ids": [
+        "Q1_b3c50001",
+        "Q1_b3c50002",
+        "Q1_b3c50003",
+        "Q1_b3c50004",
+        "Q1_b3c50005"
+      ],
+      "attribution_failures": [
+        [
+          "grp_f1a2b3c5",
+          "Q1_b3c50001",
+          "grp_f1a2b3c5_s01_t001"
+        ],
+        [
+          "grp_f1a2b3c5",
+          "Q1_b3c50001",
+          "grp_f1a2b3c5_s02_t000"
+        ],
+        [
+          "grp_f1a2b3c5",
+          "Q1_b3c50002",
+          "grp_f1a2b3c5_s02_t010"
+        ],
+        [
+          "grp_f1a2b3c5",
+          "Q1_b3c50002",
+          "grp_f1a2b3c5_s05_t009"
+        ],
+        [
+          "grp_f1a2b3c5",
+          "Q1_b3c50003",
+          "grp_f1a2b3c5_s04_t005"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_f2e3d4c5",
+      "turns": 129,
+      "sessions": 8,
+      "questions": 18,
+      "anchors": 28,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 28,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 18,
+      "first_failed_ids": [
+        "Q7_f2e3d401",
+        "Q1_f2e3d402",
+        "Q4_f2e3d403",
+        "Q5_f2e3d404",
+        "Q7_f2e3d405"
+      ],
+      "attribution_failures": [
+        [
+          "grp_f2e3d4c5",
+          "Q7_f2e3d401",
+          "grp_f2e3d4c5_s01_t014"
+        ],
+        [
+          "grp_f2e3d4c5",
+          "Q1_f2e3d402",
+          "grp_f2e3d4c5_s01_t015"
+        ],
+        [
+          "grp_f2e3d4c5",
+          "Q4_f2e3d403",
+          "grp_f2e3d4c5_s02_t002"
+        ],
+        [
+          "grp_f2e3d4c5",
+          "Q5_f2e3d404",
+          "grp_f2e3d4c5_s02_t009"
+        ],
+        [
+          "grp_f2e3d4c5",
+          "Q7_f2e3d405",
+          "grp_f2e3d4c5_s02_t013"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_f4a5b6c7",
+      "turns": 178,
+      "sessions": 8,
+      "questions": 24,
+      "anchors": 34,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 34,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 24,
+      "first_failed_ids": [
+        "Q1_f4a5b6c7",
+        "Q1_a8b9c0d1",
+        "Q1_b5c6d7e8",
+        "Q1_a0b1c2d3",
+        "Q1_d3e4f5a6"
+      ],
+      "attribution_failures": [
+        [
+          "grp_f4a5b6c7",
+          "Q1_f4a5b6c7",
+          "grp_f4a5b6c7_s01_t004"
+        ],
+        [
+          "grp_f4a5b6c7",
+          "Q1_f4a5b6c7",
+          "grp_f4a5b6c7_s02_t000"
+        ],
+        [
+          "grp_f4a5b6c7",
+          "Q1_a8b9c0d1",
+          "grp_f4a5b6c7_s02_t013"
+        ],
+        [
+          "grp_f4a5b6c7",
+          "Q1_b5c6d7e8",
+          "grp_f4a5b6c7_s04_t008"
+        ],
+        [
+          "grp_f4a5b6c7",
+          "Q1_a0b1c2d3",
+          "grp_f4a5b6c7_s05_t019"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_f6g7h8i9",
+      "turns": 200,
+      "sessions": 10,
+      "questions": 16,
+      "anchors": 35,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 35,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 16,
+      "first_failed_ids": [
+        "Q1_f6g7h8i901",
+        "Q1_f6g7h8i902",
+        "Q1_f6g7h8i903",
+        "Q1_f6g7h8i904",
+        "Q1_f6g7h8i905"
+      ],
+      "attribution_failures": [
+        [
+          "grp_f6g7h8i9",
+          "Q1_f6g7h8i901",
+          "grp_f6g7h8i9_s01_t018"
+        ],
+        [
+          "grp_f6g7h8i9",
+          "Q1_f6g7h8i901",
+          "grp_f6g7h8i9_s03_t003"
+        ],
+        [
+          "grp_f6g7h8i9",
+          "Q1_f6g7h8i901",
+          "grp_f6g7h8i9_s10_t019"
+        ],
+        [
+          "grp_f6g7h8i9",
+          "Q1_f6g7h8i902",
+          "grp_f6g7h8i9_s02_t009"
+        ],
+        [
+          "grp_f6g7h8i9",
+          "Q1_f6g7h8i902",
+          "grp_f6g7h8i9_s03_t007"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_f7a8b9c0",
+      "turns": 173,
+      "sessions": 8,
+      "questions": 19,
+      "anchors": 34,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 34,
+      "attribution_agree": 0,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 19,
+      "first_failed_ids": [
+        "Q1_f7a8b001",
+        "Q1_f7a8b002",
+        "Q1_f7a8b003",
+        "Q2_f7a8b001",
+        "Q4_f7a8b001"
+      ],
+      "attribution_failures": [
+        [
+          "grp_f7a8b9c0",
+          "Q1_f7a8b001",
+          "grp_f7a8b9c0_s01_t006"
+        ],
+        [
+          "grp_f7a8b9c0",
+          "Q1_f7a8b001",
+          "grp_f7a8b9c0_s01_t015"
+        ],
+        [
+          "grp_f7a8b9c0",
+          "Q1_f7a8b002",
+          "grp_f7a8b9c0_s03_t005"
+        ],
+        [
+          "grp_f7a8b9c0",
+          "Q1_f7a8b002",
+          "grp_f7a8b9c0_s03_t010"
+        ],
+        [
+          "grp_f7a8b9c0",
+          "Q1_f7a8b003",
+          "grp_f7a8b9c0_s07_t000"
+        ]
+      ],
+      "known_disagreements_seen": []
+    },
+    {
+      "network": "grp_f9a0b1c2",
+      "turns": 200,
+      "sessions": 10,
+      "questions": 22,
+      "anchors": 38,
+      "key_roundtrip": 0,
+      "excerpt_verbatim": 0,
+      "attribution_checked": 38,
+      "attribution_agree": 1,
+      "canary_passed": 0,
+      "unplanted_token_hits": 0,
+      "failed_questions": 22,
+      "first_failed_ids": [
+        "Q1_f9a0b101",
+        "Q1_f9a0b102",
+        "Q1_f9a0b103",
+        "Q1_f9a0b104",
+        "Q1_f9a0b105"
+      ],
+      "attribution_failures": [
+        [
+          "grp_f9a0b1c2",
+          "Q1_f9a0b101",
+          "grp_f9a0b1c2_s01_t003"
+        ],
+        [
+          "grp_f9a0b1c2",
+          "Q1_f9a0b101",
+          "grp_f9a0b1c2_s05_t001"
+        ],
+        [
+          "grp_f9a0b1c2",
+          "Q1_f9a0b102",
+          "grp_f9a0b1c2_s02_t004"
+        ],
+        [
+          "grp_f9a0b1c2",
+          "Q1_f9a0b102",
+          "grp_f9a0b1c2_s05_t008"
+        ],
+        [
+          "grp_f9a0b1c2",
+          "Q1_f9a0b103",
+          "grp_f9a0b1c2_s04_t008"
+        ]
+      ],
+      "known_disagreements_seen": []
+    }
+  ],
+  "fault_detected": true
+}

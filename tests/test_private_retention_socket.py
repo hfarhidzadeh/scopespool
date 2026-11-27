@@ -1,12 +1,16 @@
 import contextlib
 import copy
+import hashlib
 import importlib.util
+import inspect
 import io
 import json
+import shutil
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPT = Path(__file__).resolve().parents[1] / "experiments" / "private_retention_socket.py"
 spec = importlib.util.spec_from_file_location("private_retention_socket", SCRIPT)
@@ -141,6 +145,82 @@ class ConfigTests(unittest.TestCase):
         self.assertIn("experiments/private_retention_socket.py", hashes)
 
 
+class PersistentClientTests(unittest.TestCase):
+    # SHA-256 of the gate text and gate code as fixed on 2026-11-26; adding the
+    # --persistent-client measurement aid must not change any of them.
+    GATE_DOCSTRING_SHA = "da304c42e1a2e31a47bcdb5dc6b7c3bcc13bc6007011e10c9a7998e1841dad14"
+    GATE_CODE_SHA = {
+        "gate_criteria": "171e434570d730dc9015d08de62cc3e7be89858799b8d21ec324e0728527eb3a",
+        "acceptance_gate": "333e5b77d35e9e1e84024b1d5f3d1ba9b4b40d8d52299206ceed9aca5bdc32b4",
+        "validate_fault": "f0c01c394ef2c32d85e073a5a432880970acd5d1ae4ef86f01b065bf5ccde313",
+    }
+
+    def test_the_default_run_and_its_gate_are_unchanged(self):
+        doc = socket_bench.__doc__
+        gate = doc[doc.index("Acceptance gate, fixed on 2026-11-26"):doc.index("Smoke check:")]
+        self.assertEqual(hashlib.sha256(gate.encode()).hexdigest(), self.GATE_DOCSTRING_SHA)
+        for name, digest in self.GATE_CODE_SHA.items():
+            source = inspect.getsource(getattr(socket_bench, name))
+            self.assertEqual(hashlib.sha256(source.encode()).hexdigest(), digest, name)
+        args = socket_bench.parse_args([])
+        self.assertFalse(args.persistent_client)
+        self.assertEqual(socket_bench.build_config(args.sizes, args.repetitions), {
+            "smoke": False,
+            "sizes": [{"memories": 256, "readers": 2}, {"memories": 1024, "readers": 4},
+                      {"memories": 4096, "readers": 8}],
+            "repetitions": 4, "warmup": 4, "serial": 24, "concurrent_per_reader": 12,
+            "previews_per_phase": 2, "personal_rounds": 6, "search_limit": 5,
+            "client_timeout_s": 30.0,
+        })
+        self.assertTrue(socket_bench.parse_args(["--smoke", "--persistent-client"]).persistent_client)
+
+    def arm(self, persistent, directory, template, secret_file, authority):
+        with tempfile.TemporaryDirectory(dir=directory) as arm_dir:
+            return socket_bench.arm(Path(arm_dir), template, 2, True, 0, secret_file, authority,
+                                    persistent=persistent)
+
+    def test_persistent_mode_returns_identical_results_over_one_connection_per_member(self):
+        directory = Path(tempfile.mkdtemp(prefix="ss", dir="/tmp"))  # short socket paths
+        self.addCleanup(shutil.rmtree, directory, True)
+        secret = socket_bench.TokenAuthority.generate_secret()
+        secret_file = directory / "key"
+        secret_file.write_text(secret.hex())
+        authority = socket_bench.TokenAuthority(secret)
+        template = directory / "fixture.db"
+        socket_bench.seed_database(template, 256, 2)
+        opened = []
+        original = socket_bench.ScopeSpoolClient.call
+
+        def counting(client, *args, **kwargs):
+            opened.append(client.token)  # one connection per call by design
+            return original(client, *args, **kwargs)
+
+        with mock.patch.object(socket_bench.ScopeSpoolClient, "call", counting):
+            default, default_shared = self.arm(False, directory, template, secret_file, authority)
+        persistent, persistent_shared = self.arm(True, directory, template, secret_file, authority)
+        self.assertEqual(persistent_shared, default_shared)
+        for name in ("retained_by_reader", "eligible_by_reader", "shared_archived",
+                     "private_members", "checks"):
+            self.assertEqual(persistent[name], default[name], name)
+        self.assertTrue(all(default["checks"].values()))
+        self.assertNotIn("connections_by_member", default)
+        # Control: the default arm really opened one connection per call; the
+        # persistent arm opened exactly one per member for the same calls.
+        calls = sum(phase["attempts"] for name, phase in default["phases"].items()
+                    if name != "prune_preview")
+        self.assertEqual(len(opened), calls)
+        self.assertEqual(persistent["connections_by_member"],
+                         {"reader0": 1, "reader1": 1, "peer": 1, "outsider": 1})
+        self.assertGreater(calls, 10 * len(persistent["connections_by_member"]))
+
+    def test_a_dropped_connection_fails_the_call_and_the_next_call_reconnects(self):
+        client = socket_bench.PersistentClient("/nonexistent/s.sock", "t", timeout=1)
+        with self.assertRaises(OSError):
+            client.search("x")
+        self.assertIsNone(client._connection)
+        self.assertEqual(client.connections_opened, 0)
+
+
 class EndToEndTests(unittest.TestCase):
     def run_smoke(self, *extra):
         with tempfile.TemporaryDirectory() as directory:
@@ -153,6 +233,23 @@ class EndToEndTests(unittest.TestCase):
         code, report = self.run_smoke()
         self.assertEqual(code, 0)
         self.assertEqual(report["acceptance_gate"]["verdict"], "pass")
+
+    def test_the_server_stops_even_if_started_with_sigint_ignored(self):
+        # A non-interactive shell starts `cmd &` with SIGINT ignored, and the
+        # child inherits that; the full suite run in the background then hung
+        # in every server shutdown until the boot code restored the handler.
+        import signal
+        directory = Path(tempfile.mkdtemp(prefix="ss", dir="/tmp"))  # short socket path
+        self.addCleanup(shutil.rmtree, directory, True)
+        secret_file = directory / "key"
+        secret_file.write_text(socket_bench.TokenAuthority.generate_secret().hex())
+        previous = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        try:
+            with socket_bench.running_server(directory / "s.db", directory / "s.sock", secret_file):
+                pass
+        finally:
+            signal.signal(signal.SIGINT, previous)
+        self.assertFalse((directory / "s.sock").exists())
 
     def test_a_server_that_records_for_another_member_is_caught(self):
         code, report = self.run_smoke("--fault", "wrong-member")

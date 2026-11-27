@@ -1,0 +1,8 @@
+12:33:10 start head1 | 3.44 5.44 13.24
+head1 exit 0
+12:34:56 start new1 | 5.98 5.64 12.40
+new1 exit 0
+12:36:35 start head2 | 4.82 5.43 11.58
+head2 exit 0
+12:38:16 start new2 | 6.41 5.80 11.03
+new2 exit 0

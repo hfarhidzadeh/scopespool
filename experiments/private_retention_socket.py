@@ -39,6 +39,13 @@ checked after every pair; the run stops if any of them changed.
 Smoke check: ``--smoke`` (one 256-memory pair). Write recorded runs to a new
 path, for example
 ``python3 -I experiments/private_retention_socket.py --output "$(mktemp -d)/private_retention_socket"``.
+
+Measurement aid, added 2026-11-27 and not part of the gate above:
+``--persistent-client`` sends each member's calls over one kept-open connection
+(a benchmark-local client speaking the same protocol) instead of
+``ScopeSpoolClient``'s connection per call. It exists to measure what
+connection reuse would save; the default run, its workload and its gate are
+unchanged, and runs with this option are not comparable to recorded runs.
 """
 
 from __future__ import annotations
@@ -50,6 +57,7 @@ import os
 import platform
 import select
 import signal
+import socket
 import sqlite3
 import subprocess
 import sys
@@ -58,7 +66,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, contextmanager
 from pathlib import Path
-from threading import Barrier
+from threading import Barrier, Lock
 from time import perf_counter
 from typing import NamedTuple, Optional
 
@@ -70,7 +78,7 @@ from private_retention_scale import (  # noqa: E402
 from private_retention_scale import REPETITIONS as SCALE_REPETITIONS  # noqa: E402
 from private_retention_scale import SIZES as SCALE_SIZES  # noqa: E402
 from dynmemory.auth import TokenAuthority  # noqa: E402
-from dynmemory.server import RemoteError, ScopeSpoolClient  # noqa: E402
+from dynmemory.server import MAX_REQUEST_BYTES, RemoteError, ScopeSpoolClient  # noqa: E402
 
 TITLE = "Private retention over the Unix socket"
 SIZES = SCALE_SIZES
@@ -94,7 +102,10 @@ SOURCES = ("src/dynmemory/store.py", "src/dynmemory/server.py", "src/dynmemory/a
 
 # Runs inside the server process: optionally install a fault, then serve as the CLI does.
 SERVER_BOOT = """
-import sys
+import signal, sys
+# The benchmark stops the server with SIGINT. A shell starts background jobs
+# with SIGINT ignored and Python keeps it ignored, so restore the handler.
+signal.signal(signal.SIGINT, signal.default_int_handler)
 fault, argv = sys.argv[1], sys.argv[2:]
 if fault == "wrong-member":
     from dynmemory.store import MemoryStore
@@ -107,6 +118,58 @@ elif fault != "none":
 from dynmemory.cli import main
 raise SystemExit(main(argv))
 """.format(member=WRONG_MEMBER)
+
+
+class PersistentClient:
+    """Benchmark-only: one member's calls over a single kept-open connection.
+
+    Speaks ScopeSpoolClient's newline-delimited JSON, but opens the socket on
+    the first call and keeps it. A failed exchange closes the connection, so
+    the next call opens a new one; nothing is retried. A lock serialises
+    callers, so a reply can never be read by the wrong call.
+    """
+
+    def __init__(self, socket_path, token, *, timeout):
+        self.socket_path, self.token, self.timeout = str(socket_path), token, timeout
+        self.connections_opened = 0
+        self._connection = self._reader = None
+        self._lock = Lock()
+
+    def close(self):
+        for resource in (self._reader, self._connection):
+            if resource is not None:
+                resource.close()
+        self._connection = self._reader = None
+
+    def call(self, operation, *, audience=None, **arguments):
+        message = {"token": self.token, "op": operation, "args": arguments}
+        if audience:
+            message["audience"] = list(audience)
+        with self._lock:
+            try:
+                if self._connection is None:
+                    self._connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    self._connection.settimeout(self.timeout)
+                    self._connection.connect(self.socket_path)
+                    self._reader = self._connection.makefile("rb")
+                    self.connections_opened += 1
+                self._connection.sendall(json.dumps(message).encode("utf-8") + b"\n")
+                line = self._reader.readline(MAX_REQUEST_BYTES * 8)
+                if not line.endswith(b"\n"):
+                    raise ConnectionError("the server closed the connection")
+            except BaseException:
+                self.close()
+                raise
+        response = json.loads(line.decode("utf-8"))
+        if not response.get("ok"):
+            raise RemoteError(response.get("error", "request failed"))
+        return response["result"]
+
+    def search(self, query, **arguments):
+        return self.call("search", query=query, **arguments)
+
+    def list_retained_memories(self, *, limit=100):
+        return self.call("list_retained_memories", limit=limit)
 
 
 class Attempt(NamedTuple):
@@ -179,14 +242,16 @@ def private_members(database):
             "SELECT DISTINCT member_id FROM viewer_access"))
 
 
-def arm(root, template, reader_count, private, offset, secret_file, authority, fault=None):
+def arm(root, template, reader_count, private, offset, secret_file, authority, fault=None,
+        persistent=False):
     database, socket_path = root / "store.db", root / "s.sock"
     copy_database(template, database)
     with closing(sqlite3.connect(database)) as setup:
         if setup.execute("PRAGMA journal_mode=WAL").fetchone()[0] != "wal":
             raise RuntimeError("WAL mode unavailable")
     names = [f"reader{i}" for i in range(reader_count)]
-    clients = {name: ScopeSpoolClient(socket_path, authority.issue(name), timeout=CLIENT_TIMEOUT_SECONDS)
+    client_class = PersistentClient if persistent else ScopeSpoolClient
+    clients = {name: client_class(socket_path, authority.issue(name), timeout=CLIENT_TIMEOUT_SECONDS)
                for name in [*names, "peer", "outsider"]}
     options = {"record_private_access": True} if private else {}
 
@@ -220,6 +285,9 @@ def arm(root, template, reader_count, private, offset, secret_file, authority, f
         after_prune, lists_after_prune = search_probes(clients), list_probes(clients)
         personal = [[request(clients[name].list_retained_memories, limit=1000) for name in names]
                     for _ in range(PERSONAL_ROUNDS)]
+        if persistent:
+            for client in clients.values():
+                client.close()
     members = private_members(database)
 
     concurrent = [sample for samples in by_reader for sample in samples]
@@ -259,14 +327,18 @@ def arm(root, template, reader_count, private, offset, secret_file, authority, f
         "personal_ids_and_counts_match": bool(retention_ok),
         "private_rows_only_for_searching_readers": set(members) <= allowed_members,
     }
-    return {
+    result = {
         "phases": measured, "concurrent_wall_seconds": elapsed,
         "concurrent_successes_per_second": measured["concurrent"]["successes"] / elapsed,
         "shared_archived": len(archived), "eligible_by_reader": [len(ids) for ids in expected],
         "retained_by_reader": [len(s.result) if s.error is None else None for s in personal[-1]],
         "private_members": members,
         "checks": checks,
-    }, shared
+    }
+    if persistent:
+        result["connections_by_member"] = {name: client.connections_opened
+                                           for name, client in clients.items()}
+    return result, shared
 
 
 def source_hashes():
@@ -334,7 +406,7 @@ def validate_fault(fault, gate):
             "detected": gate["pairs"] > 0 and failing == gate["pairs"]}
 
 
-def run(directory, sizes, repetitions, fault=None, hashes=None):
+def run(directory, sizes, repetitions, fault=None, hashes=None, persistent=False):
     secret = TokenAuthority.generate_secret()
     secret_file = directory / "signing-key"
     with os.fdopen(os.open(secret_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w") as out:
@@ -350,7 +422,8 @@ def run(directory, sizes, repetitions, fault=None, hashes=None):
             for mode in modes:
                 with tempfile.TemporaryDirectory(dir=directory) as arm_dir:
                     arms[mode], shared[mode] = arm(Path(arm_dir), template, readers, mode == "private",
-                                                   5 * repeat, secret_file, authority, fault)
+                                                   5 * repeat, secret_file, authority, fault,
+                                                   persistent)
             if hashes is not None and source_hashes() != hashes:
                 raise RuntimeError("Source files changed while the benchmark was running")
             equal = {name: shared["silent"][name] == shared["private"][name] for name in shared["silent"]}
@@ -369,7 +442,9 @@ def render(report):
     lines = [
         f"# {TITLE}", "",
         f"Sizes (memories/readers) {sizes}; {config['repetitions']} paired repetitions"
-        + (f"; injected fault: {report['fault']}" if report["fault"] else "") + ".", "",
+        + (f"; injected fault: {report['fault']}" if report["fault"] else "")
+        + ("; persistent client (one connection per member, not the gated client)"
+           if config.get("persistent_client") else "") + ".", "",
         f"**Acceptance gate: {gate['verdict']}.** Pre-registered in the script's docstring; "
         "each criterion must hold in every pair.", "",
         "| Criterion | Pairs held |", "| --- | ---: |",
@@ -380,9 +455,13 @@ def render(report):
         check = report["validation"]
         lines += ["", "Fault validation: criterion (d) failed in {}/{} pairs; {}.".format(
             check["failed_pairs"], check["pairs"], "detected" if check["detected"] else "NOT detected")]
+    client_text = (
+        "A benchmark-local client keeps one local socket per member open for all of that "
+        "member's calls" if config.get("persistent_client") else
+        "The production client opens a new local socket for each call")
     lines += [
         "",
-        "The production client opens a new local socket for each call to a separate threaded "
+        client_text + " to a separate threaded "
         "ScopeSpool server process. Timings include connection setup, signed-token verification, "
         "JSON, store work and the decoded response. The harness seeds independent copies of a "
         "synthetic WAL database, starts the server, issues tokens, runs prune previews through the "
@@ -437,6 +516,9 @@ def parse_args(argv=None):
                         help="Paired repetitions per size (default {})".format(REPETITIONS))
     parser.add_argument("--fault", choices=FAULTS,
                         help="Inject a server fault to validate the gate")
+    parser.add_argument("--persistent-client", action="store_true",
+                        help="Send each member's calls over one connection (measurement aid; "
+                             "not the gated client)")
     args = parser.parse_args(argv)
     if args.smoke and (args.size or args.repetitions is not None):
         parser.error("--smoke cannot be combined with --size or --repetitions")
@@ -450,13 +532,16 @@ def parse_args(argv=None):
     return args
 
 
-def build_config(sizes, repetitions, smoke=False):
-    return {"smoke": smoke,
-            "sizes": [{"memories": memories, "readers": readers} for memories, readers in sizes],
-            "repetitions": repetitions, "warmup": WARMUP, "serial": SERIAL,
-            "concurrent_per_reader": CONCURRENT_PER_READER, "previews_per_phase": PREVIEWS,
-            "personal_rounds": PERSONAL_ROUNDS, "search_limit": LIMIT,
-            "client_timeout_s": CLIENT_TIMEOUT_SECONDS}
+def build_config(sizes, repetitions, smoke=False, persistent=False):
+    config = {"smoke": smoke,
+              "sizes": [{"memories": memories, "readers": readers} for memories, readers in sizes],
+              "repetitions": repetitions, "warmup": WARMUP, "serial": SERIAL,
+              "concurrent_per_reader": CONCURRENT_PER_READER, "previews_per_phase": PREVIEWS,
+              "personal_rounds": PERSONAL_ROUNDS, "search_limit": LIMIT,
+              "client_timeout_s": CLIENT_TIMEOUT_SECONDS}
+    if persistent:
+        config["persistent_client"] = True
+    return config
 
 
 def main(argv=None):
@@ -465,14 +550,15 @@ def main(argv=None):
     start = perf_counter()
     # Use a short private directory to fit macOS's 104-byte Unix socket path.
     with tempfile.TemporaryDirectory(prefix="ss-sock-", dir="/tmp") as directory:
-        pairs = run(Path(directory), args.sizes, args.repetitions, args.fault, hashes)
+        pairs = run(Path(directory), args.sizes, args.repetitions, args.fault, hashes,
+                    args.persistent_client)
     if hashes != source_hashes():
         raise RuntimeError("Source files changed while the benchmark was running")
     gate = acceptance_gate(pairs)
     report = {
         "passed": gate["passed"], "acceptance_gate": gate, "fault": args.fault,
         "validation": validate_fault(args.fault, gate), "pairs": pairs,
-        "config": build_config(args.sizes, args.repetitions, args.smoke),
+        "config": build_config(args.sizes, args.repetitions, args.smoke, args.persistent_client),
         "source_sha256": hashes, "python": platform.python_version(), "sqlite": sqlite3.sqlite_version,
         "platform": platform.platform(), "elapsed_seconds": perf_counter() - start,
     }

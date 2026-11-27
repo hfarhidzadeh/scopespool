@@ -873,6 +873,24 @@ each.
     so the task sits at its ceiling. The test shows that the built path drops
     and misorders no visible memory. It has little power to detect a subtler
     ranking cost, and it used lexical search only, with no links or keys.
+  - **Hard workload, 2026-11-27**
+    ([results](../experiments/results/audience_utility_hard.md),
+    [swap-top fault run](../experiments/results/audience_utility_hard_fault-swap-top.md)).
+    `--hard` adds distractors that share query words, graded relevance and
+    audiences of one to three people, with rules fixed in the docstring
+    before the run. It is below the ceiling: a pooled oracle reached mean RR
+    0.7229, below 1.0 in 96.5% of trials (95% required). Two planted ranking
+    faults read as a utility cost: dropping the query's rarest word cost
+    0.468 nDCG@10, and swapping the top two results cost 0.025 nDCG@10 and
+    0.086 RR. Against filtering after the whole ranking, the built path
+    differed by +0.0013 nDCG@10 (95% CI +0.0001 to +0.0025), −0.0011 RR
+    (−0.0029 to +0.0006) and +0.0027 recall@3, all within the margin, and
+    leaked nothing. The two returned different lists in 60% of items, so the
+    test now sees ranking differences. They were small: the built path was
+    slightly ahead on nDCG@10 (118 of 200 trials, sign test p = 0.013) and
+    level on RR (72 ahead, 74 behind). Verdict: "H1 supported". Filtering only the first
+    k cost 0.117 nDCG@10. Limits: synthetic data written alongside the code,
+    lexical search only.
 
 **Write outcomes of bound writers, 2026-11-19.** Review found that two write
 checks read every claim of a key: the refusal of a change of scope or personal
@@ -1361,11 +1379,21 @@ Stages, cheapest first:
     members, a staged asker for each of the 791 cross-group questions. Group
     boundaries held in all 791 (identical rankings to a store of the asker's
     groups only, no hidden-group message in the top 10); a planted leak was
-    caught in every question. See [EverMemBench](evermembench.md#audience-test).
+    caught in every question. A hybrid run on 2026-11-27 (`--embedder
+    ngram`, same rules) also held in all 791, and its planted leak failed
+    rule 3 in 791 and rule 4 in 749. See [EverMemBench](evermembench.md#audience-test).
   - **SocialMemBench** links questions to turn IDs and verbatim excerpts.
-    Its networks average about 6,800 tokens, giving a shorter-history
-    comparison. [SocialMemBench v2, §3.4](https://arxiv.org/html/2605.17789v2#S3.SS4) ·
+    The paper's token total works out to about 6,800 tokens per network on
+    average (659–7,795 words of message text per network), giving a
+    shorter-history comparison. [SocialMemBench v2, §3.4](https://arxiv.org/html/2605.17789v2#S3.SS4) ·
     [Evidence anchors](https://huggingface.co/datasets/qunlexie/SocialMemBench)
+  - **SocialMemBench loader (2026-11-27):** a standard-library loader and a
+    canary control. All 1,979 anchors resolve to the right turn and all
+    1,031 questions return exactly their evidence turns; two planted key
+    faults are caught. The files differ from the card in several places
+    (column names, turn-ID suffixes that are not indices, three anchors that
+    name the wrong speaker or session). No retrieval experiment is
+    pre-registered. See [SocialMemBench](socialmembench.md).
   - **GroupMemBench** publishes the question, answer, asker ID and question ID
     for each item. The authors use a GPT-5 judge to score answers. Reproducing
     message-level evidence recall would require the supporting message IDs

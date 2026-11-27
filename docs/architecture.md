@@ -53,6 +53,8 @@ src/dynmemory/
   longmemeval.py  converts LongMemEval questions into evaluation sets
   longmemeval_v3.py  version 3 conversion: required evidence and supersession
                   as two annotations
+  evermembench.py   EverMemBench-Dynamic loader (multi-group histories)
+  socialmembench.py SocialMemBench loader with a standard-library Parquet reader
   __init__.py     public exports
 eval/             evaluation sets and the LongMemEval label files
 experiments/      one script per experiment, and results/ (reports and JSON)
@@ -111,7 +113,10 @@ flowchart LR
 - **server.py** runs the store in its own process behind a Unix socket with
   owner-only permissions. Each request carries a token; reads run as the
   verified audience, writes as the verified member, and administrative calls
-  are not exposed. This is the process-isolation boundary.
+  are not exposed. This is the process-isolation boundary. Malformed requests
+  get an error reply rather than an internal error or a dropped thread: text
+  arguments must be strings without NUL characters, deeply nested JSON is
+  refused as invalid, and a client that hangs up or resets is let go.
 - **consolidation.py** defines what a rebuild may see: a stale memory and its
   remaining sources, nothing else. **detection.py** defines pluggable claim
   equivalence and update detection.
@@ -298,6 +303,15 @@ default is a dry run that returns the candidates. Archived memories stay in the
 table and `restore` can reactivate them, unless they were superseded or are
 stale. Channel claims already replaced in the global view are skipped.
 
+Prune reads its candidates in a few large values instead of row by row: one
+JSON array per (importance, confidence) group for scoring, then one JSON array
+of the candidates' rows and one object of their pads. Python's sqlite3 module
+releases and retakes the GIL on every row step, so with readers running in
+other threads a row-by-row preview spent most of its time waiting for the
+GIL. Stores whose SQLite lacks the JSON functions use the row-by-row path.
+`prune(details=False)` (CLI `prune --summary`) returns `PruneSummary` items
+without reading content.
+
 Private tracking for a single reader can make a pruned memory discoverable
 through that reader's personal list for 90 days after access. Shared pruning
 uses the shared counts. The personal list applies current channel and source
@@ -341,7 +355,7 @@ a Markdown and JSON report to `experiments/results/`.
 | `longmemeval_update_detection.py` | Can a small local model find updates itself? (The recorded run failed its validity check and is archived.) |
 | `audience_side_channel.py` | Can a viewer detect words in memories they cannot see through scores? |
 | `audience_link_paths.py` | Do links (graph hop, contradiction flags, topic carry-over) reveal hidden memories? |
-| `audience_utility.py` | Does filtering before retrieval cost a viewer answers? |
+| `audience_utility.py` | Does filtering before retrieval cost a viewer answers? (`--hard`: a workload below the ceiling, with planted ranking faults) |
 | `audience_noninterference.py` | Does anything hidden change what viewers read, including after retractions? |
 | `audience_write_outcomes.py` | Does a bound writer's write outcome depend on claims it cannot see? |
 | `audience_retraction_canary.py` | Does retraction erase the text, rebuild correctly, and leave earlier encrypted copies unreadable? |
@@ -353,6 +367,7 @@ a Markdown and JSON report to `experiments/results/`.
 | `evermembench_control.py` | Does the EverMemBench loader key every evidence reference correctly (canary control)? |
 | `evermembench_audience.py` | Do group boundaries hold on EverMemBench's multi-group histories (FULL vs VISIBLE noninterference, with a power control and a leak fault)? |
 | `evermembench_retrieval.py` | Draft, not run: do hybrid search and links change cited-evidence retrieval on EverMemBench? |
+| `socialmembench_control.py` | Does the SocialMemBench loader key every evidence anchor to the right turn (canary control)? |
 
 Results from single-user LongMemEval runs are marked provisional until the
 [label review](longmemeval_label_review.md) findings are resolved.
@@ -367,13 +382,14 @@ PYTHONPATH=src python3 -m unittest discover -s tests
 
 | Area | Files |
 | --- | --- |
-| Store, CLI, embeddings, links | `test_store.py`, `test_cli.py`, `test_embeddings.py`, `test_link_carryover.py`, `test_lean_scan.py`, `test_store_speedups.py` |
+| Store, CLI, embeddings, links | `test_store.py`, `test_cli.py`, `test_embeddings.py`, `test_link_carryover.py`, `test_lean_scan.py`, `test_store_speedups.py`, `test_prune_details.py` |
 | Private retention and read transactions | `test_per_viewer_retention.py`, `test_private_retention_races.py`, `test_shared_access_transactions.py`, `test_private_retention_scale.py`, `test_private_retention_socket.py` |
 | EverMemBench loader, control, audience test and retrieval draft | `test_evermembench.py`, `test_evermembench_audience.py`, `test_evermembench_retrieval.py` |
+| SocialMemBench loader and control | `test_socialmembench.py` |
 | Evaluation harness and conversion | `test_eval.py`, `test_longmemeval.py`, `test_longmemeval_v3.py`, `test_longmemeval_v3_experiment.py`, `test_longmemeval_detector_baselines.py`, `test_experiment_statistics.py`, `test_update_detection.py` |
 | Channels, viewers, writers, sources | `test_audience.py`, `test_claim_resolution.py` |
 | Disputes, who-knows, encryption, rebuild | `test_disputes_who_knows.py`, `test_encryption_and_rebuild.py` |
-| Tokens, sessions, the server, detection | `test_auth_server.py`, `test_detection.py` |
+| Tokens, sessions, the server, detection | `test_auth_server.py`, `test_server_faults.py`, `test_detection.py` |
 | The audience experiments | `test_audience_side_channel.py`, `test_audience_link_paths.py`, `test_audience_utility.py`, `test_audience_noninterference.py`, `test_audience_write_outcomes.py`, `test_audience_retraction_canary.py`, `test_audience_disputes_who_knows.py`, `test_audience_access_channel.py`, `test_longmemeval_cross_user_disputes.py` |
 
 The experiment tests check each script's own machinery, including that an

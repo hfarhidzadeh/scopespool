@@ -40,6 +40,10 @@ only its read check. ``--size`` (one of the fixed sizes, repeatable) and
 ``--repetitions`` run part of the workload. ``--src DIR`` runs against another
 source tree, for example the pre-fix store as a negative control for the gate;
 it must be given on the command line so it is imported before the store.
+``--prune-summaries`` makes the concurrent prune previews call
+``prune(details=False)`` (``PruneSummary`` items, no content read); the applied
+prune and everything else are unchanged, and both arms of a pair use the same
+setting, so criterion (b) compares summaries with summaries.
 """
 
 from __future__ import annotations
@@ -182,8 +186,10 @@ def read_calls(reader, queries, private):
             for query in queries]
 
 
-def mixed_calls(store, readers, queries, private):
+def mixed_calls(store, readers, queries, private, prune_summaries=False):
     barrier = Barrier(len(readers) + 1, timeout=30)
+    # The default preview call is unchanged; summaries only add details=False.
+    preview_options = {"details": False} if prune_summaries else {}
 
     def reader_work(index):
         barrier.wait()
@@ -191,7 +197,8 @@ def mixed_calls(store, readers, queries, private):
 
     def prune_work():
         barrier.wait()
-        return [measure(lambda: store.prune(as_of=NOW)) for _ in range(PREVIEWS)]
+        return [measure(lambda: store.prune(as_of=NOW, **preview_options))
+                for _ in range(PREVIEWS)]
 
     with ThreadPoolExecutor(max_workers=len(readers) + 1) as pool:
         start = perf_counter()
@@ -224,7 +231,8 @@ def checkpoint(connection):
         raise RuntimeError("Benchmark checkpoint could not complete")
 
 
-def arm(path: Path, workers: int, private: bool, repeat: int, embedder=None):
+def arm(path: Path, workers: int, private: bool, repeat: int, embedder=None,
+        prune_summaries=False):
     with MemoryStore(path, embedder=make_embedder(embedder)) as store, closing(
         sqlite3.connect(path)
     ) as keeper, mock.patch.object(
@@ -242,14 +250,14 @@ def arm(path: Path, workers: int, private: bool, repeat: int, embedder=None):
         serial = read_calls(readers[0], scheduled_queries(offset + WARMUP, SERIAL), private)
         mixed_before, previews_before, elapsed_before = mixed_calls(
             store, readers, [scheduled_queries(offset + 17, MIXED_BEFORE, i)
-                             for i in range(workers)], private
+                             for i in range(workers)], private, prune_summaries
         )
         observer_after_reads = observe(store)
         archived, applied_ms = timed(lambda: store.prune(as_of=NOW, dry_run=False))
         observer_after_prune = observe(store)
         mixed_after, previews_after, elapsed_after = mixed_calls(
             store, readers, [scheduled_queries(offset + 23, MIXED_AFTER, i)
-                             for i in range(workers)], private
+                             for i in range(workers)], private, prune_summaries
         )
 
         before_checkpoint = storage(path, keeper)
@@ -441,7 +449,7 @@ def acceptance_gate(pairs):
     }
 
 
-def run(directory, sizes, repetitions, embedder=None):
+def run(directory, sizes, repetitions, embedder=None, prune_summaries=False):
     pairs = []
     for memories, workers in sizes:
         template = directory / "template.db"
@@ -453,7 +461,7 @@ def run(directory, sizes, repetitions, embedder=None):
                 path = directory / f"{mode}.db"
                 copy_database(template, path)
                 measures[mode], checks[mode], comparables[mode] = arm(
-                    path, workers, mode == "private", repeat, embedder
+                    path, workers, mode == "private", repeat, embedder, prune_summaries
                 )
                 path.unlink()
             metrics, budgets = compare(measures["silent"], measures["private"])
@@ -481,6 +489,9 @@ def describe_run(config, store_src=None):
     repetitions = config["repetitions"]
     line = (f"Embedder: {embedder}. Sizes: {sizes}; {repetitions} paired "
             f"repetition{'' if repetitions == 1 else 's'} each.")
+    if config.get("prune_previews"):
+        line += (" Concurrent prune previews: `--prune-summaries` "
+                 "(`details=False`, summaries without content).")
     if store_src:
         line += " Store: an alternate source tree given with `--src` (hash below)."
     return line
@@ -647,6 +658,9 @@ def parse_args(argv=None):
                         help="Paired repetitions per size (default {})".format(REPETITIONS))
     parser.add_argument("--src", type=Path,
                         help="Source tree to import the store from instead of this checkout")
+    parser.add_argument("--prune-summaries", action="store_true",
+                        help="Make the concurrent prune previews use details=False "
+                             "(default: full previews, as recorded)")
     args = parser.parse_args(argv)
     if args.smoke and (args.size or args.repetitions is not None):
         parser.error("--smoke cannot be combined with --size or --repetitions")
@@ -660,8 +674,8 @@ def parse_args(argv=None):
     return args
 
 
-def build_config(sizes, repetitions, embedder=None):
-    return {
+def build_config(sizes, repetitions, embedder=None, prune_summaries=False):
+    config = {
         "sizes": [{"memories": memories, "readers": readers} for memories, readers in sizes],
         "repetitions": repetitions, "topics": TOPICS, "search_limit": LIMIT,
         "warmup": WARMUP, "serial": SERIAL, "mixed_before": MIXED_BEFORE,
@@ -671,6 +685,10 @@ def build_config(sizes, repetitions, embedder=None):
         "provisional_budgets": BUDGETS,
         "embedder": embedder,
     }
+    if prune_summaries:
+        # Only a non-default run records this, so default reports keep their shape.
+        config["prune_previews"] = "summaries (details=False)"
+    return config
 
 
 def main(argv=None):
@@ -680,7 +698,7 @@ def main(argv=None):
     store_hash = hashlib.sha256(source.read_bytes()).hexdigest()
     start = perf_counter()
     with tempfile.TemporaryDirectory(prefix="scopespool-retention-scale-") as directory:
-        pairs = run(Path(directory), sizes, repetitions, args.embedder)
+        pairs = run(Path(directory), sizes, repetitions, args.embedder, args.prune_summaries)
     if hashlib.sha256(source.read_bytes()).hexdigest() != store_hash:
         raise RuntimeError("Store source changed during the benchmark")
     correct_pairs = sum(
@@ -696,7 +714,7 @@ def main(argv=None):
         "correctness_passed": correct_pairs == len(pairs), "correct_pairs": correct_pairs,
         "availability_passed": available_pairs == len(pairs), "available_pairs": available_pairs,
         "store_src": str(args.src) if args.src else None,
-        "config": build_config(sizes, repetitions, args.embedder),
+        "config": build_config(sizes, repetitions, args.embedder, args.prune_summaries),
         "acceptance_gate": acceptance_gate(pairs),
         "pairs": pairs,
     }

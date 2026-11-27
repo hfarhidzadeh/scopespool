@@ -253,6 +253,71 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("scopespool: error:", err)
 
+    def stale_memories_for_prune(self, key=None):
+        """Three memories idle for 200 days; the 0.95-importance one is protected."""
+        keyed = ("--key-file", key) if key else ()
+        ids = []
+        for index, (kind, importance) in enumerate(
+            (("episode", "0.2"), ("fact", "0.3"), ("task", "0.95"))
+        ):
+            code, out, err = self.run_cli(
+                *keyed, "add", "Stale note {}.".format(index), "--type", kind,
+                "--importance", importance, "--confidence", "0.5",
+            )
+            self.assertEqual(code, 0, err)
+            memory = json.loads(out)["id"]
+            stamp = (datetime.now(timezone.utc) - timedelta(days=200 + index)).isoformat()
+            MemoryStore(self.db, key_path=key)._set_activity(memory, created_at=stamp)
+            ids.append(memory)
+        return ids
+
+    def test_prune_summary_lists_the_summary_fields_of_the_same_candidates(self):
+        self.stale_memories_for_prune()
+        _, full_out, _ = self.run_cli("prune")
+        code, summary_out, _ = self.run_cli("prune", "--summary")
+        self.assertEqual(code, 0)
+        full, summary = json.loads(full_out), json.loads(summary_out)
+        self.assertEqual((summary["mode"], summary["count"]), ("preview", full["count"]))
+        self.assertEqual(full["count"], 2)
+        for entry, item in zip(full["memories"], summary["memories"]):
+            memory = entry["memory"]
+            self.assertEqual(
+                set(item), {"memory_id", "score", "kind", "importance", "last_activity"}
+            )
+            self.assertEqual(
+                (item["memory_id"], item["kind"], item["importance"], item["last_activity"]),
+                (memory["id"], memory["kind"], memory["importance"],
+                 memory["last_accessed_at"] or memory["created_at"]),
+            )
+            self.assertAlmostEqual(item["score"], entry["score"], places=6)
+        self.assertNotIn("Stale note", summary_out)
+
+    def test_prune_summary_apply_archives_what_the_full_preview_names(self):
+        self.stale_memories_for_prune()
+        _, preview, _ = self.run_cli("prune")
+        expected = [entry["memory"]["id"] for entry in json.loads(preview)["memories"]]
+        _, out, _ = self.run_cli("prune", "--summary", "--apply")
+        applied = json.loads(out)
+        self.assertEqual((applied["mode"], applied["count"]), ("archived", 2))
+        self.assertEqual([item["memory_id"] for item in applied["memories"]], expected)
+        _, out, _ = self.run_cli("prune")
+        self.assertEqual(json.loads(out)["count"], 0)
+
+    def test_prune_default_output_keeps_full_memories(self):
+        key = str(Path(self.temp_dir.name) / "keys.sqlite3")
+        ids = self.stale_memories_for_prune(key)
+        code, out, _ = self.run_cli("--key-file", key, "prune")
+        self.assertEqual(code, 0)
+        report = json.loads(out)
+        self.assertEqual(set(report), {"mode", "count", "memories"})
+        self.assertEqual((report["mode"], report["count"]), ("preview", 2))
+        self.assertEqual([set(entry) for entry in report["memories"]], [{"score", "memory"}] * 2)
+        memory = MemoryStore(self.db, key_path=key).get_memory(ids[0])
+        self.assertEqual(report["memories"][0]["memory"],
+                         json.loads(json.dumps(dict(memory.__dict__, kind=memory.kind.value))))
+        self.assertEqual([entry["memory"]["content"] for entry in report["memories"]],
+                         ["Stale note 0.", "Stale note 1."])
+
 
 if __name__ == "__main__":
     unittest.main()
